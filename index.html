@@ -1435,8 +1435,30 @@ body.high-contrast .btn, body.high-contrast .menu-item, body.high-contrast .kanb
 <div class="watermark">⚙ UNIUBE Via Centro · 1º Pav · Modelo 3D demonstrativo</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 'use strict';
+
+// ===================================================================
+// 🔑 CONFIGURAÇÃO SUPABASE — substitua pelos valores do seu projeto
+// (Settings → API no painel do Supabase)
+// ===================================================================
+const SUPABASE_CONFIG = {
+  url:     'https://SEU-PROJETO.supabase.co',   // ← cole o "Project URL"
+  anonKey: 'eyJhbGciOiJI...',                    // ← cole a "anon public key"
+  enabled: false                                  // ← mude pra `true` quando preencher
+};
+
+let supabaseClient = null;
+if (SUPABASE_CONFIG.enabled && window.supabase &&
+    SUPABASE_CONFIG.url !== 'https://SEU-PROJETO.supabase.co') {
+  try {
+    supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    console.log('✅ Supabase conectado');
+  } catch (e) {
+    console.warn('⚠ Supabase indisponível, usando dados locais:', e);
+  }
+}
 
 // ===================================================================
 // UNIUBE VIA CENTRO · v5 (híbrido Mapa1 + Mapa2)
@@ -3258,13 +3280,16 @@ const Nav = {
     T.arrivalCelebrating = true;
     this.active = false;
     const dest = this.destRoom;
-    const elapsed = (performance.now() - this.startMs) / 1000;
+    const elapsedMs = performance.now() - this.startMs;
+    const elapsed = elapsedMs / 1000;
     document.getElementById('arrivalDestName').textContent = dest.name + (dest.num ? ' · Sala ' + dest.num : '');
     document.getElementById('arrivalDistance').textContent = Math.round(this.route.distance) + 'm';
     document.getElementById('arrivalTime').textContent = Nav.fmtTime(elapsed);
     document.getElementById('arrivalOverlay').classList.add('open');
     Confetti.start();
     if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch(e){} }
+    // 📊 Telemetria — registra no Supabase (sem bloquear a UI)
+    UI.logNavigation(UI.currentScanQrId, dest.id, this.route.accessible, this.route.distance, elapsedMs);
     const cx = dest.x + dest.w/2, cz = dest.z + dest.d/2;
     T.cameraMode = 'orbit';
     T.orbitTarget.set(cx, 1, cz);
@@ -3543,6 +3568,37 @@ const UI = {
 
     Kanban.init();
 
+    // ===========================================================
+    // 🚀 ESTRATÉGIA A · QR scan via URL (?from=qr_xxx&to=xxx&pcd=1)
+    // ===========================================================
+    // Quando o usuário escaneia um QR com a câmera nativa do celular,
+    // o browser abre esta URL. Detectamos os parâmetros e simulamos
+    // o scan automaticamente após a cena carregar.
+    setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      const fromQr = params.get('from');
+      const toRoom = params.get('to');
+      const pcd    = params.get('pcd') === '1';
+      if (fromQr) {
+        UI.simulateScan(fromQr);
+        if (pcd) {
+          UI.pcdGlobal = true;
+          UI.pcdPanel = true;
+          document.getElementById('togglePCD').classList.add('on');
+          document.getElementById('togglePanelPCD').classList.add('on');
+        }
+        if (toRoom) {
+          setTimeout(() => {
+            const sel = document.getElementById('destSelect');
+            if (sel && [...sel.options].some(o => o.value === toRoom)) {
+              sel.value = toRoom;
+              UI.calculateRoute();
+            }
+          }, 600);
+        }
+      }
+    }, 1000);
+
     // Bindings
     document.getElementById('btnMenu').onclick = () => this.openMenu();
     document.getElementById('btnCloseMenu').onclick = () => this.closeMenu();
@@ -3621,9 +3677,29 @@ const UI = {
     if (T.routeLine) { T.scene.remove(T.routeLine); T.routeLine = null; }
   },
 
-  simulateScan(qrId) {
-    const qr = QR_CHECKPOINTS.find(q => q.id === qrId);
-    if (!qr) return;
+  // Consulta Supabase pelo checkpoint; se falhar, usa array local
+  async resolveCheckpoint(qrId) {
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('checkpoints')
+          .select('id, name, x, y, z, floor, room_id, active')
+          .eq('id', qrId)
+          .eq('active', true)
+          .single();
+        if (!error && data) {
+          // Normaliza formato (room_id → roomId)
+          return { ...data, roomId: data.room_id };
+        }
+      } catch(e) { console.warn('Supabase resolveCheckpoint:', e); }
+    }
+    // Fallback: dados hardcoded no JS
+    return QR_CHECKPOINTS.find(q => q.id === qrId);
+  },
+
+  async simulateScan(qrId) {
+    const qr = await this.resolveCheckpoint(qrId);
+    if (!qr) { this.setStatus('⚠ QR-Code não encontrado'); return; }
     this.currentScanQrId = qrId;
     document.getElementById('gpsLocationName').textContent = qr.name;
     document.getElementById('gpsToken').textContent = 'uniube.app/gps?from=' + qrId;
@@ -3638,6 +3714,21 @@ const UI = {
     if (qr.roomId) T.flyToRoom(qr.roomId);
     else T.animateCameraOrbit(T.orbitTheta, Math.PI*0.4, 35, new THREE.Vector3(qr.x, 1.5, qr.z));
     UI.setStatus('📱 Checkpoint: ' + qr.name);
+  },
+
+  // Telemetria anônima: registra cada navegação concluída no Supabase
+  async logNavigation(fromQr, toRoom, accessible, distance, durationMs) {
+    if (!supabaseClient) return;
+    try {
+      await supabaseClient.from('nav_logs').insert({
+        from_qr: fromQr,
+        to_room: toRoom,
+        accessible,
+        distance: Math.round(distance * 10) / 10,
+        duration_ms: Math.round(durationMs),
+        device_type: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+      });
+    } catch(e) { console.warn('logNavigation:', e); }
   },
 
   togglePanelPCD() {
