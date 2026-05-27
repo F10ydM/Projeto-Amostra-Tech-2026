@@ -7,7 +7,29 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0c1730">
 <meta name="description" content="UNIUBE Via Centro · Trabalho Integrador Amostra Tech 2026 · Modelo 3D realista com navegação indoor por QR Code">
-<title>UNIUBE Via Centro · 3D Navegável · v5</title>
+<title>UNIUBE Via Centro · GPS Interno 3D · Amostra Tech 2026</title>
+
+<!-- PWA: ícone + manifest -->
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231e3a8a'/%3E%3Ctext x='50' y='65' font-family='Arial' font-size='60' font-weight='bold' fill='%23fbbf24' text-anchor='middle'%3EU%3C/text%3E%3C/svg%3E">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://projeto-amostra-tech-2026-nrqt.vercel.app/">
+<meta property="og:title" content="UNIUBE Via Centro · GPS Interno 3D">
+<meta property="og:description" content="Navegue em primeira pessoa pelo campus Via Centro de Uberlândia. Trabalho Integrador Amostra Tech 2026.">
+<meta property="og:image" content="https://projeto-amostra-tech-2026-nrqt.vercel.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="UNIUBE Via Centro">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="UNIUBE Via Centro · GPS Interno 3D">
+<meta name="twitter:description" content="Navegue em primeira pessoa pelo campus Via Centro. Amostra Tech 2026.">
+<meta name="twitter:image" content="https://projeto-amostra-tech-2026-nrqt.vercel.app/og-image.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -805,6 +827,170 @@ body.nav-active .watermark { display: none; }
   .watermark { display: none; }
 }
 
+/* === CHATBOT FAB === */
+.chatbot-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: 2px solid rgba(255,255,255,0.2);
+  color: #0c1730;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 8px 28px rgba(229,169,59,0.5);
+  z-index: var(--z-panel);
+  transition: transform 0.18s, box-shadow 0.18s;
+  animation: chatbot-pulse 2.4s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chatbot-fab:hover { transform: scale(1.08); }
+.chatbot-fab:active { transform: scale(0.95); }
+body.nav-active .chatbot-fab { display: none; }
+@keyframes chatbot-pulse {
+  0%, 100% { box-shadow: 0 8px 28px rgba(229,169,59,0.5); }
+  50%      { box-shadow: 0 8px 36px rgba(229,169,59,0.85); }
+}
+
+/* === CHAT MODAL === */
+.chat-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,10,24,0.86);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: var(--z-modal);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.chat-modal.open { display: flex; animation: fade-in 0.25s ease; }
+.chat-shell {
+  width: 100%;
+  max-width: 520px;
+  height: min(640px, 100%);
+  background: var(--bg-1);
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.chat-title { display: flex; align-items: center; gap: 12px; }
+.chat-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.chat-name { font-weight: 700; font-size: 15px; }
+.chat-badge {
+  font-size: 9px; font-weight: 700;
+  background: var(--accent); color: #0c1730;
+  padding: 2px 6px; border-radius: 4px;
+  letter-spacing: 0.08em; margin-left: 6px;
+  vertical-align: middle;
+}
+.chat-sub { font-size: 11px; color: var(--text-dim); }
+
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.chat-msg {
+  display: flex;
+  max-width: 85%;
+}
+.chat-msg.user { align-self: flex-end; }
+.chat-msg.assistant { align-self: flex-start; }
+.chat-bubble {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.chat-msg.user .chat-bubble {
+  background: var(--accent);
+  color: #0c1730;
+  border-bottom-right-radius: 4px;
+}
+.chat-msg.assistant .chat-bubble {
+  background: var(--bg-2);
+  color: var(--text);
+  border: 1px solid var(--border-subtle);
+  border-bottom-left-radius: 4px;
+}
+.chat-msg.typing .chat-bubble {
+  display: flex; align-items: center; gap: 4px; min-height: 24px;
+}
+.chat-msg.typing .dot {
+  width: 6px; height: 6px; background: var(--text-dim); border-radius: 50%;
+  animation: chat-dot 1.2s infinite ease-in-out;
+}
+.chat-msg.typing .dot:nth-child(2) { animation-delay: 0.2s; }
+.chat-msg.typing .dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes chat-dot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40%           { opacity: 1;   transform: scale(1); }
+}
+
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  max-width: 85%;
+}
+.chat-suggest {
+  background: var(--bg-2);
+  border: 1px solid var(--border-subtle);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.chat-suggest:hover { background: var(--bg-3); border-color: var(--accent); }
+
+.chat-input-row {
+  padding: 12px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 8px;
+}
+.chat-input-row input {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--border-subtle);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+}
+.chat-input-row input:focus { outline: none; border-color: var(--accent); }
+
 /* === KANBAN MODAL === */
 .kanban-modal {
   position: fixed;
@@ -1199,6 +1385,14 @@ body.high-contrast .btn, body.high-contrast .menu-item, body.high-contrast .kanb
           </div>
           <button class="toggle" id="toggleContrast"></button>
         </div>
+        <div class="toggle-row">
+          <div>
+            <div class="label">🔊 Som de chegada</div>
+            <div class="hint">Chime ao chegar no destino</div>
+          </div>
+          <button class="toggle on" id="toggleSound"></button>
+        </div>
+        <button class="menu-item" id="miLang">🇧🇷 Português · trocar</button>
         <div class="slider-row">
           <div class="label-row">
             <span>Velocidade da navegação</span>
@@ -1301,6 +1495,7 @@ body.high-contrast .btn, body.high-contrast .menu-item, body.high-contrast .kanb
     <ul class="gps-directions" id="directionsList"></ul>
     <div class="gps-actions" id="navActions" style="display:none;">
       <button class="btn btn-ghost" id="btnBackPanel">Voltar</button>
+      <button class="btn btn-ghost btn-icon" id="btnShareRoute" title="Compartilhar rota" aria-label="Compartilhar">🔗</button>
       <button class="btn btn-accent" id="btnStartNav">▶ Iniciar navegação</button>
     </div>
   </div>
@@ -1372,6 +1567,48 @@ body.high-contrast .btn, body.high-contrast .menu-item, body.high-contrast .kanb
 <div class="alarm-vignette" id="alarmVignette"></div>
 
 <!-- ============================================================ -->
+<!-- CHATBOT FAB + MODAL                                          -->
+<!-- ============================================================ -->
+<button id="btnChatbot" class="chatbot-fab" aria-label="Abrir chatbot Cicerone" title="Cicerone · Chatbot UNIUBE">
+  <span class="icon">💬</span>
+</button>
+
+<div class="chat-modal" id="chatModal">
+  <div class="chat-shell">
+    <div class="chat-header">
+      <div class="chat-title">
+        <div class="chat-avatar">🤖</div>
+        <div>
+          <div class="chat-name">Cicerone <span class="chat-badge">UNIUBE</span></div>
+          <div class="chat-sub">Pergunte sobre o campus · Acessibilidade · Salas</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-icon" id="btnCloseChat" aria-label="Fechar">×</button>
+    </div>
+
+    <div class="chat-log" id="chatLog">
+      <div class="chat-msg assistant">
+        <div class="chat-bubble">
+          👋 Olá! Sou o <strong>Cicerone</strong>, assistente do campus UNIUBE Via Centro.<br>
+          Posso ajudar com rotas, salas, acessibilidade e curiosidades. Experimente:
+        </div>
+      </div>
+      <div class="chat-suggestions">
+        <button class="chat-suggest" data-q="Onde fica a Biblioteca?">📚 Onde fica a Biblioteca?</button>
+        <button class="chat-suggest" data-q="Como chegar de cadeira de rodas até a Sala 152?">♿ Rota acessível para Sala 152</button>
+        <button class="chat-suggest" data-q="O que tem no Galpão das Engenharias?">🏭 O que tem no Galpão 116?</button>
+        <button class="chat-suggest" data-q="Quem foi Mandela e por que tem uma parede com frase dele aqui?">🖼 Sobre a parede do Mandela</button>
+      </div>
+    </div>
+
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="Digite sua pergunta..." autocomplete="off">
+      <button class="btn btn-accent btn-icon" id="btnSendChat" aria-label="Enviar">▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
 <!-- KANBAN MODAL                                                  -->
 <!-- ============================================================ -->
 <div class="kanban-modal" id="kanbanModal">
@@ -1434,7 +1671,35 @@ body.high-contrast .btn, body.high-contrast .menu-item, body.high-contrast .kanb
 
 <div class="watermark">⚙ UNIUBE Via Centro · 1º Pav · Modelo 3D demonstrativo</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Three.js com fallback de CDN (3 espelhos) -->
+<script>
+  (function loadThree() {
+    var cdns = [
+      'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+      'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
+      'https://unpkg.com/three@0.128.0/build/three.min.js'
+    ];
+    function tryNext(i) {
+      if (i >= cdns.length) {
+        var ldr = document.getElementById('loader');
+        if (ldr) ldr.innerHTML =
+          '<div style="text-align:center;padding:24px;color:#f4f6fb;">' +
+          '<div style="font-size:48px;margin-bottom:16px;">📡</div>' +
+          '<div style="font-size:18px;font-weight:600;">Sem conexão</div>' +
+          '<div style="font-size:13px;color:#b0bcd6;margin-top:8px;max-width:300px;">' +
+          'Conecte-se à internet para carregar o modelo 3D do Three.js.' +
+          '</div></div>';
+        return;
+      }
+      var s = document.createElement('script');
+      s.src = cdns[i];
+      s.onload  = function () { window.__THREE_LOADED__ = true; };
+      s.onerror = function () { tryNext(i + 1); };
+      document.head.appendChild(s);
+    }
+    tryNext(0);
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 'use strict';
@@ -1649,21 +1914,73 @@ function buildGraph() {
 // ===================================================================
 // TOUR E DEMO STEPS adaptados ao prédio real
 // ===================================================================
+// CAMPUS_TOUR — waypoints SEMPRE em corredores/escada/rampa.
+// "via" = pontos intermediários obrigatórios pra evitar atravessar paredes.
 const CAMPUS_TOUR = [
-  { x: 25, y: 1.65, z: -7,  look: {x:25, y:1.65, z:4},   name: '🅿️ Esplanada Av. João Pinheiro', desc: 'Acesso principal pela entrada sul, com palmeira-ravenala e marquise.' },
-  { x: 25, y: 1.65, z: 3,   look: {x:25, y:1.65, z:14},  name: '🚪 Saguão da Entrada Principal', desc: 'Porta automática, forro de pingentes de cristal e faixas LED no piso.' },
-  { x: 34, y: 1.65, z: 6.5, look: {x:34, y:1.65, z:7},   name: '🖼 Parede do Mandela', desc: '"A educação é a arma mais poderosa…" em azul cobalto.' },
-  { x: 12, y: 1.65, z: 4,   look: {x:12, y:1.65, z:6},   name: '📚 Biblioteca 163', desc: 'Estantes de livros + mesas redondas de estudo.' },
-  { x: 6.75, y: 1.65, z: 12,look: {x:6.75, y:3, z:8},    name: '⛓ Escada Rolante Dupla', desc: 'Banner "Gaudium Hall" entre as duas esteiras.' },
-  { x: 18, y: 1.65, z: 11,  look: {x:14, y:2.5, z:9},    name: '♿ Rampa em "L"', desc: 'Patamar central, guarda-corpos de vidro verde-água.' },
-  { x: 31, y: 1.65, z: 17,  look: {x:31, y:1.65, z:11},  name: '🧾 Multiatendimento + Xerox', desc: 'CAC, Guichês 6–9, Reprografia 111.' },
-  { x: 11, y: 1.65, z: 23,  look: {x:11, y:2.2, z:22},   name: '🟡 Parede Amarela "laboratórios"', desc: 'Texto preto gigante + escudo Uniube.' },
-  { x: 22, y: 1.65, z: 25,  look: {x:20, y:2, z:25},     name: '🦍 Parede do Gorila', desc: 'Mascote punk + "CURSO TÉCNICO" em amarelo.' },
-  { x: 4,  y: 1.65, z: 28,  look: {x:4,  y:1.65, z:34},  name: '🏫 Salas 147–156 (Setor Norte)', desc: 'Piso bege diferenciado, mural CIPA 2025/2026.' },
-  { x: 45, y: 1.65, z: 28,  look: {x:45, y:1.65, z:33},  name: '🛋 Convivência Descolada', desc: 'Pufes cinzas, vending machines, balcão Castelli.' },
-  { x: 47.5, y: 1.65, z: 16, look: {x:47.5,y:1.65,z:15}, name: '🛗 Elevador (acessível)', desc: 'Símbolo da cadeira de rodas, plataforma elevatória.' },
-  { x: 60, y: 2,    z: 18,  look: {x:60, y:4, z:18},     name: '🏭 Galpão Engenharias 116', desc: 'Treliças metálicas, pé-direito 6m, oficina mecânica.' },
-  { x: 60, y: 1.65, z: 18,  look: {x:55, y:1.65, z:18},  name: '🏁 Tour completo!', desc: 'Você percorreu todo o 1º pavimento do Via Centro.' }
+  { x: 25, y: 1.65, z: -7,  look: {x:25, y:1.65, z:4},
+    name: '🅿️ Esplanada Av. João Pinheiro',
+    desc: 'Acesso principal pela entrada sul. Note a fachada UNIUBE iluminada e a marquise.' },
+
+  { x: 25, y: 1.65, z: 3,   look: {x:25, y:1.65, z:8},
+    name: '🚪 Saguão da Entrada Principal',
+    desc: 'Porta automática, forro de pingentes de cristal e faixas LED no piso.',
+    via: [ [25, 1.65, -2] ] },
+
+  { x: 24.5, y: 1.65, z: 6, look: {x:34, y:1.65, z:7},
+    name: '🖼 Parede do Mandela',
+    desc: '"A educação é a arma mais poderosa…" em azul cobalto · vista do corredor central.' },
+
+  { x: 24.5, y: 1.65, z: 9, look: {x:12, y:1.65, z:7},
+    name: '📚 Biblioteca 163',
+    desc: 'Estantes de livros + mesas redondas · vista do corredor de acesso.' },
+
+  { x: 6.75, y: 1.65, z: 12, look: {x:6.75, y:3, z:8},
+    name: '⛓ Escada Rolante Dupla',
+    desc: 'Banner "Gaudium Hall" entre as duas esteiras.',
+    via: [ [24.5, 1.65, 11], [12, 1.65, 11] ] },
+
+  { x: 18, y: 1.65, z: 12, look: {x:18, y:2.5, z:9},
+    name: '♿ Rampa em "U"',
+    desc: 'Acessível · patamar central · guarda-corpos de vidro verde-água.',
+    via: [ [11, 1.65, 12] ] },
+
+  { x: 24.5, y: 1.65, z: 17, look: {x:31, y:1.65, z:17},
+    name: '🧾 Multiatendimento + Xerox',
+    desc: 'CAC, Guichês 6-9, Reprografia 111 · cruzamento dos corredores.',
+    via: [ [24.5, 1.65, 14] ] },
+
+  { x: 11, y: 1.65, z: 20, look: {x:11, y:2.0, z:22},
+    name: '🟡 Parede Amarela "laboratórios"',
+    desc: 'Texto preto gigante + escudo Uniube · vista do corredor norte.',
+    via: [ [20, 1.65, 17], [11, 1.65, 17] ] },
+
+  { x: 22.5, y: 1.65, z: 23, look: {x:22, y:2, z:25},
+    name: '🦍 Parede do Gorila',
+    desc: 'Mascote punk + "CURSO TÉCNICO" · vista do vão central.',
+    via: [ [22.5, 1.65, 21] ] },
+
+  { x: 24.5, y: 1.65, z: 29, look: {x:10, y:1.65, z:29},
+    name: '🏫 Salas 147-156 (Setor Norte)',
+    desc: 'Piso bege diferenciado · 7 salas com portas e numeração.' },
+
+  { x: 44, y: 1.65, z: 22, look: {x:45, y:1.65, z:30},
+    name: '🛋 Convivência Descolada',
+    desc: 'Pufes, vending machines, balcão Castelli · acesso pelo corredor.',
+    via: [ [40, 1.65, 22] ] },
+
+  { x: 47.5, y: 1.65, z: 15, look: {x:47.5, y:1.65, z:14},
+    name: '🛗 Elevador (acessível)',
+    desc: 'Símbolo da cadeira de rodas · única transição vertical PCD.',
+    via: [ [44, 1.65, 17], [47.5, 1.65, 17] ] },
+
+  { x: 60, y: 1.65, z: 18, look: {x:60, y:4, z:18},
+    name: '🏭 Galpão das Engenharias 116',
+    desc: 'Treliças metálicas, pé-direito 6m, sublabs 116-A/B/C/D.',
+    via: [ [50.5, 1.65, 17], [55, 1.65, 18] ] },
+
+  { x: 60, y: 1.65, z: 18, look: {x:55, y:1.65, z:18},
+    name: '🏁 Tour completo!',
+    desc: 'Você percorreu todo o 1º pavimento do Via Centro.' }
 ];
 
 const DEMO_STEPS = [
@@ -1750,6 +2067,7 @@ const T = {
     this.setupLights();
     this.buildExterior();
     this.buildFloorsAndWalls();
+    this.buildClassroomWalls();
     this.buildIconic();
     this.buildEscalator();
     this.buildRamp();
@@ -1841,9 +2159,7 @@ const T = {
     sidewalk.position.set(34, -0.05, 18);
     this.scene.add(sidewalk);
 
-    // Palmeiras e árvores
-    const trees = [[-2,10],[-2,24],[22,-3],[27,-3],[73,12],[73,26],[40,38],[16,38],[78,4],[78,32]];
-    trees.forEach(([x,z]) => this.addTree(x, z));
+    // (Árvores e palmeiras removidas para destacar a fachada UNIUBE)
 
     // 2 pontos de ônibus azuis (saída leste)
     for (let i = 0; i < 2; i++) {
@@ -1878,6 +2194,88 @@ const T = {
     leaves.position.set(x, 4.2, z);
     leaves.scale.y = 0.7;
     this.scene.add(leaves);
+  },
+
+  // Fecha cada sala 147-156 com paredes laterais + parede norte + recorte de porta
+  buildClassroomWalls() {
+    const grp = new THREE.Group();
+    this.scene.add(grp);
+    const IH = 2.7;
+    const WC = 0xeae6da;
+    const DOOR_W = 1.0;          // largura do vão da porta
+    const DOOR_H = 2.1;           // altura do vão
+    const classrooms = [
+      { x:1,  z:24, w:7, d:11 },  // s147
+      { x:8,  z:24, w:6, d:11 },  // s149
+      { x:14, z:24, w:6, d:11 },  // s150
+      { x:20, z:24, w:5, d:11 },  // s151
+      { x:25, z:24, w:5, d:11 },  // s152
+      { x:30, z:24, w:6, d:11 },  // s153
+      { x:36, z:24, w:6, d:11 }   // s156
+    ];
+
+    // Parede norte corrida em z=35 (fundo das salas)
+    this.wall(grp, 1, 35, 22, 35, IH, WC);
+    this.wall(grp, 24, 35, 42, 35, IH, WC);
+
+    // Paredes verticais separadoras entre salas (x=8, 14, 20, 30, 36)
+    // (x=25 já é coberto pela parede vertical existente em x=24..25 do central)
+    [8, 14, 20, 30, 36].forEach(sx => {
+      this.wall(grp, sx, 24, sx, 35, IH, WC);
+    });
+
+    // Recortes de porta na face sul (z=24) — cada sala ganha um marco visível
+    classrooms.forEach(r => {
+      const cx = r.x + r.w/2;
+      // 2 segmentos curtos de parede em z=24, deixando vão central de DOOR_W
+      const half1Start = r.x + 0.1;
+      const half1End   = cx - DOOR_W/2;
+      const half2Start = cx + DOOR_W/2;
+      const half2End   = r.x + r.w - 0.1;
+      this.wall(grp, half1Start, 24, half1End, 24, IH, WC);
+      this.wall(grp, half2Start, 24, half2End, 24, IH, WC);
+      // Lintel acima do vão da porta (faixa de 0.6m no topo)
+      const lintelH = IH - DOOR_H;
+      if (lintelH > 0.05) {
+        const lintel = new THREE.Mesh(
+          new THREE.BoxGeometry(DOOR_W, lintelH, 0.2),
+          this.mat(WC)
+        );
+        lintel.position.set(cx, DOOR_H + lintelH/2, 24);
+        grp.add(lintel);
+      }
+      // Moldura escura da porta (batente) — dá o "recorte" visual
+      const frameMat = this.mat(0x3a3a3a);
+      const fL = new THREE.Mesh(new THREE.BoxGeometry(0.05, DOOR_H, 0.25), frameMat);
+      fL.position.set(cx - DOOR_W/2 - 0.025, DOOR_H/2, 24);
+      grp.add(fL);
+      const fR = new THREE.Mesh(new THREE.BoxGeometry(0.05, DOOR_H, 0.25), frameMat);
+      fR.position.set(cx + DOOR_W/2 + 0.025, DOOR_H/2, 24);
+      grp.add(fR);
+      const fT = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W + 0.1, 0.05, 0.25), frameMat);
+      fT.position.set(cx, DOOR_H + 0.025, 24);
+      grp.add(fT);
+      // Placa do número (no batente direito)
+      const plateC = document.createElement('canvas');
+      plateC.width = 256; plateC.height = 128;
+      const plctx = plateC.getContext('2d');
+      plctx.fillStyle = '#1e3a8a'; plctx.fillRect(0, 0, 256, 128);
+      plctx.fillStyle = '#ffffff';
+      plctx.font = 'bold 68px Arial, sans-serif';
+      plctx.textAlign = 'center'; plctx.textBaseline = 'middle';
+      // Encontra o num da sala correspondente
+      const room = ROOMS.find(rr =>
+        Math.abs(rr.x - r.x) < 0.1 && Math.abs(rr.z - r.z) < 0.1
+      );
+      plctx.fillText(room && room.num ? room.num : '', 128, 64);
+      const plateT = new THREE.CanvasTexture(plateC);
+      const plate = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.5, 0.25),
+        new THREE.MeshBasicMaterial({ map: plateT })
+      );
+      plate.position.set(cx + DOOR_W/2 + 0.4, DOOR_H - 0.4, 23.99);
+      grp.add(plate);
+    });
   },
 
   buildFloorsAndWalls() {
@@ -1966,15 +2364,60 @@ const T = {
     fctx.fillText('· CAMPUS VIA CENTRO ·', 1024, 440);
     const ftex = new THREE.CanvasTexture(fc);
     const facadeSign = new THREE.Mesh(
-      new THREE.PlaneGeometry(12, 3),
+      new THREE.PlaneGeometry(18, 4.5),
       new THREE.MeshBasicMaterial({ map: ftex, transparent: true })
     );
-    facadeSign.position.set(25, 4.7, -0.03);
+    facadeSign.position.set(25, 5.5, -0.03);
     facadeSign.rotation.y = Math.PI;
     grp.add(facadeSign);
 
+    // Glow emissivo atrás do letreiro (deixa "iluminado")
+    const facadeGlow = new THREE.Mesh(
+      new THREE.PlaneGeometry(20, 5.5),
+      new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.18 })
+    );
+    facadeGlow.position.set(25, 5.5, -0.08);
+    facadeGlow.rotation.y = Math.PI;
+    grp.add(facadeGlow);
+
+    // OUTDOOR luminoso suspenso (acima do prédio · totem da fachada)
+    const outdoor = new THREE.Mesh(
+      new THREE.BoxGeometry(8, 1.8, 0.4),
+      new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
+    );
+    outdoor.position.set(25, 9.0, -0.4);
+    grp.add(outdoor);
+    // Suportes do outdoor
+    [22, 28].forEach(sx => {
+      const support = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, 1.5, 0.18),
+        new THREE.MeshBasicMaterial({ color: 0x1a1a22 })
+      );
+      support.position.set(sx, 8.2, -0.3);
+      grp.add(support);
+    });
+    // Letreiro do outdoor (face frontal)
+    const oc = document.createElement('canvas');
+    oc.width = 2048; oc.height = 512;
+    const octx = oc.getContext('2d');
+    octx.fillStyle = '#fbbf24'; octx.fillRect(0, 0, 2048, 512);
+    octx.fillStyle = '#1e3a8a';
+    octx.font = 'bold 280px system-ui, sans-serif';
+    octx.textAlign = 'center'; octx.textBaseline = 'middle';
+    octx.fillText('UNIUBE', 1024, 230);
+    octx.font = 'bold 90px system-ui, sans-serif';
+    octx.fillText('VIA CENTRO · UBERLÂNDIA', 1024, 400);
+    const otex = new THREE.CanvasTexture(oc);
+    const outdoorFront = new THREE.Mesh(
+      new THREE.PlaneGeometry(7.8, 1.6),
+      new THREE.MeshBasicMaterial({ map: otex })
+    );
+    outdoorFront.position.set(25, 9.0, -0.595);
+    outdoorFront.rotation.y = Math.PI;
+    grp.add(outdoorFront);
+
     // Caixa volumétrica atrás do letreiro (dá relevo de fachada esculpida)
-    this.box(grp, 13, 3.6, 0.4, 0x142447, 18.5, 2.7, -0.45);
+    this.box(grp, 16, 4.5, 0.4, 0x142447, 17, 3.3, -0.45);
 
     // Marquise da entrada principal (volume escurecido, mais grosso e largo)
     this.box(grp, 8, 0.45, 3.4, 0x0c1730, 21, 2.55, -3.4);
@@ -3172,11 +3615,13 @@ const Nav = {
     if (window.innerWidth < 600) {
       mini.style.top = '108px'; mini.style.right = '10px';
       mini.style.bottom = 'auto'; mini.style.left = 'auto';
-      mini.style.width = '160px'; mini.style.height = '120px';
+      mini.style.width = '200px'; mini.style.height = '170px';
+      mini.width = 320; mini.height = 272;
     } else {
       mini.style.top = 'auto'; mini.style.bottom = '90px';
       mini.style.right = '20px'; mini.style.left = 'auto';
-      mini.style.width = '280px'; mini.style.height = '200px';
+      mini.style.width = '340px'; mini.style.height = '260px';
+      mini.width = 544; mini.height = 416;
     }
   },
 
@@ -3224,33 +3669,119 @@ const Nav = {
     document.getElementById('navHudArrow').textContent = arrow;
   },
 
+  // Determina sala/área onde o ponto (x,z) está agora
+  currentArea(x, z) {
+    // 1) Tenta achar uma sala que contém o ponto
+    for (const r of ROOMS) {
+      if (r.external) continue;
+      if (x >= r.x && x <= r.x + r.w && z >= r.z && z <= r.z + r.d) {
+        return r.num ? `Sala ${r.num} · ${r.name}` : r.name;
+      }
+    }
+    // 2) Corredores nomeados
+    if (Math.abs(x - 24.5) < 1.5 && z >= 3 && z <= 30)  return 'Corredor Central (N-S)';
+    if (Math.abs(z - 17) < 1.5 && x >= 3 && x <= 50)    return 'Corredor Central (L-O)';
+    if (Math.abs(z - 22) < 1.5)                          return 'Corredor das Salas 147-156';
+    if (Math.abs(x - 61) < 2.5 && x >= 50)               return 'Galpão das Engenharias';
+    if (Math.abs(x - 6.75) < 2 && z >= 7 && z <= 14)     return 'Base da Escada Rolante';
+    if (Math.abs(x - 18) < 2.5 && z >= 7 && z <= 14)     return 'Rampa em U (acessível)';
+    if (z < 1) return 'Esplanada · Av. João Pinheiro';
+    return 'Passagem interna';
+  },
+
   drawMinimap() {
     const canvas = document.getElementById('canvas2d-minimap');
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
+    // Header reservado pro nome da sala atual
+    const HEADER_H = 28;
+    const mapH = H - HEADER_H;
     const totalW = BUILDING.BX + BUILDING.HX + 8;
     const totalD = BUILDING.BZ + 4;
-    const scale = Math.min(W / totalW, H / totalD) * 0.92;
+    const scale = Math.min(W / totalW, mapH / totalD) * 0.94;
     const ox = (W - totalW * scale) / 2;
-    const oz = (H - totalD * scale) / 2;
+    const oz = HEADER_H + (mapH - totalD * scale) / 2;
+
+    // Fundo
     ctx.fillStyle = '#0c1730'; ctx.fillRect(0, 0, W, H);
-    // Prédio principal
-    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+
+    // Header (sala/corredor atual)
+    const cur = this.curve.getPoint(this.progress);
+    const areaName = this.currentArea(cur.x, cur.z);
+    ctx.fillStyle = 'rgba(251,191,36,0.14)';
+    ctx.fillRect(0, 0, W, HEADER_H);
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 10px Inter, system-ui';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('📍 VOCÊ ESTÁ EM', 8, 5);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12px Inter, system-ui';
+    // Trunca se muito longo
+    let txt = areaName;
+    while (ctx.measureText(txt).width > W - 16 && txt.length > 10) txt = txt.slice(0, -1);
+    if (txt !== areaName) txt += '…';
+    ctx.fillText(txt, 8, 16);
+
+    // Prédio principal (fundo)
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
     ctx.fillRect(ox, oz, BUILDING.BX * scale, BUILDING.BZ * scale);
     // Galpão
     ctx.fillStyle = 'rgba(255,214,10,0.07)';
     ctx.fillRect(ox + BUILDING.HOX*scale, oz + BUILDING.HOZ*scale, BUILDING.HX*scale, BUILDING.HZ*scale);
-    // Salas
+
+    // Salas (com highlight se for a sala atual)
+    const curRoomId = this.areaRoomId(cur.x, cur.z);
     ROOMS.forEach(r => {
       if (r.external) return;
       const c = CAT_COLORS[r.cat] ? CAT_COLORS[r.cat].label : 0x999999;
-      ctx.fillStyle = '#' + c.toString(16).padStart(6, '0') + '55';
+      const hex = '#' + c.toString(16).padStart(6, '0');
+      const isCurrent = r.id === curRoomId;
+      ctx.fillStyle = isCurrent ? hex + 'cc' : hex + '55';
       ctx.fillRect(ox + r.x * scale, oz + r.z * scale, r.w * scale, r.d * scale);
-      ctx.strokeStyle = '#' + c.toString(16).padStart(6, '0');
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = isCurrent ? '#fbbf24' : hex;
+      ctx.lineWidth = isCurrent ? 2 : 1;
       ctx.strokeRect(ox + r.x * scale, oz + r.z * scale, r.w * scale, r.d * scale);
+      // Número da sala se a célula for grande o suficiente
+      if (r.num && r.w * scale > 18 && r.d * scale > 14) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 9px Inter, system-ui';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(r.num, ox + (r.x + r.w/2) * scale, oz + (r.z + r.d/2) * scale);
+      }
     });
-    // Rota
+
+    // Marcador de destino (estrela amarela na sala-alvo)
+    if (Nav.destRoom) {
+      const dr = Nav.destRoom;
+      const dx = ox + (dr.x + dr.w/2) * scale;
+      const dy = oz + (dr.z + dr.d/2) * scale;
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2 - Math.PI/2;
+        const rr = i % 2 === 0 ? 6 : 3;
+        const sx = dx + Math.cos(a) * rr;
+        const sy = dy + Math.sin(a) * rr;
+        if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+      }
+      ctx.closePath(); ctx.fill();
+    }
+
+    // Marcador de origem (QR)
+    if (UI.currentScanQrId) {
+      const qrc = QR_CHECKPOINTS.find(q => q.id === UI.currentScanQrId);
+      if (qrc) {
+        const qx = ox + qrc.x * scale;
+        const qy = oz + qrc.z * scale;
+        ctx.fillStyle = '#fbbf24';
+        ctx.strokeStyle = '#0c1730';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(qx, qy, 4, 0, Math.PI*2);
+        ctx.fill(); ctx.stroke();
+      }
+    }
+
+    // Rota (linha tracejada)
     const routeColor = this.route.accessible ? '#f08a4b' : '#fbbf24';
     ctx.strokeStyle = routeColor;
     ctx.lineWidth = 3;
@@ -3264,8 +3795,8 @@ const Nav = {
     });
     ctx.stroke();
     ctx.setLineDash([]);
-    // Posição atual
-    const cur = this.curve.getPoint(this.progress);
+
+    // Posição atual (dot pulsante)
     const px = ox + cur.x * scale, py = oz + cur.z * scale;
     const pulse = 1 + 0.3 * Math.sin(performance.now() * 0.005);
     ctx.fillStyle = routeColor;
@@ -3273,6 +3804,30 @@ const Nav = {
     ctx.strokeStyle = routeColor + '88';
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(px, py, 10 * pulse, 0, Math.PI*2); ctx.stroke();
+
+    // Indicador da direção (cone simples apontando pro próximo ponto)
+    const ahead = this.curve.getPoint(Math.min(1, this.progress + 0.02));
+    const dx2 = ahead.x - cur.x, dz2 = ahead.z - cur.z;
+    const ang = Math.atan2(dz2, dx2);
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(ang);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(8, 0);
+    ctx.lineTo(2, -3);
+    ctx.lineTo(2, 3);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  },
+
+  // Retorna o id da sala que contém o ponto, ou null
+  areaRoomId(x, z) {
+    for (const r of ROOMS) {
+      if (r.external) continue;
+      if (x >= r.x && x <= r.x + r.w && z >= r.z && z <= r.z + r.d) return r.id;
+    }
+    return null;
   },
 
   triggerArrival() {
@@ -3287,6 +3842,7 @@ const Nav = {
     document.getElementById('arrivalTime').textContent = Nav.fmtTime(elapsed);
     document.getElementById('arrivalOverlay').classList.add('open');
     Confetti.start();
+    Sound.chime();
     if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch(e){} }
     // 📊 Telemetria — registra no Supabase (sem bloquear a UI)
     UI.logNavigation(UI.currentScanQrId, dest.id, this.route.accessible, this.route.distance, elapsedMs);
@@ -3346,12 +3902,21 @@ const Tour = {
     document.getElementById('tourDesc').textContent = next.desc;
     document.getElementById('tourProgress').style.width = ((this.curIdx + 1) / (this.waypoints.length - 1) * 100) + '%';
     const startV = new THREE.Vector3(cur.x, cur.y, cur.z);
-    const endV = new THREE.Vector3(next.x, next.y, next.z);
-    const mid = startV.clone().lerp(endV, 0.5);
-    this.curve = new THREE.CatmullRomCurve3([startV, mid, endV], false);
+    const endV   = new THREE.Vector3(next.x, next.y, next.z);
+    // Constrói path: start → via[] (se houver) → end
+    const points = [startV];
+    if (next.via && next.via.length) {
+      next.via.forEach(p => points.push(new THREE.Vector3(p[0], p[1], p[2])));
+    } else {
+      // Sem via: usa midpoint pra curva suave
+      points.push(startV.clone().lerp(endV, 0.5));
+    }
+    points.push(endV);
+    this.curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.15);
     this.segProgress = 0;
-    const d = startV.distanceTo(endV);
-    this.segDuration = Math.max(2.5, Math.min(6, d / 4));
+    // Duração proporcional ao comprimento real do trajeto
+    const totalLen = this.curve.getLength();
+    this.segDuration = Math.max(3, Math.min(9, totalLen / 4));
   },
 
   update(dt) {
@@ -3537,6 +4102,215 @@ const Kanban = {
 // ===================================================================
 // UI - bindings, events, etc
 // ===================================================================
+// ===================================================================
+// SOUND - Chime de chegada via Web Audio API (zero arquivos de áudio)
+// ===================================================================
+const Sound = {
+  ctx: null, enabled: true,
+
+  ensureCtx() {
+    if (!this.ctx) {
+      try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { return null; }
+    }
+    return this.ctx;
+  },
+
+  // Acorde alegre de 3 notas (Dó-Mi-Sol) — ~600ms
+  chime() {
+    if (!this.enabled) return;
+    const ctx = this.ensureCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    [523.25, 659.25, 783.99].forEach((freq, i) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const start = now + i * 0.10;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.55);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.6);
+    });
+  }
+};
+
+// ===================================================================
+// STORE - Persistência de preferências no localStorage
+// ===================================================================
+const Store = {
+  KEY: 'uniube_viacentro_v5',
+
+  load() {
+    try { return JSON.parse(localStorage.getItem(this.KEY)) || {}; }
+    catch (e) { return {}; }
+  },
+
+  save(patch) {
+    try {
+      const cur = this.load();
+      localStorage.setItem(this.KEY, JSON.stringify({ ...cur, ...patch }));
+    } catch (e) { /* quota cheia ou modo privado */ }
+  }
+};
+
+// ===================================================================
+// SHARE - Compartilhamento de rota (Web Share API + fallback clipboard)
+// ===================================================================
+const Share = {
+  async route() {
+    const from = UI.currentScanQrId;
+    const to   = document.getElementById('destSelect').value;
+    if (!from || !to) { UI.toast('Calcule uma rota antes de compartilhar'); return; }
+    const pcd = UI.pcdPanel ? '&pcd=1' : '';
+    const url = `${location.origin}${location.pathname}?from=${from}&to=${to}${pcd}`;
+    const txt = i18n.t('share_text');
+    if (navigator.share) {
+      try { await navigator.share({ title: 'UNIUBE Via Centro', text: txt, url }); return; }
+      catch (e) { /* usuário cancelou — cai pro clipboard */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      UI.toast(i18n.t('share_copied'));
+    } catch (e) {
+      UI.toast(url);
+    }
+  }
+};
+
+// ===================================================================
+// I18N - Português / Inglês
+// ===================================================================
+const i18n = {
+  lang: 'pt',
+  dict: {
+    pt: {
+      ready:          'Pronto · Clique num QR ou abra o menu',
+      pick_dest:      '⚠ Escolha um destino',
+      pick_qr:        '⚠ Escolha um checkpoint primeiro',
+      no_route:       '⚠ Não foi possível calcular rota',
+      route_calc:     'Rota calculada · ',
+      navigating:     'Navegando para ',
+      arrived:        '🎉 Chegou ao destino!',
+      checkpoint:     '📱 Checkpoint: ',
+      qr_invalid:     '⚠ QR-Code não encontrado',
+      share_text:     'Veja a rota no GPS Interno 3D da UNIUBE Via Centro',
+      share_copied:   '🔗 Link copiado para a área de transferência',
+      elev_arrived:   'Elevador no ',
+      elev_going:     'Elevador indo para o '
+    },
+    en: {
+      ready:          'Ready · Tap a QR or open the menu',
+      pick_dest:      '⚠ Choose a destination',
+      pick_qr:        '⚠ Choose a checkpoint first',
+      no_route:       '⚠ Could not calculate route',
+      route_calc:     'Route calculated · ',
+      navigating:     'Navigating to ',
+      arrived:        '🎉 You have arrived!',
+      checkpoint:     '📱 Checkpoint: ',
+      qr_invalid:     '⚠ QR-Code not found',
+      share_text:     'Check this route on UNIUBE Via Centro 3D Indoor GPS',
+      share_copied:   '🔗 Link copied to clipboard',
+      elev_arrived:   'Elevator at floor ',
+      elev_going:     'Elevator going to floor '
+    }
+  },
+
+  t(key) { return (this.dict[this.lang] && this.dict[this.lang][key]) || key; },
+
+  toggle() {
+    this.lang = this.lang === 'pt' ? 'en' : 'pt';
+    document.documentElement.lang = this.lang === 'pt' ? 'pt-BR' : 'en';
+    Store.save({ lang: this.lang });
+    UI.setStatus(this.t('ready'));
+    const btn = document.getElementById('miLang');
+    if (btn) btn.textContent = (this.lang === 'pt' ? '🇧🇷 Português' : '🇺🇸 English') + ' · trocar';
+  }
+};
+
+// ===================================================================
+// CHATBOT - Modal de chat conectado à API Claude (via Edge Function /api/chatbot)
+// ===================================================================
+const Chatbot = {
+  open: false,
+  messages: [], // {role, content}
+
+  init() {
+    document.getElementById('btnChatbot').onclick = () => this.toggle();
+    document.getElementById('btnCloseChat').onclick = () => this.toggle(false);
+    document.getElementById('btnSendChat').onclick = () => this.send();
+    document.getElementById('chatInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); }
+    });
+    // Sugestões clicáveis
+    document.querySelectorAll('.chat-suggest').forEach(s => {
+      s.onclick = () => {
+        document.getElementById('chatInput').value = s.dataset.q;
+        this.send();
+      };
+    });
+  },
+
+  toggle(force) {
+    this.open = (force !== undefined) ? force : !this.open;
+    document.getElementById('chatModal').classList.toggle('open', this.open);
+    if (this.open) setTimeout(() => document.getElementById('chatInput').focus(), 100);
+  },
+
+  addMsg(role, content) {
+    this.messages.push({ role, content });
+    const log = document.getElementById('chatLog');
+    const el  = document.createElement('div');
+    el.className = 'chat-msg ' + role;
+    el.innerHTML = `<div class="chat-bubble">${this.escapeHtml(content)}</div>`;
+    log.appendChild(el);
+    log.scrollTop = log.scrollHeight;
+  },
+
+  escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  },
+
+  async send() {
+    const input = document.getElementById('chatInput');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    this.addMsg('user', q);
+    // Indicador de "digitando"
+    const log = document.getElementById('chatLog');
+    const typing = document.createElement('div');
+    typing.className = 'chat-msg assistant typing';
+    typing.innerHTML = '<div class="chat-bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+    log.appendChild(typing);
+    log.scrollTop = log.scrollHeight;
+    try {
+      const r = await fetch('/api/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: this.messages.slice(-10),
+          mode: UI.pcdGlobal ? 'acessibilidade' : 'cicerone',
+          context: { currentQr: UI.currentScanQrId || null }
+        })
+      });
+      typing.remove();
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      this.addMsg('assistant', data.reply || '(resposta vazia)');
+    } catch (e) {
+      typing.remove();
+      this.addMsg('assistant',
+        i18n.lang === 'pt'
+          ? '⚠ Chatbot indisponível. Configure a Edge Function /api/chatbot na Vercel com ANTHROPIC_API_KEY.'
+          : '⚠ Chatbot unavailable. Configure the /api/chatbot Edge Function on Vercel with ANTHROPIC_API_KEY.');
+    }
+  }
+};
+
 const UI = {
   pcdGlobal: false,
   pcdPanel: false,
@@ -3567,6 +4341,20 @@ const UI = {
     });
 
     Kanban.init();
+    Chatbot.init();
+
+    // 💾 Carrega preferências persistidas
+    const prefs = Store.load();
+    if (prefs.lang === 'en') i18n.toggle();
+    if (prefs.pcd) { this.toggleSetting('pcd'); }
+    if (prefs.reduceMotion) { this.toggleSetting('reduceMotion'); }
+    if (prefs.contrast) { this.toggleSetting('contrast'); }
+    if (prefs.sound === false) {
+      Sound.enabled = false;
+      const btnS = document.getElementById('toggleSound');
+      if (btnS) btnS.classList.remove('on');
+    }
+    if (prefs.lastQr) this.currentScanQrId = prefs.lastQr;
 
     // ===========================================================
     // 🚀 ESTRATÉGIA A · QR scan via URL (?from=qr_xxx&to=xxx&pcd=1)
@@ -3618,6 +4406,14 @@ const UI = {
     document.getElementById('btnDemoNext').onclick = () => Demo.next();
     document.getElementById('btnArrivalMap').onclick = () => this.dismissArrival(false);
     document.getElementById('btnArrivalNew').onclick = () => this.dismissArrival(true);
+
+    // 🆕 Novos bindings (Share · Sound · Lang)
+    const btnShare = document.getElementById('btnShareRoute');
+    if (btnShare) btnShare.onclick = () => this.shareRoute();
+    const btnSound = document.getElementById('toggleSound');
+    if (btnSound) btnSound.onclick = () => this.toggleSound();
+    const btnLang = document.getElementById('miLang');
+    if (btnLang) btnLang.onclick = () => i18n.toggle();
 
     // Theme toggle (se existir)
     const btnTheme = document.getElementById('btnTheme');
@@ -3701,6 +4497,7 @@ const UI = {
     const qr = await this.resolveCheckpoint(qrId);
     if (!qr) { this.setStatus('⚠ QR-Code não encontrado'); return; }
     this.currentScanQrId = qrId;
+    Store.save({ lastQr: qrId });
     document.getElementById('gpsLocationName').textContent = qr.name;
     document.getElementById('gpsToken').textContent = 'uniube.app/gps?from=' + qrId;
     document.getElementById('destSelect').value = '';
@@ -3752,6 +4549,7 @@ const UI = {
     } else if (name === 'contrast') {
       document.body.classList.toggle('high-contrast', on);
     }
+    Store.save({ [name]: on });
   },
 
   setSpeed(v) {
@@ -3834,6 +4632,36 @@ const UI = {
     else if (mode === 'nav') pill.classList.add('nav');
   },
 
+  toast(message, ms) {
+    ms = ms || 2400;
+    let t = document.getElementById('uiToast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'uiToast';
+      t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(12,23,48,0.96);color:#f4f6fb;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--accent);box-shadow:0 8px 32px rgba(0,0,0,0.5);opacity:0;transition:opacity .25s,transform .25s;z-index:9999;pointer-events:none;max-width:90vw;text-align:center;';
+      document.body.appendChild(t);
+    }
+    t.textContent = message;
+    requestAnimationFrame(() => {
+      t.style.opacity = '1';
+      t.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transform = 'translateX(-50%) translateY(20px)';
+    }, ms);
+  },
+
+  toggleSound() {
+    Sound.enabled = !Sound.enabled;
+    document.getElementById('toggleSound').classList.toggle('on', Sound.enabled);
+    Store.save({ sound: Sound.enabled });
+    if (Sound.enabled) Sound.chime();
+  },
+
+  shareRoute() { Share.route(); },
+
   handleKey(e) {
     if (e.target.matches('input, select, textarea')) return;
     const k = e.key;
@@ -3891,8 +4719,23 @@ function init() {
 if (!window.WebGLRenderingContext) {
   document.getElementById('loader').innerHTML = '<div style="text-align:center; padding:20px; color:#f4f6fb;"><div style="font-size:48px;">⚠️</div><div>Seu navegador não suporta WebGL.</div></div>';
 } else {
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
+  // Aguarda Three.js (carregado por fallback chain) antes de inicializar
+  function waitThreeThenInit() {
+    if (window.THREE) {
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+      else init();
+    } else {
+      setTimeout(waitThreeThenInit, 100);
+    }
+  }
+  waitThreeThenInit();
+
+  // Registra Service Worker (PWA · offline · instalável)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW:', err));
+    });
+  }
 }
 </script>
 </body>
