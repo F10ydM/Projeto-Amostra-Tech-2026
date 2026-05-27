@@ -1709,8 +1709,8 @@ body.high-contrast .btn, body.high-contrast .menu-item, body.high-contrast .kanb
 // (Settings → API no painel do Supabase)
 // ===================================================================
 const SUPABASE_CONFIG = {
-  url:     'https://fzuszestpofcrtskzgvy.supabase.co',   // ← cole o "Project URL"
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6dXN6ZXN0cG9mY3J0c2t6Z3Z5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MTA5NjAsImV4cCI6MjA5NDk4Njk2MH0.vFd5qbDZ-OvgxHRleS_Wf2uI_ncy0hsJsz14D6_jfo4',                    // ← cole a "anon public key"
+  url:     'https://SEU-PROJETO.supabase.co',   // ← cole o "Project URL"
+  anonKey: 'eyJhbGciOiJI...',                    // ← cole a "anon public key"
   enabled: false                                  // ← mude pra `true` quando preencher
 };
 
@@ -2036,13 +2036,13 @@ const KANBAN_CARDS = {
 // ===================================================================
 const T = {
   scene: null, camera: null, renderer: null,
-  raycaster: null, mouse: new THREE.Vector2(),
+  raycaster: null, mouse: null,  // ← inicializado em T.init() (após THREE carregar)
   qrMeshes: [], rooms3D: {},
   elevator: null, escalators: [], doorsMeshes: [], grpLabels: null, grpCeil: null,
   routeLine: null,
   cameraMode: 'orbit',
   orbitTheta: Math.PI * 0.20, orbitPhi: Math.PI * 0.35, orbitDist: 95,
-  orbitTarget: new THREE.Vector3(28, 0, 18),
+  orbitTarget: null,  // ← inicializado em T.init()
   qrHighlight: false, labelsVisible: true, ceilVisible: false, doorsOpen: false,
   alarmMode: false, reduceMotion: false, navSpeed: 1.0,
   arrivalCelebrating: false, vitrineActive: false,
@@ -2050,6 +2050,10 @@ const T = {
   lastTime: 0, startTime: 0, emergencyLights: [], labelEls: [],
 
   init() {
+    // 🛠 Instancia objetos THREE somente agora — após CDN carregar
+    this.mouse = new THREE.Vector2();
+    this.orbitTarget = new THREE.Vector3(28, 0, 18);
+
     const canvas = document.getElementById('canvas3d');
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.Fog(0x142447, 110, 280);
@@ -4720,12 +4724,24 @@ if (!window.WebGLRenderingContext) {
   document.getElementById('loader').innerHTML = '<div style="text-align:center; padding:20px; color:#f4f6fb;"><div style="font-size:48px;">⚠️</div><div>Seu navegador não suporta WebGL.</div></div>';
 } else {
   // Aguarda Three.js (carregado por fallback chain) antes de inicializar
+  let _threeWaitTries = 0;
   function waitThreeThenInit() {
     if (window.THREE) {
+      console.log('✅ Three.js detectado em ' + (_threeWaitTries * 100) + 'ms');
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
       else init();
-    } else {
+    } else if (_threeWaitTries++ < 150) {  // ~15s de timeout total
       setTimeout(waitThreeThenInit, 100);
+    } else {
+      console.error('❌ Three.js não carregou em 15s. Bloqueio de CDN?');
+      const ldr = document.getElementById('loader');
+      if (ldr) ldr.innerHTML =
+        '<div style="text-align:center;padding:24px;color:#f4f6fb;">' +
+        '<div style="font-size:48px;margin-bottom:16px;">⚠️</div>' +
+        '<div style="font-size:18px;font-weight:600;">Não foi possível carregar a engine 3D</div>' +
+        '<div style="font-size:13px;color:#b0bcd6;margin-top:8px;max-width:340px;">' +
+        'Os CDNs do Three.js estão bloqueados. Verifique sua conexão ou desative bloqueadores de anúncio neste site.' +
+        '</div></div>';
     }
   }
   waitThreeThenInit();
