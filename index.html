@@ -2330,180 +2330,225 @@ const T = {
       grp.add(m);
     });
 
+
     // ============================================================
-    // FACHADA UNIUBE EM DESTAQUE — entrada principal monumentalizada
+    // FACHADA UNIUBE — fiel à foto real do campus Via Centro
     // ============================================================
-    // Painel cego da fachada (acima da entrada, faixa branca larga)
-    const facadeBg = new THREE.Mesh(
-      new THREE.PlaneGeometry(14, 1.6),
-      new THREE.MeshBasicMaterial({ color: 0xf6f4ee })
-    );
-    facadeBg.position.set(25, 3.6, -0.05);
-    facadeBg.rotation.y = Math.PI;
-    grp.add(facadeBg);
+    // Geometria de referência da foto:
+    // - Marquise frontal azul cobalto retangular com logo Uniube branco
+    // - Pergolado horizontal de ripas pretas acima/sobre a entrada
+    // - Colunas em concreto bege/creme nos lados
+    // - Porta envidraçada azul-esverdeada
+    // - Faixa azul cobalto principal da fachada (mais à esquerda na foto)
 
-    // Letreiro Uniube GIGANTE iluminado (efeito de néon azul)
-    const fc = document.createElement('canvas');
-    fc.width = 2048; fc.height = 512;
-    const fctx = fc.getContext('2d');
-    // gradient de fundo escuro pra contraste do brilho
-    const fgrad = fctx.createLinearGradient(0, 0, 0, 512);
-    fgrad.addColorStop(0, '#0a1838'); fgrad.addColorStop(1, '#1e3a8a');
-    fctx.fillStyle = fgrad; fctx.fillRect(0, 0, 2048, 512);
-    // halo branco atrás do texto
-    fctx.fillStyle = 'rgba(255,255,255,0.10)';
-    fctx.beginPath(); fctx.ellipse(1024, 256, 900, 180, 0, 0, Math.PI*2); fctx.fill();
-    // glow stroke
-    fctx.strokeStyle = 'rgba(140,180,255,0.55)';
-    fctx.lineWidth = 18;
-    fctx.font = 'bold 280px system-ui, -apple-system, sans-serif';
-    fctx.textAlign = 'center'; fctx.textBaseline = 'middle';
-    fctx.strokeText('Uniube', 1024, 260);
-    // texto principal branco
-    fctx.fillStyle = '#ffffff';
-    fctx.fillText('Uniube', 1024, 260);
-    // subtítulo dourado
-    fctx.fillStyle = '#fbbf24';
-    fctx.font = 'bold 56px system-ui, sans-serif';
-    fctx.fillText('· CAMPUS VIA CENTRO ·', 1024, 440);
-    const ftex = new THREE.CanvasTexture(fc);
-    const facadeSign = new THREE.Mesh(
-      new THREE.PlaneGeometry(18, 4.5),
-      new THREE.MeshBasicMaterial({ map: ftex, transparent: true })
+    // ----- 1. Fachada lateral esquerda (faixa azul cobalto principal) -----
+    // Cobre a parede sul de x=0 a x=22, criando o efeito da foto onde
+    // se vê toda a empena azul com o letreiro "Uniube · campus via centro"
+    const facadeMain = new THREE.Mesh(
+      new THREE.BoxGeometry(22, 2.4, 0.15),
+      new THREE.MeshBasicMaterial({ color: 0x1e3a8a })  // azul cobalto
     );
-    facadeSign.position.set(25, 5.5, -0.03);
-    facadeSign.rotation.y = Math.PI;
-    grp.add(facadeSign);
+    facadeMain.position.set(11, 2.0, -0.08);
+    grp.add(facadeMain);
 
-    // Glow emissivo atrás do letreiro (deixa "iluminado")
-    const facadeGlow = new THREE.Mesh(
-      new THREE.PlaneGeometry(20, 5.5),
-      new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.18 })
+    // Letreiro "Uniube · campus via centro" na fachada principal
+    const fmCanvas = document.createElement('canvas');
+    fmCanvas.width = 2048; fmCanvas.height = 256;
+    const fmCtx = fmCanvas.getContext('2d');
+    fmCtx.fillStyle = '#1e3a8a'; fmCtx.fillRect(0, 0, 2048, 256);
+    // Brasão (escudo branco com 4 estrelas e cruz)
+    drawUniubeShield(fmCtx, 220, 128, 90);
+    // Texto "Uniube"
+    fmCtx.fillStyle = '#ffffff';
+    fmCtx.font = 'bold 140px Inter, system-ui, sans-serif';
+    fmCtx.textAlign = 'left'; fmCtx.textBaseline = 'middle';
+    fmCtx.fillText('Uniube', 340, 110);
+    // Subtítulo "campus via centro"
+    fmCtx.font = '500 56px Inter, system-ui, sans-serif';
+    fmCtx.fillText('campus via centro', 340, 195);
+    const fmTex = new THREE.CanvasTexture(fmCanvas);
+    const facadeMainSign = new THREE.Mesh(
+      new THREE.PlaneGeometry(14, 1.75),
+      new THREE.MeshBasicMaterial({ map: fmTex, transparent: true })
     );
-    facadeGlow.position.set(25, 5.5, -0.08);
-    facadeGlow.rotation.y = Math.PI;
-    grp.add(facadeGlow);
+    facadeMainSign.position.set(10, 2.0, -0.155);
+    facadeMainSign.rotation.y = Math.PI;
+    grp.add(facadeMainSign);
 
-    // OUTDOOR luminoso suspenso (acima do prédio · totem da fachada)
-    const outdoor = new THREE.Mesh(
-      new THREE.BoxGeometry(8, 1.8, 0.4),
-      new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
+    // ----- 2. Bloco da MARQUISE da entrada (à direita, próximo ao usuário) -----
+    // Volume azul cobalto retangular sobre a porta (como na foto)
+    const marqueeBlock = new THREE.Mesh(
+      new THREE.BoxGeometry(7.2, 1.8, 0.45),
+      new THREE.MeshBasicMaterial({ color: 0x1e3a8a })
     );
-    outdoor.position.set(25, 9.0, -0.4);
-    grp.add(outdoor);
-    // Suportes do outdoor
-    [22, 28].forEach(sx => {
-      const support = new THREE.Mesh(
-        new THREE.BoxGeometry(0.18, 1.5, 0.18),
+    marqueeBlock.position.set(25, 3.0, -1.2);
+    grp.add(marqueeBlock);
+
+    // Letreiro do bloco da marquise: brasão + "Uniube"
+    const mqCanvas = document.createElement('canvas');
+    mqCanvas.width = 1536; mqCanvas.height = 384;
+    const mqCtx = mqCanvas.getContext('2d');
+    mqCtx.fillStyle = '#1e3a8a'; mqCtx.fillRect(0, 0, 1536, 384);
+    drawUniubeShield(mqCtx, 250, 192, 130);
+    mqCtx.fillStyle = '#ffffff';
+    mqCtx.font = 'bold 200px Inter, system-ui, sans-serif';
+    mqCtx.textAlign = 'left'; mqCtx.textBaseline = 'middle';
+    mqCtx.fillText('Uniube', 400, 192);
+    const mqTex = new THREE.CanvasTexture(mqCanvas);
+    const marqueeSign = new THREE.Mesh(
+      new THREE.PlaneGeometry(6.5, 1.6),
+      new THREE.MeshBasicMaterial({ map: mqTex, transparent: true })
+    );
+    marqueeSign.position.set(25, 3.0, -1.425);
+    marqueeSign.rotation.y = Math.PI;
+    grp.add(marqueeSign);
+
+    // ----- 3. Pergolado horizontal de ripas pretas (brise sobre a entrada) -----
+    // 8 ripas horizontais finas espaçadas, criando padrão visual da foto
+    const pergolaY = 4.1;
+    for (let i = 0; i < 8; i++) {
+      const ripa = new THREE.Mesh(
+        new THREE.BoxGeometry(8.5, 0.10, 0.10),
         new THREE.MeshBasicMaterial({ color: 0x1a1a22 })
       );
-      support.position.set(sx, 8.2, -0.3);
-      grp.add(support);
-    });
-    // Letreiro do outdoor (face frontal)
-    const oc = document.createElement('canvas');
-    oc.width = 2048; oc.height = 512;
-    const octx = oc.getContext('2d');
-    octx.fillStyle = '#fbbf24'; octx.fillRect(0, 0, 2048, 512);
-    octx.fillStyle = '#1e3a8a';
-    octx.font = 'bold 280px system-ui, sans-serif';
-    octx.textAlign = 'center'; octx.textBaseline = 'middle';
-    octx.fillText('UNIUBE', 1024, 230);
-    octx.font = 'bold 90px system-ui, sans-serif';
-    octx.fillText('VIA CENTRO · UBERLÂNDIA', 1024, 400);
-    const otex = new THREE.CanvasTexture(oc);
-    const outdoorFront = new THREE.Mesh(
-      new THREE.PlaneGeometry(7.8, 1.6),
-      new THREE.MeshBasicMaterial({ map: otex })
-    );
-    outdoorFront.position.set(25, 9.0, -0.595);
-    outdoorFront.rotation.y = Math.PI;
-    grp.add(outdoorFront);
-
-    // Caixa volumétrica atrás do letreiro (dá relevo de fachada esculpida)
-    this.box(grp, 16, 4.5, 0.4, 0x142447, 17, 3.3, -0.45);
-
-    // Marquise da entrada principal (volume escurecido, mais grosso e largo)
-    this.box(grp, 8, 0.45, 3.4, 0x0c1730, 21, 2.55, -3.4);
-    // 4 colunas metálicas grossas suportando a marquise
-    [21.6, 23.5, 26.5, 28.4].forEach(cx => {
-      this.box(grp, 0.28, 2.55, 0.28, 0x2a2f38, cx - 0.14, 0, -3.1);
-    });
-
-    // Logo Uniube na marquise (face inferior) — placa mais ousada
-    const lc = document.createElement('canvas');
-    lc.width = 1024; lc.height = 256;
-    const lctx = lc.getContext('2d');
-    lctx.fillStyle = '#1e3a8a'; lctx.fillRect(0, 0, 1024, 256);
-    // moldura dourada
-    lctx.strokeStyle = '#fbbf24';
-    lctx.lineWidth = 12;
-    lctx.strokeRect(20, 20, 984, 216);
-    lctx.fillStyle = '#ffffff';
-    lctx.font = 'bold 150px system-ui';
-    lctx.textAlign = 'center'; lctx.textBaseline = 'middle';
-    lctx.fillText('Uniube', 512, 138);
-    const ltex = new THREE.CanvasTexture(lc);
-    const logo = new THREE.Mesh(
-      new THREE.PlaneGeometry(6, 1.4),
-      new THREE.MeshBasicMaterial({ map: ltex })
-    );
-    logo.position.set(25, 2.62, -1.7);
-    logo.rotation.y = Math.PI;
-    logo.rotation.x = -Math.PI/2; // virado pra baixo (visto de quem entra)
-    grp.add(logo);
-
-    // 2 SPOTLIGHTS dourados apontados pra fachada (visíveis como sferas + cones)
-    [21, 29].forEach(sx => {
-      const housing = new THREE.Mesh(
-        new THREE.BoxGeometry(0.4, 0.25, 0.4),
+      ripa.position.set(25, pergolaY + i * 0.22, -1.6);
+      grp.add(ripa);
+    }
+    // 2 perfis metálicos pretos verticais conectando o pergolado à marquise
+    [21.2, 28.8].forEach(px => {
+      const perfil = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 2.5, 0.12),
         new THREE.MeshBasicMaterial({ color: 0x1a1a22 })
       );
-      housing.position.set(sx, 2.4, -3.4);
-      grp.add(housing);
-      // Lâmpada emissiva (efeito de luz acesa)
-      const bulb = new THREE.Mesh(
-        new THREE.SphereGeometry(0.16, 12, 8),
-        new THREE.MeshBasicMaterial({ color: 0xfff4d6 })
-      );
-      bulb.position.set(sx, 2.25, -3.15);
-      grp.add(bulb);
-      // Cone de luz amarelado (feixe)
-      const cone = new THREE.Mesh(
-        new THREE.ConeGeometry(1.4, 3.5, 16, 1, true),
-        new THREE.MeshBasicMaterial({ color: 0xffd966, transparent: true, opacity: 0.12, side: THREE.DoubleSide })
-      );
-      cone.position.set(sx, 3.6, -1.6);
-      cone.rotation.x = -Math.PI/2.6;
-      grp.add(cone);
+      perfil.position.set(px, pergolaY + 0.7, -1.6);
+      grp.add(perfil);
     });
 
-    // Bandeiras laterais com escudo Uniube (efeito instituicional)
-    [16, 34].forEach(bx => {
-      const bandeira = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.6, 4.2),
-        new THREE.MeshBasicMaterial({ color: 0x1e3a8a })
+    // ----- 4. Colunas LATERAIS em concreto bege/claro (como na foto) -----
+    // Coluna grossa à esquerda e à direita da entrada principal
+    const concreteMat = new THREE.MeshBasicMaterial({ color: 0xc8b896 });
+    [20.5, 29.5].forEach(cx => {
+      const coluna = new THREE.Mesh(
+        new THREE.BoxGeometry(1.2, 4.0, 1.2),
+        concreteMat
       );
-      bandeira.position.set(bx, 2.6, -0.03);
-      bandeira.rotation.y = Math.PI;
-      grp.add(bandeira);
-      // estrela amarela
-      const star = new THREE.Mesh(
-        new THREE.CircleGeometry(0.4, 5),
-        new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
-      );
-      star.position.set(bx, 3.2, -0.025);
-      star.rotation.y = Math.PI;
-      grp.add(star);
+      coluna.position.set(cx, 2.0, -1.6);
+      grp.add(coluna);
     });
 
-    // Tapete UNIUBE preto na entrada (dentro do prédio)
+    // ----- 5. Porta de vidro envidraçada azul-esverdeada -----
+    const glassDoor = new THREE.Mesh(
+      new THREE.BoxGeometry(5.2, 2.4, 0.08),
+      new THREE.MeshBasicMaterial({
+        color: 0x6db5b0,
+        transparent: true,
+        opacity: 0.55
+      })
+    );
+    glassDoor.position.set(25, 1.2, -0.04);
+    grp.add(glassDoor);
+
+    // Moldura escura ao redor da porta
+    const doorFrameMat = new THREE.MeshBasicMaterial({ color: 0x1a1a22 });
+    // batentes verticais
+    [22.3, 27.7].forEach(fx => {
+      const batente = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, 2.4, 0.12),
+        doorFrameMat
+      );
+      batente.position.set(fx, 1.2, -0.02);
+      grp.add(batente);
+    });
+    // travessa superior da porta
+    const travessa = new THREE.Mesh(
+      new THREE.BoxGeometry(5.4, 0.12, 0.12),
+      doorFrameMat
+    );
+    travessa.position.set(25, 2.42, -0.02);
+    grp.add(travessa);
+    // divisória vertical no meio da porta (duas folhas)
+    const meio = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 2.4, 0.04),
+      doorFrameMat
+    );
+    meio.position.set(25, 1.2, -0.02);
+    grp.add(meio);
+
+    // ----- 6. Refletor de poste (como na foto · poste branco com luminária) -----
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.10, 6, 8),
+      new THREE.MeshBasicMaterial({ color: 0xeeeeee })
+    );
+    post.position.set(15, 3.0, -5);
+    grp.add(post);
+    const refletor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 0.18, 0.3),
+      new THREE.MeshBasicMaterial({ color: 0x1a1a22 })
+    );
+    refletor.position.set(15, 5.8, -5);
+    grp.add(refletor);
+
+    // ----- 7. Tapete UNIUBE preto na entrada (dentro do prédio) -----
     const tapete = new THREE.Mesh(
       new THREE.BoxGeometry(5, 0.02, 2),
       new THREE.MeshBasicMaterial({ color: 0x0a0a0a })
     );
     tapete.position.set(25, 0.05, 1.5);
     grp.add(tapete);
+
+    // ----- Helper: brasão Uniube (escudo branco + 4 estrelas + linha vertical) -----
+    function drawUniubeShield(ctx, cx, cy, size) {
+      const w = size, h = size * 1.15;
+      ctx.save();
+      ctx.translate(cx, cy);
+      // Escudo (heráldico)
+      ctx.beginPath();
+      ctx.moveTo(-w/2, -h/2);
+      ctx.lineTo(w/2, -h/2);
+      ctx.lineTo(w/2, h/4);
+      ctx.quadraticCurveTo(w/2, h/2 + 5, 0, h/2);
+      ctx.quadraticCurveTo(-w/2, h/2 + 5, -w/2, h/4);
+      ctx.closePath();
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      // Banda vertical azul ao centro
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(-w*0.10, -h/2, w*0.20, h);
+      // 4 estrelas pequenas azuis (2 em cada lado da banda)
+      ctx.fillStyle = '#1e3a8a';
+      const starPositions = [
+        [-w*0.28, -h*0.20], [-w*0.28, h*0.05],
+        [ w*0.28, -h*0.20], [ w*0.28, h*0.05]
+      ];
+      starPositions.forEach(([sx, sy]) => {
+        // estrela 5 pontas pequena
+        ctx.beginPath();
+        const r1 = w*0.07, r2 = w*0.03;
+        for (let k = 0; k < 10; k++) {
+          const a = (k / 10) * Math.PI * 2 - Math.PI/2;
+          const rr = k % 2 === 0 ? r1 : r2;
+          const px = sx + Math.cos(a) * rr;
+          const py = sy + Math.sin(a) * rr;
+          if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath(); ctx.fill();
+      });
+      // Pequenas estrelas brancas dentro da banda azul
+      ctx.fillStyle = '#ffffff';
+      [-h*0.18, 0, h*0.18].forEach(sy => {
+        ctx.beginPath();
+        const r1 = w*0.04, r2 = w*0.02;
+        for (let k = 0; k < 10; k++) {
+          const a = (k / 10) * Math.PI * 2 - Math.PI/2;
+          const rr = k % 2 === 0 ? r1 : r2;
+          const px = Math.cos(a) * rr;
+          const py = sy + Math.sin(a) * rr;
+          if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath(); ctx.fill();
+      });
+      ctx.restore();
+    }
 
     // PAREDES INTERNAS principais
     const IH = 2.7;
@@ -3346,6 +3391,13 @@ const T = {
     this.camera.lookAt(this.orbitTarget);
   },
 
+  // Ajusta o FOV da câmera (corredores parecem MUITO maiores com FOV maior)
+  setFov(fov) {
+    if (!this.camera) return;
+    this.camera.fov = fov;
+    this.camera.updateProjectionMatrix();
+  },
+
   setView(name) {
     this.cameraMode = 'orbit';
     if (name === 'iso')   this.animateCameraOrbit(Math.PI*0.20, Math.PI*0.35, 95, new THREE.Vector3(28, 0, 18));
@@ -3591,7 +3643,8 @@ const Nav = {
   prepare(route, destRoomId) {
     this.route = route;
     this.destRoom = ROOMS.find(r => r.id === destRoomId);
-    const pts = route.points.map(p => new THREE.Vector3(p.x, (p.y||0) + 1.65, p.z));
+    // Câmera a 2.05m de altura — sensação de mais espaço nos corredores
+    const pts = route.points.map(p => new THREE.Vector3(p.x, (p.y||0) + 2.05, p.z));
     if (pts.length < 2) return;
     this.curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.25);
     this.totalLength = this.curve.getLength();
@@ -3604,6 +3657,7 @@ const Nav = {
     this.progress = 0;
     this.startMs = performance.now();
     T.cameraMode = 'follow';
+    T.setFov(78);  // FOV largo → corredor parece muito mais espaçoso
     document.body.classList.add('nav-active');
     document.getElementById('navTopbarActions').style.display = 'flex';
     document.getElementById('navDestName').textContent = this.destRoom.name + (this.destRoom.num ? ' · ' + this.destRoom.num : '');
@@ -3863,6 +3917,7 @@ const Nav = {
     this.active = false;
     T.vitrineActive = false;
     T.arrivalCelebrating = false;
+    T.setFov(55);  // restaura FOV normal
     document.body.classList.remove('nav-active');
     document.getElementById('navTopbarActions').style.display = 'none';
     document.getElementById('canvas2d-minimap').style.display = 'none';
@@ -3891,6 +3946,7 @@ const Tour = {
     this.segProgress = 0;
     this.waypoints = CAMPUS_TOUR;
     T.cameraMode = 'follow';
+    T.setFov(78);  // FOV largo no tour
     document.body.classList.add('nav-active');
     document.getElementById('navTopbarActions').style.display = 'flex';
     document.getElementById('tourHud').classList.add('visible');
@@ -3905,12 +3961,14 @@ const Tour = {
     document.getElementById('tourName').textContent = next.name;
     document.getElementById('tourDesc').textContent = next.desc;
     document.getElementById('tourProgress').style.width = ((this.curIdx + 1) / (this.waypoints.length - 1) * 100) + '%';
-    const startV = new THREE.Vector3(cur.x, cur.y, cur.z);
-    const endV   = new THREE.Vector3(next.x, next.y, next.z);
+    // Altura levemente elevada (+0.4m) → câmera de "drone baixo" · corredor parece bem mais espaçoso
+    const HEIGHT_BOOST = 0.4;
+    const startV = new THREE.Vector3(cur.x, cur.y + HEIGHT_BOOST, cur.z);
+    const endV   = new THREE.Vector3(next.x, next.y + HEIGHT_BOOST, next.z);
     // Constrói path: start → via[] (se houver) → end
     const points = [startV];
     if (next.via && next.via.length) {
-      next.via.forEach(p => points.push(new THREE.Vector3(p[0], p[1], p[2])));
+      next.via.forEach(p => points.push(new THREE.Vector3(p[0], p[1] + HEIGHT_BOOST, p[2])));
     } else {
       // Sem via: usa midpoint pra curva suave
       points.push(startV.clone().lerp(endV, 0.5));
@@ -3950,6 +4008,7 @@ const Tour = {
 
   end() {
     this.active = false;
+    T.setFov(55);  // restaura FOV normal
     document.body.classList.remove('nav-active');
     document.getElementById('navTopbarActions').style.display = 'none';
     document.getElementById('tourHud').classList.remove('visible');
