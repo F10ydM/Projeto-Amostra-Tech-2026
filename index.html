@@ -1,0 +1,3808 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0c1730">
+<meta name="description" content="UNIUBE Via Centro · Trabalho Integrador Amostra Tech 2026 · Modelo 3D realista com navegação indoor por QR Code">
+<title>UNIUBE Via Centro · 3D Navegável · v5</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --z-canvas: 1;
+  --z-watermark: 10;
+  --z-status: 20;
+  --z-panel: 30;
+  --z-topbar: 100;
+  --z-menu: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+
+  --bg-0: #050a18;
+  --bg-1: #0c1730;
+  --bg-2: #142447;
+  --bg-3: #1d3160;
+  --text: #f4f6fb;
+  --text-dim: #b0bcd6;
+  --text-faint: #7a86a3;
+  --primary: #1e3a8a;
+  --primary-light: #3457c9;
+  --accent: #e5a93b;
+  --accent-2: #f0b860;
+  --danger: #d64550;
+  --success: #4caf6e;
+  --canvas-bg: #08122a;
+  --gps-line: #e5a93b;
+  --gps-line-access: #f08a4b;
+  --border-subtle: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.16);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.5);
+}
+
+[data-theme="light"] {
+  --bg-0: #f3f5fa;
+  --bg-1: #ffffff;
+  --bg-2: #e9eef8;
+  --bg-3: #dde4f2;
+  --text: #0c1730;
+  --text-dim: #4a5777;
+  --text-faint: #8a96b3;
+  --primary: #1e3a8a;
+  --primary-light: #2b4cb0;
+  --accent: #b8842a;
+  --accent-2: #d4a04a;
+  --danger: #b3343e;
+  --success: #2f8b4f;
+  --canvas-bg: #e6ecf7;
+  --gps-line: #b8842a;
+  --gps-line-access: #c96b30;
+  --border-subtle: rgba(12,23,48,0.08);
+  --border-strong: rgba(12,23,48,0.16);
+  --shadow-md: 0 8px 24px rgba(12,23,48,0.12);
+  --shadow-lg: 0 16px 48px rgba(12,23,48,0.18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow: hidden; }
+html { height: 100%; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-0);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior: none;
+}
+button, select, input { font-family: inherit; font-size: inherit; color: inherit; }
+
+#canvas3d {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: var(--z-canvas);
+  background: var(--canvas-bg);
+  display: block;
+}
+
+#canvas2d-minimap {
+  position: fixed;
+  z-index: var(--z-panel);
+  background: var(--bg-1);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  display: none;
+}
+
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-toast);
+  pointer-events: none;
+  display: none;
+}
+#confetti-canvas.active { display: block; }
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg-0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  transition: opacity 0.5s;
+}
+.loader.hidden { opacity: 0; pointer-events: none; }
+.loader-spinner {
+  width: 48px; height: 48px;
+  border: 3px solid var(--border-subtle);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-text { color: var(--text-dim); font-size: 14px; }
+
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  padding-top: env(safe-area-inset-top);
+  padding-left: max(14px, env(safe-area-inset-left));
+  padding-right: max(14px, env(safe-area-inset-right));
+  background: rgba(12,23,48,0.78);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom: 1px solid var(--border-subtle);
+  z-index: var(--z-topbar);
+  gap: 10px;
+  transition: height 0.3s ease;
+}
+[data-theme="light"] .topbar { background: rgba(255,255,255,0.85); }
+body.nav-active .topbar { height: 44px; }
+body.nav-active .topbar .hide-during-nav { display: none !important; }
+
+.hamburger {
+  width: 40px; height: 40px;
+  min-width: 40px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  transition: background 0.15s;
+}
+.hamburger:hover, .hamburger:active { background: var(--bg-2); }
+.hamburger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.brand-logo { width: 36px; height: 36px; flex-shrink: 0; }
+.brand-text { display: flex; flex-direction: column; min-width: 0; }
+.brand-title {
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 720px) { .brand-sub { display: none; } }
+.badge-demo {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0c1730;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.topbar-actions { display: flex; gap: 6px; align-items: center; }
+
+.btn {
+  background: var(--bg-2);
+  color: var(--text);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 12px;
+  min-height: 36px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.btn:hover, .btn:active { background: var(--bg-3); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-primary { background: var(--primary); border-color: var(--primary-light); color: #fff; }
+.btn-primary:hover, .btn-primary:active { background: var(--primary-light); }
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0c1730;
+  border-color: transparent;
+}
+.btn-accent:hover, .btn-accent:active { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-danger { background: var(--danger); color: #fff; border-color: transparent; }
+.btn-ghost { background: transparent; border-color: var(--border-subtle); }
+.btn-icon { width: 40px; min-width: 40px; height: 40px; padding: 0; justify-content: center; }
+@media (max-width: 720px) { .btn .btn-label-long { display: none; } }
+
+.status-pill {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-status);
+  background: rgba(12,23,48,0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-md);
+  max-width: calc(100vw - 32px);
+}
+[data-theme="light"] .status-pill { background: rgba(255,255,255,0.92); }
+.status-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse-dot 1.4s ease-in-out infinite; }
+.status-pill.alarm .dot { background: var(--danger); }
+.status-pill.nav .dot { background: var(--accent); }
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.7); }
+}
+body.nav-active .status-pill { display: none; }
+
+.menu-scrim {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: calc(var(--z-menu) - 1);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.menu-scrim.open { opacity: 1; pointer-events: auto; }
+
+.side-menu {
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  height: 100dvh;
+  width: 320px;
+  max-width: 85vw;
+  background: var(--bg-1);
+  border-right: 1px solid var(--border-strong);
+  z-index: var(--z-menu);
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  box-shadow: var(--shadow-lg);
+}
+.side-menu.open { transform: translateX(0); }
+
+.side-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+.side-menu-title { font-weight: 800; font-size: 16px; }
+.side-menu-close { width: 36px; height: 36px; background: transparent; border: none; color: var(--text); cursor: pointer; font-size: 22px; border-radius: 8px; }
+.side-menu-close:hover { background: var(--bg-2); }
+.side-menu-body { overflow-y: auto; flex: 1; padding: 8px 0 24px; }
+
+.menu-section { border-bottom: 1px solid var(--border-subtle); }
+.menu-section summary {
+  list-style: none;
+  padding: 14px 18px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+.menu-section summary::-webkit-details-marker { display: none; }
+.menu-section summary::after { content: "▾"; font-size: 10px; transition: transform 0.2s; }
+.menu-section[open] summary::after { transform: rotate(180deg); }
+.menu-section-content { padding: 4px 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  min-height: 44px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: left;
+  width: 100%;
+  transition: all 0.15s;
+}
+.menu-item:hover, .menu-item:active { background: var(--bg-2); border-color: var(--border-subtle); }
+.menu-item .kbd-hint {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background: var(--bg-3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text-dim);
+}
+.menu-item.cta { background: var(--primary); color: #fff; }
+.menu-item.cta:hover { background: var(--primary-light); }
+.menu-item.cta-accent { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0c1730; }
+.menu-item.danger { color: var(--danger); }
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 12px;
+}
+.toggle-row .label { flex: 1; }
+.toggle-row .hint { font-size: 11px; color: var(--text-dim); font-weight: 400; }
+.toggle {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  background: var(--bg-3);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  border: none;
+  padding: 0;
+}
+.toggle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px; height: 18px;
+  background: var(--text);
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle.on { background: var(--accent); }
+.toggle.on::after { transform: translateX(18px); background: #0c1730; }
+
+.slider-row { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.slider-row .label-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; }
+.slider-row .value { font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 12px; }
+.slider-row input[type=range] { width: 100%; accent-color: var(--accent); }
+
+.legend-row { display: flex; align-items: center; gap: 10px; padding: 6px 12px; font-size: 12px; }
+.legend-swatch { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; }
+
+.kbd {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: var(--bg-3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-dim);
+}
+
+.gps-panel {
+  position: fixed;
+  top: 0; right: 0;
+  width: 360px;
+  max-width: 95vw;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--bg-1);
+  border-left: 1px solid var(--border-strong);
+  z-index: var(--z-panel);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  box-shadow: var(--shadow-lg);
+}
+.gps-panel.open { transform: translateX(0); }
+body.nav-active .gps-panel { display: none; }
+
+@media (max-width: 600px) {
+  .gps-panel {
+    width: 100vw;
+    height: 80vh;
+    height: 80dvh;
+    top: auto;
+    bottom: 0;
+    border-left: none;
+    border-top: 1px solid var(--border-strong);
+    border-radius: 18px 18px 0 0;
+    transform: translateY(100%);
+  }
+  .gps-panel.open { transform: translateY(0); }
+}
+
+.gps-panel-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.location-info { flex: 1; min-width: 0; }
+.pre-title {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.gps-panel-header h2 {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+.token {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.gps-panel-body { overflow-y: auto; flex: 1; padding: 16px 20px 24px; }
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.field select {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  color: var(--text);
+  font-weight: 500;
+  font-size: 14px;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%23b0bcd6' d='M6 8L0 0h12z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+}
+
+.gps-route-summary {
+  background: var(--bg-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  display: none;
+}
+.gps-route-summary.visible { display: block; }
+.gps-route-summary .stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.gps-route-summary .stat .label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+.gps-route-summary .stat .value {
+  font-size: 18px;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+}
+.gps-route-summary .type {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.gps-directions { list-style: none; margin-top: 8px; }
+.gps-directions li {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  animation: slide-in 0.3s ease;
+}
+.gps-directions li .step-n {
+  width: 24px; height: 24px;
+  min-width: 24px;
+  background: var(--accent);
+  color: #0c1730;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.gps-actions { display: flex; gap: 8px; margin-top: 16px; }
+.gps-actions .btn { flex: 1; justify-content: center; padding: 12px; font-size: 14px; }
+
+.nav-hud-top {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: var(--z-topbar);
+  background: rgba(12,23,48,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--accent);
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  display: none;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 24px rgba(229,169,59,0.2);
+}
+body.nav-active .nav-hud-top { display: flex; }
+[data-theme="light"] .nav-hud-top { background: rgba(255,255,255,0.95); }
+
+.nav-hud-top .arrow {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--accent);
+  animation: pulse-arrow 1.2s ease-in-out infinite;
+}
+@keyframes pulse-arrow {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+.nav-hud-top .info { flex: 1; min-width: 0; }
+.nav-hud-top .maneuver { font-size: 16px; font-weight: 700; line-height: 1.2; }
+.nav-hud-top .distance { font-size: 13px; color: var(--text-dim); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+
+.nav-hud-bottom {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: var(--z-topbar);
+  background: rgba(12,23,48,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-strong);
+  padding: 14px 16px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+body.nav-active .nav-hud-bottom { display: flex; }
+[data-theme="light"] .nav-hud-bottom { background: rgba(255,255,255,0.95); }
+.nav-hud-bottom .summary { flex: 1; min-width: 0; }
+.nav-hud-bottom .destination {
+  font-weight: 800;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-hud-bottom .meta { font-size: 12px; color: var(--text-dim); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+.nav-hud-bottom .actions { display: flex; gap: 8px; }
+
+.tour-hud {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-topbar);
+  background: rgba(12,23,48,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--accent);
+  border-radius: 16px;
+  padding: 16px 20px;
+  max-width: calc(100vw - 32px);
+  width: 460px;
+  box-shadow: var(--shadow-lg);
+  display: none;
+}
+.tour-hud.visible { display: block; animation: pop-in 0.3s ease; }
+[data-theme="light"] .tour-hud { background: rgba(255,255,255,0.95); }
+.tour-hud .name {
+  font-weight: 800;
+  font-size: 16px;
+  margin-bottom: 4px;
+  color: var(--accent);
+}
+.tour-hud .desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 12px; }
+.tour-hud .progress { height: 4px; background: var(--bg-3); border-radius: 999px; overflow: hidden; }
+.tour-hud .progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: 999px;
+  transition: width 0.3s;
+}
+.tour-hud .actions { display: flex; gap: 8px; margin-top: 12px; }
+.tour-hud .actions .btn { flex: 1; justify-content: center; }
+@keyframes pop-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.demo-tooltip {
+  position: fixed;
+  z-index: var(--z-modal);
+  background: rgba(12,23,48,0.95);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--accent);
+  border-radius: 18px;
+  padding: 18px 22px;
+  max-width: 420px;
+  box-shadow: var(--shadow-lg);
+  display: none;
+}
+.demo-tooltip.visible { display: block; animation: pop-in 0.3s ease; }
+[data-theme="light"] .demo-tooltip { background: rgba(255,255,255,0.97); }
+.demo-tooltip .step-counter {
+  font-size: 10px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.demo-tooltip h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+.demo-tooltip p { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+.demo-tooltip .actions { display: flex; gap: 8px; margin-top: 14px; }
+.demo-tooltip .actions .btn { flex: 1; justify-content: center; }
+
+.arrival-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.arrival-overlay.open { display: flex; animation: fade-in 0.4s ease; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.arrival-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.85) 100%);
+  pointer-events: none;
+}
+.arrival-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(12,23,48,0.95), rgba(30,58,138,0.95));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--accent);
+  border-radius: 22px;
+  padding: 32px 28px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 80px rgba(229,169,59,0.3);
+}
+[data-theme="light"] .arrival-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(232,238,250,0.98));
+  color: #0c1730;
+}
+.arrival-icon { font-size: 56px; margin-bottom: 8px; }
+.arrival-card h1 {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.arrival-card .destination-name { font-size: 18px; color: var(--text-dim); margin-bottom: 22px; }
+.arrival-card .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
+.arrival-card .stat-block { background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); padding: 14px; border-radius: 12px; }
+.arrival-card .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+.arrival-card .stat-value { font-size: 22px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+.arrival-card .actions { display: flex; gap: 8px; }
+.arrival-card .actions .btn { flex: 1; justify-content: center; padding: 12px; font-size: 14px; }
+
+.alarm-banner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: var(--z-toast);
+  background: var(--danger);
+  color: #fff;
+  padding: 14px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.06em;
+  display: none;
+  animation: alarm-flash 0.9s ease-in-out infinite;
+}
+.alarm-banner.active { display: block; }
+@keyframes alarm-flash {
+  0%,100% { background: var(--danger); }
+  50% { background: #ff6070; }
+}
+.alarm-vignette {
+  position: fixed; inset: 0;
+  z-index: 5;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(214,69,80,0.15) 100%);
+  pointer-events: none;
+  display: none;
+}
+.alarm-vignette.active { display: block; animation: alarm-flash 0.9s ease-in-out infinite; }
+
+.watermark {
+  position: fixed;
+  bottom: 8px;
+  left: 14px;
+  z-index: var(--z-watermark);
+  font-size: 10px;
+  color: var(--text-faint);
+  pointer-events: none;
+  font-family: 'JetBrains Mono', monospace;
+}
+body.nav-active .watermark { display: none; }
+@media (max-width: 600px) {
+  .watermark { display: none; }
+}
+
+/* === KANBAN MODAL === */
+.kanban-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(5,10,24,0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: none;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+}
+.kanban-modal.open { display: flex; animation: fade-in 0.3s ease; }
+.kanban-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-1);
+  overflow: hidden;
+}
+.kanban-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  border-bottom: 1px solid var(--border-strong);
+  background: linear-gradient(135deg, rgba(30,58,138,0.5), rgba(12,23,48,0.85));
+  gap: 12px;
+}
+.kanban-header h2 { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+.kanban-header .badge {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0c1730;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.kanban-credits {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-2);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 720px) { .kanban-credits { grid-template-columns: 1fr; } }
+
+.credit-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.credit-card .role {
+  font-size: 10px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.credit-card .name { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+.credit-card .links { display: flex; flex-wrap: wrap; gap: 8px; }
+.credit-card .links a {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 4px 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.credit-card .links a:hover { background: var(--bg-3); color: var(--text); border-color: var(--accent); }
+
+.professors-strip {
+  padding: 14px 22px;
+  background: linear-gradient(135deg, rgba(229,169,59,0.18), rgba(240,184,96,0.10));
+  border-bottom: 1px solid var(--border-subtle);
+  border-top: 1px solid rgba(229,169,59,0.4);
+}
+.professors-strip .label {
+  font-size: 10px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.professors-strip .list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.prof-chip {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0c1730;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(229,169,59,0.25);
+}
+.prof-chip::before { content: "🎓"; }
+
+/* === PROBLEMA & SOLUÇÃO === */
+.problem-solution {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 16px 20px 0;
+  background: var(--bg-0);
+}
+@media (max-width: 720px) {
+  .problem-solution { grid-template-columns: 1fr; }
+}
+.ps-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 18px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.ps-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+}
+.ps-problem { border-color: rgba(214,69,80,0.4); }
+.ps-problem::before { background: var(--danger); }
+.ps-solution { border-color: rgba(229,169,59,0.5); }
+.ps-solution::before { background: linear-gradient(180deg, var(--accent), var(--accent-2)); }
+.ps-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.ps-icon { font-size: 18px; }
+.ps-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.ps-problem .ps-title { color: var(--danger); }
+.ps-solution .ps-title { color: var(--accent); }
+.ps-card p {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-dim);
+  margin: 0;
+}
+.ps-card strong { color: var(--text); font-weight: 600; }
+
+.kanban-board {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--bg-0);
+}
+@media (max-width: 720px) {
+  .kanban-board {
+    grid-template-columns: repeat(4, 78vw);
+    overflow-x: auto;
+  }
+}
+
+.kanban-col {
+  background: var(--bg-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.kanban-col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 10px;
+}
+.kanban-col-head .title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  display: flex; align-items: center; gap: 6px;
+}
+.kanban-col-head .dot { width: 8px; height: 8px; border-radius: 50%; }
+.kanban-col[data-col="backlog"] .dot { background: #6c7896; }
+.kanban-col[data-col="doing"] .dot { background: #3457c9; }
+.kanban-col[data-col="review"] .dot { background: #c98a4a; }
+.kanban-col[data-col="done"] .dot { background: var(--success); }
+.kanban-col-head .count {
+  font-size: 11px;
+  color: var(--text-dim);
+  background: var(--bg-2);
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.kanban-cards {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+.kanban-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: grab;
+  transition: all 0.15s;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.kanban-card[data-tag="3d"] { border-left-color: #3457c9; }
+.kanban-card[data-tag="nav"] { border-left-color: #4d8a5a; }
+.kanban-card[data-tag="ui"] { border-left-color: #c98a4a; }
+.kanban-card[data-tag="api"] { border-left-color: #8a6dc4; }
+.kanban-card[data-tag="qr"] { border-left-color: #e5a93b; }
+.kanban-card[data-tag="docs"] { border-left-color: #4caf6e; }
+
+.kanban-card:hover { background: var(--bg-3); transform: translateX(2px); }
+.kanban-card.dragging { opacity: 0.45; cursor: grabbing; }
+.kanban-card .title { font-weight: 600; margin-bottom: 4px; color: var(--text); }
+.kanban-card .meta {
+  display: flex;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-dim);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.kanban-card .chip {
+  background: var(--bg-3);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+.kanban-add {
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  color: var(--text-dim);
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 8px;
+  transition: all 0.15s;
+}
+.kanban-add:hover { background: var(--bg-2); color: var(--text); border-color: var(--accent); }
+
+.kanban-col.drop-target { background: rgba(229,169,59,0.08); border-color: var(--accent); }
+
+/* High contrast */
+body.high-contrast { --border-subtle: rgba(255,255,255,0.25); --border-strong: rgba(255,255,255,0.5); }
+body.high-contrast .btn, body.high-contrast .menu-item, body.high-contrast .kanban-card { border-color: var(--border-strong); }
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">Carregando modelo 3D · Via Centro UNIUBE...</div>
+</div>
+
+<canvas id="canvas3d"></canvas>
+<canvas id="canvas2d-minimap" width="280" height="200"></canvas>
+<canvas id="confetti-canvas"></canvas>
+
+<header class="topbar">
+  <button class="hamburger hide-during-nav" id="btnMenu" aria-label="Menu">☰</button>
+  <div class="brand">
+    <svg class="brand-logo" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="logoGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3457c9"/>
+          <stop offset="100%" stop-color="#1e3a8a"/>
+        </linearGradient>
+      </defs>
+      <path d="M32 4 L56 16 L56 36 Q56 52 32 60 Q8 52 8 36 L8 16 Z" fill="url(#logoGrad)" stroke="#e5a93b" stroke-width="1.5"/>
+      <text x="32" y="30" text-anchor="middle" fill="#fff" font-family="Inter" font-weight="800" font-size="11">U</text>
+      <g fill="#e5a93b">
+        <polygon points="24,38 25.5,42 30,42 26.5,44.5 28,49 24,46.5 20,49 21.5,44.5 18,42 22.5,42"/>
+        <polygon points="32,36 33.5,40 38,40 34.5,42.5 36,47 32,44.5 28,47 29.5,42.5 26,40 30.5,40"/>
+        <polygon points="40,38 41.5,42 46,42 42.5,44.5 44,49 40,46.5 36,49 37.5,44.5 34,42 38.5,42"/>
+      </g>
+    </svg>
+    <div class="brand-text">
+      <div class="brand-title">UNIUBE Via Centro <span class="badge-demo">v5</span></div>
+      <div class="brand-sub">Trabalho Integrador · Amostra Tech 2026 · Estande E2</div>
+    </div>
+  </div>
+  <div class="topbar-actions hide-during-nav">
+    <button class="btn btn-icon btn-ghost" id="btnTheme" aria-label="Tema">🌙</button>
+    <button class="btn btn-ghost" id="btnTour" aria-label="Tour do Campus"><span>🎬</span><span class="btn-label-long">Tour</span></button>
+    <button class="btn btn-accent" id="btnDemo"><span>▶</span><span class="btn-label-long">Demo</span></button>
+  </div>
+  <div class="topbar-actions" style="display:none;" id="navTopbarActions">
+    <button class="btn btn-danger" id="btnEndNavTop">✕ Encerrar</button>
+  </div>
+</header>
+
+<div class="status-pill" id="statusPill">
+  <div class="dot"></div>
+  <span id="statusText">Pronto · Clique num QR para começar</span>
+</div>
+
+<div class="menu-scrim" id="menuScrim"></div>
+<aside class="side-menu" id="sideMenu">
+  <div class="side-menu-header">
+    <div class="side-menu-title">Menu</div>
+    <button class="side-menu-close" id="btnCloseMenu" aria-label="Fechar">×</button>
+  </div>
+  <div class="side-menu-body">
+
+    <details class="menu-section" open>
+      <summary>🎥 Demonstrações</summary>
+      <div class="menu-section-content">
+        <button class="menu-item cta" id="miDemo">▶ Iniciar demo guiada</button>
+        <button class="menu-item cta-accent" id="miTour">🎬 Tour completo do campus</button>
+        <button class="menu-item" id="miScanHall">📍 Simular scan: Saguão Entrada</button>
+        <button class="menu-item" id="miScanBib">📍 Simular scan: Biblioteca 163</button>
+        <button class="menu-item" id="miScanLab">📍 Simular scan: Lab. Engenharias 116</button>
+      </div>
+    </details>
+
+    <details class="menu-section">
+      <summary>📋 Planejamento / Kanban</summary>
+      <div class="menu-section-content">
+        <button class="menu-item cta-accent" id="miKanban">📋 Abrir Kanban do projeto</button>
+        <div style="padding: 8px 12px; font-size: 11px; color: var(--text-dim); line-height: 1.6;">
+          Quadro de sprint do Trabalho Integrador<br>com créditos da equipe + orientadores.
+        </div>
+      </div>
+    </details>
+
+    <details class="menu-section">
+      <summary>♿ Acessibilidade</summary>
+      <div class="menu-section-content">
+        <div class="toggle-row">
+          <div>
+            <div class="label">Modo acessível (PCD)</div>
+            <div class="hint">Usa rampa/elevador por padrão</div>
+          </div>
+          <button class="toggle" id="togglePCD"></button>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="label">Reduzir movimento</div>
+            <div class="hint">Minimiza sway/bob da câmera</div>
+          </div>
+          <button class="toggle" id="toggleReduceMotion"></button>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="label">Alto contraste</div>
+            <div class="hint">Aumenta legibilidade</div>
+          </div>
+          <button class="toggle" id="toggleContrast"></button>
+        </div>
+        <div class="slider-row">
+          <div class="label-row">
+            <span>Velocidade da navegação</span>
+            <span class="value" id="speedValue">1.0x</span>
+          </div>
+          <input type="range" min="0.5" max="2" step="0.1" value="1" id="speedSlider">
+        </div>
+      </div>
+    </details>
+
+    <details class="menu-section">
+      <summary>🎛 Funcionalidades</summary>
+      <div class="menu-section-content">
+        <button class="menu-item" id="miOverview">📷 Vista geral<span class="kbd-hint">1</span></button>
+        <button class="menu-item" id="miTop">🗺 Vista de topo<span class="kbd-hint">2</span></button>
+        <button class="menu-item" id="miEntry">🚪 Entrada Principal<span class="kbd-hint">3</span></button>
+        <button class="menu-item" id="miHall">🏭 Galpão Engenharias<span class="kbd-hint">4</span></button>
+        <button class="menu-item" id="miElev">🛗 Acionar elevador<span class="kbd-hint">E</span></button>
+        <button class="menu-item" id="miDoors">🚪 Abrir/fechar portas<span class="kbd-hint">D</span></button>
+        <button class="menu-item" id="miRoof">🏠 Ocultar/mostrar teto<span class="kbd-hint">R</span></button>
+        <button class="menu-item" id="miQR">📱 Destacar QRs<span class="kbd-hint">Q</span></button>
+        <button class="menu-item" id="miLabels">🏷 Labels<span class="kbd-hint">L</span></button>
+        <button class="menu-item danger" id="miAlarm">🚨 Alarme de incêndio<span class="kbd-hint">⇧A</span></button>
+      </div>
+    </details>
+
+    <details class="menu-section">
+      <summary>📚 Legenda</summary>
+      <div class="menu-section-content">
+        <div class="legend-row"><div class="legend-swatch" style="background:#85B7EB"></div><span>Administrativo</span></div>
+        <div class="legend-row"><div class="legend-swatch" style="background:#FFD60A"></div><span>Laboratórios Engenharias (Galpão 116)</span></div>
+        <div class="legend-row"><div class="legend-swatch" style="background:#5DCAA5"></div><span>Biblioteca / Rampa Acessível</span></div>
+        <div class="legend-row"><div class="legend-swatch" style="background:#ED93B1"></div><span>Salas 147–156</span></div>
+        <div class="legend-row"><div class="legend-swatch" style="background:#a78bfa"></div><span>Elevador / Núcleo Vertical</span></div>
+        <div class="legend-row"><div class="legend-swatch" style="background:#d6d3c4"></div><span>Convivência / WC</span></div>
+        <div class="legend-row" style="margin-top:8px;"><div class="legend-swatch" style="background:#e5a93b"></div><span>🗺️ Rota padrão (esc. rolante)</span></div>
+        <div class="legend-row"><div class="legend-swatch" style="background:#f08a4b"></div><span>♿ Rota acessível (rampa/elevador)</span></div>
+        <div class="legend-row" style="margin-top:8px; font-size:11px; color:var(--text-dim);">📱 QR Code · 🟡 Piso tátil</div>
+      </div>
+    </details>
+
+    <details class="menu-section">
+      <summary>❓ Ajuda</summary>
+      <div class="menu-section-content">
+        <div style="padding: 8px 12px; font-size: 12px; color: var(--text-dim); line-height: 1.8;">
+          <strong style="color:var(--text);">Atalhos de teclado</strong><br>
+          <span class="kbd">1</span> Iso · <span class="kbd">2</span> Topo · <span class="kbd">3</span> Entrada · <span class="kbd">4</span> Galpão<br>
+          <span class="kbd">E</span> Elevador · <span class="kbd">D</span> Portas · <span class="kbd">R</span> Teto<br>
+          <span class="kbd">Q</span> QRs · <span class="kbd">L</span> Labels · <span class="kbd">⇧A</span> Alarme<br>
+          <span class="kbd">N</span> Navegar · <span class="kbd">Esc</span> Encerrar
+        </div>
+        <div style="padding: 12px; font-size: 11px; color: var(--text-faint); border-top: 1px solid var(--border-subtle); margin-top: 8px; line-height: 1.5;">
+          <strong>UNIUBE Via Centro · v5</strong><br>
+          Trabalho Integrador Amostra Tech 2026 — modelo 3D realista do 1º pavimento do campus Via Centro de Uberlândia, com pathfinding A*/Dijkstra, navegação primeira-pessoa e checkpoints por QR Code.<br><br>
+          <em>Universidade de Uberaba · Igreja Metodista</em>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</aside>
+
+<aside class="gps-panel" id="gpsPanel">
+  <div class="gps-panel-header">
+    <div class="location-info">
+      <div class="pre-title">📍 Você está em</div>
+      <h2 id="gpsLocationName">Saguão da Entrada Principal</h2>
+      <div class="token" id="gpsToken">uniube.app/gps?from=qr_saguao</div>
+    </div>
+    <button class="hamburger" id="btnClosePanel" aria-label="Fechar">×</button>
+  </div>
+  <div class="gps-panel-body">
+    <div class="field">
+      <label for="destSelect">Para onde você quer ir?</label>
+      <select id="destSelect"><option value="">— Selecione um destino —</option></select>
+    </div>
+    <div class="toggle-row" style="background: var(--bg-2); border-radius: 10px; padding: 12px 14px;">
+      <div>
+        <div class="label">♿ Tenho dificuldade de locomoção</div>
+        <div class="hint">Usa rampa/elevador</div>
+      </div>
+      <button class="toggle" id="togglePanelPCD"></button>
+    </div>
+    <div style="margin: 16px 0;">
+      <button class="btn btn-primary" style="width:100%; justify-content:center; padding: 14px; font-size: 15px;" id="btnCalculateRoute">🗺️ Calcular rota</button>
+    </div>
+    <div class="gps-route-summary" id="routeSummary">
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Distância</div>
+          <div class="value" id="routeDistance">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Tempo</div>
+          <div class="value" id="routeTime">—</div>
+        </div>
+      </div>
+      <div class="type" id="routeType">—</div>
+    </div>
+    <ul class="gps-directions" id="directionsList"></ul>
+    <div class="gps-actions" id="navActions" style="display:none;">
+      <button class="btn btn-ghost" id="btnBackPanel">Voltar</button>
+      <button class="btn btn-accent" id="btnStartNav">▶ Iniciar navegação</button>
+    </div>
+  </div>
+</aside>
+
+<div class="nav-hud-top" id="navHudTop">
+  <span class="arrow" id="navHudArrow">→</span>
+  <div class="info">
+    <div class="maneuver" id="navManeuver">Siga em frente</div>
+    <div class="distance" id="navManeuverDist">--m</div>
+  </div>
+</div>
+
+<div class="nav-hud-bottom" id="navHudBottom">
+  <div class="summary">
+    <div class="destination" id="navDestName">—</div>
+    <div class="meta" id="navMeta">— · —</div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-ghost" id="btnPauseNav">⏸</button>
+    <button class="btn btn-danger" id="btnEndNav">✕</button>
+  </div>
+</div>
+
+<div class="tour-hud" id="tourHud">
+  <div class="name" id="tourName">—</div>
+  <div class="desc" id="tourDesc">—</div>
+  <div class="progress"><div class="progress-bar" id="tourProgress"></div></div>
+  <div class="actions">
+    <button class="btn btn-ghost" id="btnTourSkip">⏭ Pular</button>
+    <button class="btn btn-danger" id="btnTourEnd">✕ Encerrar</button>
+  </div>
+</div>
+
+<div class="demo-tooltip" id="demoTooltip">
+  <div class="step-counter" id="demoCounter">Passo 1 de 12</div>
+  <h3 id="demoTitle">—</h3>
+  <p id="demoBody">—</p>
+  <div class="actions">
+    <button class="btn btn-ghost" id="btnDemoSkip">Pular</button>
+    <button class="btn btn-accent" id="btnDemoNext">Avançar →</button>
+  </div>
+</div>
+
+<div class="arrival-overlay" id="arrivalOverlay">
+  <div class="arrival-vignette"></div>
+  <div class="arrival-card">
+    <div class="arrival-icon">📍</div>
+    <h1>Você chegou!</h1>
+    <div class="destination-name" id="arrivalDestName">—</div>
+    <div class="stats">
+      <div class="stat-block">
+        <div class="stat-label">Distância</div>
+        <div class="stat-value" id="arrivalDistance">—</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">Tempo</div>
+        <div class="stat-value" id="arrivalTime">—</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" id="btnArrivalMap">📍 Ver no mapa</button>
+      <button class="btn btn-primary" id="btnArrivalNew">🔄 Nova rota</button>
+    </div>
+  </div>
+</div>
+
+<div class="alarm-banner" id="alarmBanner">🚨 EVACUAÇÃO — Dirija-se ao Ponto de Encontro (Esplanada Av. João Pinheiro) 🚨</div>
+<div class="alarm-vignette" id="alarmVignette"></div>
+
+<!-- ============================================================ -->
+<!-- KANBAN MODAL                                                  -->
+<!-- ============================================================ -->
+<div class="kanban-modal" id="kanbanModal">
+  <div class="kanban-shell">
+    <div class="kanban-header">
+      <h2>📋 Planejamento do Projeto <span class="badge">SPRINT</span></h2>
+      <button class="btn btn-ghost btn-icon" id="btnCloseKanban" aria-label="Fechar Kanban">×</button>
+    </div>
+
+    <!-- Créditos da equipe -->
+    <div class="kanban-credits">
+      <div class="credit-card">
+        <div class="role">👨‍💻 Desenvolvedor · Autor</div>
+        <div class="name">Arthur Moreira Martins</div>
+        <div class="links">
+          <a href="https://www.linkedin.com/in/arthur-martins-677a193a4" target="_blank" rel="noopener">🔗 LinkedIn</a>
+          <a href="https://github.com/F10ydM/Projeto-Amostra-Tech-2026.git" target="_blank" rel="noopener">💻 GitHub</a>
+        </div>
+      </div>
+      <div class="credit-card">
+        <div class="role">👩‍💻 Desenvolvedora · Co-autora</div>
+        <div class="name">Maria Eduarda</div>
+        <div class="links">
+          <a href="https://www.linkedin.com/in/maria-eduarda-a3a9142a9" target="_blank" rel="noopener">🔗 LinkedIn</a>
+          <a href="https://github.com/Mio-exe" target="_blank" rel="noopener">💻 GitHub</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Professores Orientadores em destaque -->
+    <div class="professors-strip">
+      <div class="label">Professores Orientadores</div>
+      <div class="list">
+        <span class="prof-chip">Camilo</span>
+        <span class="prof-chip">Renato</span>
+        <span class="prof-chip">Romualdo</span>
+        <span class="prof-chip">Maxwell</span>
+        <span class="prof-chip">Kênia</span>
+      </div>
+    </div>
+
+    <!-- Problema & Solução em destaque -->
+    <div class="problem-solution">
+      <div class="ps-card ps-problem">
+        <div class="ps-head"><span class="ps-icon">⚠️</span><span class="ps-title">Gargalo</span></div>
+        <p>O campus UNIUBE Via Centro recebe diariamente alunos novatos, visitantes da Amostra Tech, professores em trânsito e pessoas com mobilidade reduzida que precisam localizar salas, laboratórios e o galpão das engenharias num prédio com <strong>topologia confusa</strong> — escada rolante dupla, rampa em U, mezaninos, dois pavimentos e um galpão anexo. Sinalização estática não dá conta: <strong>fluxos PCD ficam invisíveis</strong>, novatos chegam atrasados às aulas e o ponto de encontro de emergência não é claro.</p>
+      </div>
+      <div class="ps-card ps-solution">
+        <div class="ps-head"><span class="ps-icon">💡</span><span class="ps-title">Solução proposta</span></div>
+        <p>GPS Interno 3D baseado em <strong>QR-Codes físicos</strong> distribuídos por checkpoints estratégicos. O usuário escaneia com o celular, escolhe o destino e recebe uma <strong>rota navegável em primeira pessoa</strong>, calculada por Dijkstra sobre um grafo que diferencia caminhos padrão (escada rolante) e <strong>acessíveis (rampa/elevador)</strong>. Backend em Django REST + Supabase armazena rotas, salas e checkpoints; frontend Three.js publicado na Vercel; chatbot integrado à API Claude responde dúvidas sobre o campus em modo Cicerone (histórico-tour) e modo Acessibilidade.</p>
+      </div>
+    </div>
+
+    <!-- Board Kanban com drag-and-drop -->
+    <div class="kanban-board" id="kanbanBoard">
+      <!-- preenchido via JS -->
+    </div>
+  </div>
+</div>
+
+<div class="watermark">⚙ UNIUBE Via Centro · 1º Pav · Modelo 3D demonstrativo</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ===================================================================
+// UNIUBE VIA CENTRO · v5 (híbrido Mapa1 + Mapa2)
+// Trabalho Integrador Amostra Tech 2026 · ADS UNIUBE
+// Arthur Moreira Martins + Maria Eduarda
+//
+// Coordenadas (m):
+//   Origem (0,0,0) = canto SUDOESTE do prédio principal
+//   X+ = leste, Z+ = norte, Y+ = altura
+//   Prédio principal: 50 (X) × 36 (Z) × 3 (Y)
+//   Galpão anexo:     22 (X) × 28 (Z) × 6 (Y), offset (X=50, Z=4)
+// ===================================================================
+
+const BUILDING = {
+  BX: 50, BZ: 36, BY: 3,        // prédio principal
+  HX: 22, HZ: 28, HY: 6,        // galpão de engenharias
+  HOX: 50, HOZ: 4,              // offset do galpão
+  WT: 0.2,                       // espessura de parede
+  WALL_H: 3.0,
+  FLOOR_H: 3.0                  // p/ compatibilidade c/ pathfinding
+};
+
+const CAT_COLORS = {
+  admin:    { dark: 0x2a3a5c, label: 0x85B7EB, tint: 0xc6d8ed },
+  aula:     { dark: 0x5a3a5c, label: 0xED93B1, tint: 0xe7c4cf },
+  lab_eng:  { dark: 0x6a5a1a, label: 0xFFD60A, tint: 0xefe1a8 },
+  biblio:   { dark: 0x2e4d3c, label: 0x5DCAA5, tint: 0xc8dcc6 },
+  wc:       { dark: 0x4a3848, label: 0xa55a8a, tint: 0xd6d3c4 },
+  apoio:    { dark: 0x5a4a2a, label: 0xc4983a, tint: 0xe7d4a0 },
+  elev:     { dark: 0x4a3a6e, label: 0xa78bfa, tint: 0xc9bce4 },
+  circ:     { dark: 0x3a4a5c, label: 0x9aa8c0, tint: 0xd6d8de }
+};
+
+// ===================================================================
+// ROOMS - salas REAIS do Via Centro (do Mapa 1)
+// Convenção: x, z = canto SO da sala; w, d = largura(X) × profundidade(Z)
+// floor = 1 (só temos 1º pav nesta v5)
+// ===================================================================
+const ROOMS = [
+  // Externa
+  { id: 'esplanada',  name: 'Esplanada Av. João Pinheiro', floor: 1, x: 0, z: -10, w: 50, d: 9, cat: 'circ', external: true },
+
+  // Setor sul - entrada principal e administrativo
+  { id: 'biblio',     name: 'Biblioteca',                 num: '163', floor: 1, x: 1,  z: 1,  w: 23, d: 6, cat: 'biblio' },
+  { id: 'cac',        name: 'CAC',                                    floor: 1, x: 25, z: 1,  w: 6,  d: 3, cat: 'admin' },
+  { id: 'guich',      name: 'Guichês 6–9',                            floor: 1, x: 31, z: 1,  w: 6,  d: 3, cat: 'apoio' },
+  { id: 'banh_s',     name: 'Banheiros (Sul)',                        floor: 1, x: 37, z: 1,  w: 6,  d: 3, cat: 'wc' },
+  { id: 'planej',     name: 'Planejamento + TI',          num: '145', floor: 1, x: 43, z: 1,  w: 6,  d: 3, cat: 'aula' },
+  { id: 'coord',      name: 'Coord. Cursos',                          floor: 1, x: 25, z: 4,  w: 6,  d: 3, cat: 'admin' },
+  { id: 'unitec',     name: 'Unitecne / Itec',                        floor: 1, x: 31, z: 4,  w: 6,  d: 3, cat: 'admin' },
+  { id: 'multijr',    name: 'Multi JR',                               floor: 1, x: 37, z: 4,  w: 6,  d: 3, cat: 'admin' },
+  { id: 'ead',        name: 'EaD UNIUBE',                             floor: 1, x: 43, z: 4,  w: 6,  d: 3, cat: 'admin' },
+
+  // Faixa central (z=8 a z=21)
+  { id: 'banh_n',     name: 'Banheiros (Norte)',                      floor: 1, x: 1,  z: 14, w: 11, d: 7, cat: 'wc' },
+  { id: 'deposito',   name: 'Depósito',                   num: '118', floor: 1, x: 13, z: 14, w: 11, d: 7, cat: 'apoio' },
+  { id: 'multi',      name: 'Multiatendimento',                       floor: 1, x: 25, z: 14, w: 13, d: 7, cat: 'admin' },
+  { id: 'xerox',      name: 'Xerox / Reprografia',        num: '111', floor: 1, x: 25, z: 8,  w: 13, d: 6, cat: 'apoio' },
+  { id: 'esctec',     name: 'Escola Técnica',             num: '112', floor: 1, x: 39, z: 8,  w: 7,  d: 6, cat: 'admin' },
+  { id: 'escemerg',   name: 'Escada Enclausurada',                    floor: 1, x: 39, z: 14, w: 7,  d: 7, cat: 'circ' },
+  { id: 'elev',       name: 'Elevador',                               floor: 1, x: 46, z: 14, w: 3,  d: 3, cat: 'elev' },
+  { id: 'npj',        name: 'Núcleo Práticas Jurídicas',  num: '148', floor: 1, x: 46, z: 8,  w: 3,  d: 6, cat: 'apoio' },
+
+  // Setor norte - salas 147 a 156 (piso bege diferenciado)
+  { id: 's147',       name: 'Sala de Aula',               num: '147', floor: 1, x: 1,  z: 24, w: 7,  d: 11, cat: 'aula' },
+  { id: 's149',       name: 'Sala de Aula',               num: '149', floor: 1, x: 8,  z: 24, w: 6,  d: 11, cat: 'aula' },
+  { id: 's150',       name: 'Docentes Tempo Integral',    num: '150', floor: 1, x: 14, z: 24, w: 6,  d: 11, cat: 'aula' },
+  { id: 's151',       name: 'Sala de Aula',               num: '151', floor: 1, x: 20, z: 24, w: 5,  d: 11, cat: 'aula' },
+  { id: 's152',       name: 'Sala de Aula',               num: '152', floor: 1, x: 25, z: 24, w: 5,  d: 11, cat: 'aula' },
+  { id: 's153',       name: 'Sala dos Docentes',          num: '153', floor: 1, x: 30, z: 24, w: 6,  d: 11, cat: 'aula' },
+  { id: 's156',       name: 'Sala de Aula',               num: '156', floor: 1, x: 36, z: 24, w: 6,  d: 11, cat: 'aula' },
+  { id: 'conviv',     name: 'Convivência (Pufes)',                    floor: 1, x: 42, z: 22, w: 7,  d: 13, cat: 'circ' },
+
+  // Galpão das Engenharias (anexo leste)
+  { id: 'lab116a',    name: 'Materiais / Ambiental / Metrologia', num: '116-A', floor: 1, x: 51, z: 5,  w: 20, d: 8, cat: 'lab_eng' },
+  { id: 'lab116b',    name: 'Quím. / Física / Bio / Bioquímica',  num: '116-B', floor: 1, x: 51, z: 14, w: 20, d: 8, cat: 'lab_eng' },
+  { id: 'lab116cd',   name: 'Oficina Mecânica',                   num: '116-C/D', floor: 1, x: 51, z: 23, w: 20, d: 8, cat: 'lab_eng' }
+];
+
+function roomCenter(r) {
+  return { x: r.x + r.w/2, z: r.z + r.d/2, y: (r.floor - 1) * BUILDING.FLOOR_H };
+}
+
+// QR Checkpoints em pontos estratégicos do prédio real
+const QR_CHECKPOINTS = [
+  { id: 'qr_saguao',     name: 'Saguão Entrada Principal',  roomId: 'cac',      x: 25, z: 3,    y: 1.5, floor: 1 },
+  { id: 'qr_biblio',     name: 'Biblioteca 163',            roomId: 'biblio',   x: 12, z: 4,    y: 1.5, floor: 1 },
+  { id: 'qr_multi',      name: 'Multiatendimento',          roomId: 'multi',    x: 31, z: 17,   y: 1.5, floor: 1 },
+  { id: 'qr_xerox',      name: 'Xerox 111',                 roomId: 'xerox',    x: 31, z: 11,   y: 1.5, floor: 1 },
+  { id: 'qr_elev',       name: 'Elevador',                  roomId: 'elev',     x: 47.5, z: 15.5, y: 1.5, floor: 1 },
+  { id: 'qr_s147',       name: 'Salas 147–156',             roomId: 's147',     x: 4,  z: 23,   y: 1.5, floor: 1 },
+  { id: 'qr_conviv',     name: 'Convivência (Setor Norte)', roomId: 'conviv',   x: 45, z: 28,   y: 1.5, floor: 1 },
+  { id: 'qr_lab_eng',    name: 'Galpão Engenharias 116',    roomId: 'lab116b',  x: 52, z: 18,   y: 1.5, floor: 1 },
+  { id: 'qr_npj',        name: 'Núcleo Práticas Jur. 148',  roomId: 'npj',      x: 47.5, z: 11, y: 1.5, floor: 1 }
+];
+
+// ===================================================================
+// GRAFO p/ pathfinding (Dijkstra)
+// Topologia: corredor central N-S + núcleo vertical (esc.rolante + rampa + elevador)
+// ===================================================================
+const NODES = [];
+const EDGES = [];
+
+function addNode(id, x, y, z) {
+  if (NODES.find(n => n.id === id)) return;
+  NODES.push({ id, x, y, z });
+}
+function addEdge(a, b, accessible = true) {
+  const na = NODES.find(n => n.id === a);
+  const nb = NODES.find(n => n.id === b);
+  if (!na || !nb) return;
+  const dx = na.x - nb.x, dy = na.y - nb.y, dz = na.z - nb.z;
+  const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+  EDGES.push({ a, b, dist, accessible });
+}
+
+function buildGraph() {
+  const y = 0;
+
+  // Corredor central N-S (x≈24.5), em z = 4, 11, 17, 22, 29
+  const corrZs = [4, 11, 17, 22, 29];
+  corrZs.forEach((z, i) => {
+    addNode(`c_${z}`, 24.5, y, z);
+    if (i > 0) addEdge(`c_${corrZs[i-1]}`, `c_${z}`, true);
+  });
+
+  // Corredor leste-oeste no z=17 (alargamento central)
+  const corrXs = [4, 12, 19, 24.5, 32, 39, 45];
+  corrXs.forEach((x, i) => {
+    if (Math.abs(x - 24.5) < 0.1) return; // já existe c_17
+    addNode(`cew_${x}`, x, y, 17);
+    if (i > 0) {
+      const prev = corrXs[i-1];
+      const prevId = Math.abs(prev - 24.5) < 0.1 ? 'c_17' : `cew_${prev}`;
+      addEdge(prevId, `cew_${x}`, true);
+    }
+  });
+  addEdge('cew_19', 'c_17', true);
+  addEdge('c_17', 'cew_32', true);
+
+  // Cada sala tem uma "porta" no nó mais próximo do corredor
+  ROOMS.forEach(r => {
+    if (r.external) return;
+    const cx = r.x + r.w/2;
+    const cz = r.z + r.d/2;
+    addNode(`room_${r.id}`, cx, y, cz);
+
+    // determina nó de corredor mais próximo
+    let bestNode = null, bestDist = Infinity;
+    NODES.forEach(n => {
+      if (n.id.startsWith('c_') || n.id.startsWith('cew_')) {
+        const dd = Math.hypot(n.x - cx, n.z - cz);
+        if (dd < bestDist) { bestDist = dd; bestNode = n; }
+      }
+    });
+    if (bestNode) {
+      addNode(`door_${r.id}`, bestNode.x, y, cz);
+      addEdge(`room_${r.id}`, `door_${r.id}`, true);
+      addEdge(`door_${r.id}`, bestNode.id, true);
+    }
+  });
+
+  // Núcleo vertical: escada rolante (não acessível), rampa em L (acessível), elevador (acessível)
+  // (no v5 só tem 1 pavimento, mas mantemos os nós p/ direções de "subir")
+  addNode('escal_base', 6.75, y, 13);  // base da escada rolante
+  addEdge('escal_base', 'c_11', false); // não acessível
+  addNode('rampa_base', 18, y, 13);
+  addEdge('rampa_base', 'c_11', true);
+  addNode('elev_pad', 47.5, y, 15.5);
+  addEdge('elev_pad', 'room_elev', true);
+  addEdge('room_elev', 'cew_45', true);
+
+  // Acesso externo
+  addNode('saguao_ext', 25, y, -2);
+  addEdge('saguao_ext', 'c_4', true);
+  addNode('saguao_galpao_ext', 73, y, 16);
+  addEdge('saguao_galpao_ext', 'room_lab116b', true);
+
+  // QR nodes
+  QR_CHECKPOINTS.forEach(qr => {
+    addNode(qr.id, qr.x, y, qr.z);
+    if (qr.id === 'qr_saguao') addEdge(qr.id, 'c_4', true);
+    else if (qr.id === 'qr_elev') addEdge(qr.id, 'room_elev', true);
+    else addEdge(qr.id, `door_${qr.roomId}`, true);
+  });
+}
+
+// ===================================================================
+// TOUR E DEMO STEPS adaptados ao prédio real
+// ===================================================================
+const CAMPUS_TOUR = [
+  { x: 25, y: 1.65, z: -7,  look: {x:25, y:1.65, z:4},   name: '🅿️ Esplanada Av. João Pinheiro', desc: 'Acesso principal pela entrada sul, com palmeira-ravenala e marquise.' },
+  { x: 25, y: 1.65, z: 3,   look: {x:25, y:1.65, z:14},  name: '🚪 Saguão da Entrada Principal', desc: 'Porta automática, forro de pingentes de cristal e faixas LED no piso.' },
+  { x: 34, y: 1.65, z: 6.5, look: {x:34, y:1.65, z:7},   name: '🖼 Parede do Mandela', desc: '"A educação é a arma mais poderosa…" em azul cobalto.' },
+  { x: 12, y: 1.65, z: 4,   look: {x:12, y:1.65, z:6},   name: '📚 Biblioteca 163', desc: 'Estantes de livros + mesas redondas de estudo.' },
+  { x: 6.75, y: 1.65, z: 12,look: {x:6.75, y:3, z:8},    name: '⛓ Escada Rolante Dupla', desc: 'Banner "Gaudium Hall" entre as duas esteiras.' },
+  { x: 18, y: 1.65, z: 11,  look: {x:14, y:2.5, z:9},    name: '♿ Rampa em "L"', desc: 'Patamar central, guarda-corpos de vidro verde-água.' },
+  { x: 31, y: 1.65, z: 17,  look: {x:31, y:1.65, z:11},  name: '🧾 Multiatendimento + Xerox', desc: 'CAC, Guichês 6–9, Reprografia 111.' },
+  { x: 11, y: 1.65, z: 23,  look: {x:11, y:2.2, z:22},   name: '🟡 Parede Amarela "laboratórios"', desc: 'Texto preto gigante + escudo Uniube.' },
+  { x: 22, y: 1.65, z: 25,  look: {x:20, y:2, z:25},     name: '🦍 Parede do Gorila', desc: 'Mascote punk + "CURSO TÉCNICO" em amarelo.' },
+  { x: 4,  y: 1.65, z: 28,  look: {x:4,  y:1.65, z:34},  name: '🏫 Salas 147–156 (Setor Norte)', desc: 'Piso bege diferenciado, mural CIPA 2025/2026.' },
+  { x: 45, y: 1.65, z: 28,  look: {x:45, y:1.65, z:33},  name: '🛋 Convivência Descolada', desc: 'Pufes cinzas, vending machines, balcão Castelli.' },
+  { x: 47.5, y: 1.65, z: 16, look: {x:47.5,y:1.65,z:15}, name: '🛗 Elevador (acessível)', desc: 'Símbolo da cadeira de rodas, plataforma elevatória.' },
+  { x: 60, y: 2,    z: 18,  look: {x:60, y:4, z:18},     name: '🏭 Galpão Engenharias 116', desc: 'Treliças metálicas, pé-direito 6m, oficina mecânica.' },
+  { x: 60, y: 1.65, z: 18,  look: {x:55, y:1.65, z:18},  name: '🏁 Tour completo!', desc: 'Você percorreu todo o 1º pavimento do Via Centro.' }
+];
+
+const DEMO_STEPS = [
+  { title: '👋 Bem-vindo!', body: 'UNIUBE Via Centro — Trabalho Integrador Amostra Tech 2026. Você está prestes a navegar pelo 1º pavimento.', duration: 4500, action: () => T.resetOverview() },
+  { title: '🏛️ O edifício real', body: 'Prédio principal 50×36m + galpão das engenharias 22×28×6m. Modelado in loco a partir de 81 fotos.', duration: 4500, action: () => T.orbitTo(Math.PI*0.7) },
+  { title: '🟡 Parede dos Laboratórios', body: 'Elemento icônico do setor descolado — parede amarela + parede do gorila.', duration: 4500, action: () => T.flyToRoom('s149') },
+  { title: '📱 QR Codes nos checkpoints', body: 'Cada ponto estratégico tem um QR. O usuário escaneia com o celular para ser localizado.', duration: 5000, action: () => { T.qrHighlight = true; T.updateQRHighlight(); } },
+  { title: '📍 Origem identificada', body: 'Simulando: usuário escaneou o QR do Saguão da Entrada Principal.', duration: 4500, action: () => UI.simulateScan('qr_saguao') },
+  { title: '🎯 Destino: Sala 152', body: 'Selecionando "Sala 152" como destino — uma das salas do setor norte.', duration: 4500, action: () => { document.getElementById('destSelect').value = 's152'; } },
+  { title: '🗺️ Rota calculada via Dijkstra', body: 'Linha dourada no piso = caminho mais curto. Algoritmo considera todas as arestas do grafo.', duration: 5000, action: () => UI.calculateRoute() },
+  { title: '♿ Modo Acessibilidade', body: 'Toggle PCD recalcula a rota usando a rampa em L em vez da escada rolante.', duration: 4500, action: () => {} },
+  { title: '▶ Navegação primeira-pessoa', body: 'Câmera assume vista do usuário, com sway natural e minimap 2D sincronizado.', duration: 4000, action: () => Nav.start() },
+  { title: '📋 Planejamento Kanban', body: 'O projeto tem um quadro Kanban com créditos da equipe e orientadores — acessível pelo menu.', duration: 5000, action: () => {} },
+  { title: '🎉 Chegada', body: 'Ao chegar: confete + card celebratório + vibração no celular.', duration: 5000, action: () => {} },
+  { title: '🚀 É só isso!', body: 'Fluxo completo: scan → destino → rota → guia → chegada. Pronto para o pit!', duration: 5000, action: () => Demo.end() }
+];
+
+// ===================================================================
+// KANBAN CARDS - dados do quadro
+// ===================================================================
+// Cards usam data-tag = 3d, nav, ui, api, qr, docs (cores no CSS existente)
+const KANBAN_CARDS = {
+  backlog: [
+    { tag:'api',  title:'Chatbot Cicerone · API Claude',     body:'2 modos: Cicerone histórico-tour + Acessibilidade PCD · serverless function na Vercel' },
+    { tag:'api',  title:'Modelar tabelas no Supabase',       body:'rooms (salas), checkpoints (QRs), edges (arestas), routes (rotas favoritas dos usuários)' },
+    { tag:'api',  title:'Migrar pathfinding p/ backend',     body:'Dijkstra hoje roda no client; mover p/ função edge da Vercel + cache de rotas no Supabase' },
+    { tag:'3d',   title:'2º pavimento · Gaudium Hall',       body:'Extrude AutoCAD → 3Ds Max → glTF/FBX · Cantina + Labs Info' },
+    { tag:'qr',   title:'Geração em massa dos QRs físicos',  body:'Script Python imprime PDF A4 com 13 QRs prontos para fixar no campus' },
+    { tag:'docs', title:'Testes com usuários reais',         body:'10 alunos novatos + 2 PCDs · medir tempo até a sala destino' }
+  ],
+  doing: [
+    { tag:'api',  title:'Integração Supabase ↔ frontend',    body:'Client JS lê rooms/checkpoints via REST · variáveis em .env.local' },
+    { tag:'api',  title:'Deploy contínuo na Vercel',         body:'Push no main do GitHub → build automático · domínio uniube-viacentro.vercel.app' },
+    { tag:'nav',  title:'Pathfinding Dijkstra/A*',           body:'Grafo com modo acessível (rampa/elevador) · 27 nós · 1º pav completo' },
+    { tag:'ui',   title:'HUD navegação 1ª pessoa',           body:'Minimap 2D sincronizado · indicações passo-a-passo · sem trepidação' },
+    { tag:'3d',   title:'Refino estético prédio principal',  body:'Paredes icônicas + forro de pingentes + fachada UNIUBE em destaque' },
+    { tag:'docs', title:'Apresentação Amostra Tech 2026',    body:'Roteiro de demo (12 passos) + slides de fechamento' }
+  ],
+  done: [
+    { tag:'3d',   title:'Modelagem 1º pav (50×36m)',         body:'81 fotos in loco · todas as zonas mapeadas' },
+    { tag:'3d',   title:'Galpão engenharias (22×28×6)',      body:'Treliças metálicas · sublabs 116-A/B/C/D' },
+    { tag:'3d',   title:'Fachada UNIUBE iluminada',          body:'Marquise + logo emissivo + spotlight + palmeiras-ravenala' },
+    { tag:'ui',   title:'Identidade visual',                 body:'Paleta azul cobalto + dourado · tipografia Inter + JetBrains Mono' },
+    { tag:'3d',   title:'Esc. rolante + Rampa em L',         body:'Degraus animados · guarda-corpo verde-água · acessível' },
+    { tag:'qr',   title:'Sistema QR-Code interativo',        body:'13 checkpoints fotorrealistas · simulação de scan funcional' },
+    { tag:'nav',  title:'Modo PCD recalcula rota',           body:'Toggle no painel GPS troca escada rolante por rampa/elevador' },
+    { tag:'docs', title:'Mapeamento topologia real',         body:'Saguão · Ágora · Setor Descolado · Salas 147–156' }
+  ]
+};
+
+// ===================================================================
+// THREE.JS SCENE CONTROLLER (T) — todos os elementos icônicos do Mapa 1
+// ===================================================================
+const T = {
+  scene: null, camera: null, renderer: null,
+  raycaster: null, mouse: new THREE.Vector2(),
+  qrMeshes: [], rooms3D: {},
+  elevator: null, escalators: [], doorsMeshes: [], grpLabels: null, grpCeil: null,
+  routeLine: null,
+  cameraMode: 'orbit',
+  orbitTheta: Math.PI * 0.20, orbitPhi: Math.PI * 0.35, orbitDist: 95,
+  orbitTarget: new THREE.Vector3(28, 0, 18),
+  qrHighlight: false, labelsVisible: true, ceilVisible: false, doorsOpen: false,
+  alarmMode: false, reduceMotion: false, navSpeed: 1.0,
+  arrivalCelebrating: false, vitrineActive: false,
+  cameraAnimating: null,
+  lastTime: 0, startTime: 0, emergencyLights: [], labelEls: [],
+
+  init() {
+    const canvas = document.getElementById('canvas3d');
+    this.scene = new THREE.Scene();
+    this.scene.fog = new THREE.Fog(0x142447, 110, 280);
+
+    this.camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 500);
+
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.shadowMap.enabled = false;
+    this.renderer.setClearColor(0x000000, 0);
+
+    this.raycaster = new THREE.Raycaster();
+
+    this.setupLights();
+    this.buildExterior();
+    this.buildFloorsAndWalls();
+    this.buildIconic();
+    this.buildEscalator();
+    this.buildRamp();
+    this.buildElevator();
+    this.buildLibrary();
+    this.buildConvivencia();
+    this.buildGalpao();
+    this.buildEntradaSec();
+    this.buildPisoTatil();
+    this.buildCeilingDecorations();
+    this.buildQRCodes();
+    this.buildLabels();
+    this.buildSafetyEquipment();
+
+    this.applyOrbit();
+    this.bindEvents();
+    window.addEventListener('resize', () => this.onResize());
+    this.loop();
+  },
+
+  setupLights() {
+    this.ambient = new THREE.AmbientLight(0xffffff, 0.62);
+    this.scene.add(this.ambient);
+    this.hemi = new THREE.HemisphereLight(0xbfd4ff, 0x1a1f2e, 0.40);
+    this.scene.add(this.hemi);
+    this.sun = new THREE.DirectionalLight(0xfff5e0, 0.85);
+    this.sun.position.set(70, 90, 35);
+    this.scene.add(this.sun);
+  },
+
+  // ===== Helpers =====
+  mat(color, opts) {
+    opts = opts || {};
+    const m = new THREE.MeshLambertMaterial({
+      color,
+      transparent: opts.opacity != null,
+      opacity: opts.opacity != null ? opts.opacity : 1.0,
+      side: opts.side || THREE.FrontSide,
+      emissive: opts.emissive != null ? opts.emissive : 0x000000
+    });
+    return m;
+  },
+
+  box(group, w, h, d, color, x, y, z, opts) {
+    opts = opts || {};
+    const geo = new THREE.BoxGeometry(w, h, d);
+    const m = new THREE.Mesh(geo, this.mat(color, opts));
+    m.position.set(x + w/2, y + h/2, z + d/2);
+    group.add(m);
+    return m;
+  },
+
+  wall(group, x1, z1, x2, z2, h, color) {
+    color = color || 0xf6f4ee;
+    const WT = BUILDING.WT;
+    const dx = Math.abs(x2-x1), dz = Math.abs(z2-z1);
+    const w = dx > 0 ? dx : WT;
+    const d = dz > 0 ? dz : WT;
+    const x = Math.min(x1, x2) - (dx > 0 ? 0 : WT/2);
+    const z = Math.min(z1, z2) - (dz > 0 ? 0 : WT/2);
+    return this.box(group, w, h, d, color, x, 0, z);
+  },
+
+  floorTint(group, r, color) {
+    if (!color) color = 0xe9e7df;
+    const geo = new THREE.BoxGeometry(r.w, 0.05, r.d);
+    const m = new THREE.Mesh(geo, this.mat(color));
+    m.position.set(r.x + r.w/2, 0.025, r.z + r.d/2);
+    group.add(m);
+    return m;
+  },
+
+  buildExterior() {
+    // Esplanada
+    const explanade = new THREE.Mesh(
+      new THREE.PlaneGeometry(240, 240),
+      this.mat(0x1b2547)
+    );
+    explanade.rotation.x = -Math.PI/2;
+    explanade.position.set(35, -0.12, 18);
+    this.scene.add(explanade);
+
+    // Calçada
+    const sidewalk = new THREE.Mesh(
+      new THREE.PlaneGeometry(95, 50),
+      this.mat(0x2a3552)
+    );
+    sidewalk.rotation.x = -Math.PI/2;
+    sidewalk.position.set(34, -0.05, 18);
+    this.scene.add(sidewalk);
+
+    // Palmeiras e árvores
+    const trees = [[-2,10],[-2,24],[22,-3],[27,-3],[73,12],[73,26],[40,38],[16,38],[78,4],[78,32]];
+    trees.forEach(([x,z]) => this.addTree(x, z));
+
+    // 2 pontos de ônibus azuis (saída leste)
+    for (let i = 0; i < 2; i++) {
+      const stop = new THREE.Mesh(
+        new THREE.BoxGeometry(3, 2.4, 1.2),
+        this.mat(0x1e3a8a, { opacity: 0.88 })
+      );
+      stop.position.set(76, 1.2, 12 + i * 12);
+      this.scene.add(stop);
+    }
+
+    // Cruz cristã (universidade metodista, pintada na empena)
+    const cruzV = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.4, 0.06), this.mat(0xffffff));
+    cruzV.position.set(73, 4.5, 4);
+    this.scene.add(cruzV);
+    const cruzH = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.2, 0.06), this.mat(0xffffff));
+    cruzH.position.set(73, 4.8, 4);
+    this.scene.add(cruzH);
+  },
+
+  addTree(x, z) {
+    const trunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.25, 4, 8),
+      this.mat(0x6b4a30)
+    );
+    trunk.position.set(x, 2, z);
+    this.scene.add(trunk);
+    const leaves = new THREE.Mesh(
+      new THREE.SphereGeometry(1.4, 8, 6),
+      this.mat(0x2a6a4a)
+    );
+    leaves.position.set(x, 4.2, z);
+    leaves.scale.y = 0.7;
+    this.scene.add(leaves);
+  },
+
+  buildFloorsAndWalls() {
+    const grpFloor = new THREE.Group();
+    this.scene.add(grpFloor);
+    // Piso prédio principal
+    this.box(grpFloor, BUILDING.BX, 0.1, BUILDING.BZ, 0xe9e7df, 0, -0.1, 0);
+    // Piso galpão
+    this.box(grpFloor, BUILDING.HX, 0.1, BUILDING.HZ, 0xc8c4b6, BUILDING.HOX, -0.1, BUILDING.HOZ);
+    // Pisos coloridos por zona
+    ROOMS.forEach(r => {
+      if (r.external) return;
+      const tint = CAT_COLORS[r.cat] ? CAT_COLORS[r.cat].tint : 0xe9e7df;
+      this.floorTint(grpFloor, r, tint);
+    });
+
+    // Paredes externas
+    const grp = new THREE.Group();
+    this.scene.add(grp);
+    const BH = BUILDING.BY, HH = BUILDING.HY;
+    // Sul (z=0) com vão entrada principal x=22-28
+    this.wall(grp, 0, 0, 22, 0, BH);
+    this.wall(grp, 28, 0, BUILDING.BX, 0, BH);
+    // Norte (z=36)
+    this.wall(grp, 0, BUILDING.BZ, 1, BUILDING.BZ, BH);
+    this.wall(grp, 4, BUILDING.BZ, BUILDING.BX, BUILDING.BZ, BH);
+    // Oeste
+    this.wall(grp, 0, 0, 0, BUILDING.BZ, BH);
+    // Leste com 2 vãos
+    this.wall(grp, BUILDING.BX, 0, BUILDING.BX, 7, BH);
+    this.wall(grp, BUILDING.BX, 13, BUILDING.BX, 22, BH);
+    this.wall(grp, BUILDING.BX, 28, BUILDING.BX, BUILDING.BZ, BH);
+
+    // Galpão
+    this.wall(grp, BUILDING.HOX, BUILDING.HOZ, BUILDING.HOX+BUILDING.HX, BUILDING.HOZ, HH);
+    this.wall(grp, BUILDING.HOX, BUILDING.HOZ+BUILDING.HZ, BUILDING.HOX+BUILDING.HX, BUILDING.HOZ+BUILDING.HZ, HH);
+    this.wall(grp, BUILDING.HOX+BUILDING.HX, BUILDING.HOZ, BUILDING.HOX+BUILDING.HX, 14, HH);
+    this.wall(grp, BUILDING.HOX+BUILDING.HX, 18, BUILDING.HOX+BUILDING.HX, BUILDING.HOZ+BUILDING.HZ, HH);
+
+    // Tampa lateral
+    const tampaH = HH - BH;
+    [[BUILDING.HOZ, 7], [13, 22], [28, BUILDING.HOZ+BUILDING.HZ]].forEach(p => {
+      const m = new THREE.Mesh(
+        new THREE.BoxGeometry(BUILDING.WT, tampaH, p[1]-p[0]),
+        this.mat(0xf6f4ee)
+      );
+      m.position.set(BUILDING.BX, BH + tampaH/2, p[0] + (p[1]-p[0])/2);
+      grp.add(m);
+    });
+
+    // ============================================================
+    // FACHADA UNIUBE EM DESTAQUE — entrada principal monumentalizada
+    // ============================================================
+    // Painel cego da fachada (acima da entrada, faixa branca larga)
+    const facadeBg = new THREE.Mesh(
+      new THREE.PlaneGeometry(14, 1.6),
+      new THREE.MeshBasicMaterial({ color: 0xf6f4ee })
+    );
+    facadeBg.position.set(25, 3.6, -0.05);
+    facadeBg.rotation.y = Math.PI;
+    grp.add(facadeBg);
+
+    // Letreiro Uniube GIGANTE iluminado (efeito de néon azul)
+    const fc = document.createElement('canvas');
+    fc.width = 2048; fc.height = 512;
+    const fctx = fc.getContext('2d');
+    // gradient de fundo escuro pra contraste do brilho
+    const fgrad = fctx.createLinearGradient(0, 0, 0, 512);
+    fgrad.addColorStop(0, '#0a1838'); fgrad.addColorStop(1, '#1e3a8a');
+    fctx.fillStyle = fgrad; fctx.fillRect(0, 0, 2048, 512);
+    // halo branco atrás do texto
+    fctx.fillStyle = 'rgba(255,255,255,0.10)';
+    fctx.beginPath(); fctx.ellipse(1024, 256, 900, 180, 0, 0, Math.PI*2); fctx.fill();
+    // glow stroke
+    fctx.strokeStyle = 'rgba(140,180,255,0.55)';
+    fctx.lineWidth = 18;
+    fctx.font = 'bold 280px system-ui, -apple-system, sans-serif';
+    fctx.textAlign = 'center'; fctx.textBaseline = 'middle';
+    fctx.strokeText('Uniube', 1024, 260);
+    // texto principal branco
+    fctx.fillStyle = '#ffffff';
+    fctx.fillText('Uniube', 1024, 260);
+    // subtítulo dourado
+    fctx.fillStyle = '#fbbf24';
+    fctx.font = 'bold 56px system-ui, sans-serif';
+    fctx.fillText('· CAMPUS VIA CENTRO ·', 1024, 440);
+    const ftex = new THREE.CanvasTexture(fc);
+    const facadeSign = new THREE.Mesh(
+      new THREE.PlaneGeometry(12, 3),
+      new THREE.MeshBasicMaterial({ map: ftex, transparent: true })
+    );
+    facadeSign.position.set(25, 4.7, -0.03);
+    facadeSign.rotation.y = Math.PI;
+    grp.add(facadeSign);
+
+    // Caixa volumétrica atrás do letreiro (dá relevo de fachada esculpida)
+    this.box(grp, 13, 3.6, 0.4, 0x142447, 18.5, 2.7, -0.45);
+
+    // Marquise da entrada principal (volume escurecido, mais grosso e largo)
+    this.box(grp, 8, 0.45, 3.4, 0x0c1730, 21, 2.55, -3.4);
+    // 4 colunas metálicas grossas suportando a marquise
+    [21.6, 23.5, 26.5, 28.4].forEach(cx => {
+      this.box(grp, 0.28, 2.55, 0.28, 0x2a2f38, cx - 0.14, 0, -3.1);
+    });
+
+    // Logo Uniube na marquise (face inferior) — placa mais ousada
+    const lc = document.createElement('canvas');
+    lc.width = 1024; lc.height = 256;
+    const lctx = lc.getContext('2d');
+    lctx.fillStyle = '#1e3a8a'; lctx.fillRect(0, 0, 1024, 256);
+    // moldura dourada
+    lctx.strokeStyle = '#fbbf24';
+    lctx.lineWidth = 12;
+    lctx.strokeRect(20, 20, 984, 216);
+    lctx.fillStyle = '#ffffff';
+    lctx.font = 'bold 150px system-ui';
+    lctx.textAlign = 'center'; lctx.textBaseline = 'middle';
+    lctx.fillText('Uniube', 512, 138);
+    const ltex = new THREE.CanvasTexture(lc);
+    const logo = new THREE.Mesh(
+      new THREE.PlaneGeometry(6, 1.4),
+      new THREE.MeshBasicMaterial({ map: ltex })
+    );
+    logo.position.set(25, 2.62, -1.7);
+    logo.rotation.y = Math.PI;
+    logo.rotation.x = -Math.PI/2; // virado pra baixo (visto de quem entra)
+    grp.add(logo);
+
+    // 2 SPOTLIGHTS dourados apontados pra fachada (visíveis como sferas + cones)
+    [21, 29].forEach(sx => {
+      const housing = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 0.25, 0.4),
+        new THREE.MeshBasicMaterial({ color: 0x1a1a22 })
+      );
+      housing.position.set(sx, 2.4, -3.4);
+      grp.add(housing);
+      // Lâmpada emissiva (efeito de luz acesa)
+      const bulb = new THREE.Mesh(
+        new THREE.SphereGeometry(0.16, 12, 8),
+        new THREE.MeshBasicMaterial({ color: 0xfff4d6 })
+      );
+      bulb.position.set(sx, 2.25, -3.15);
+      grp.add(bulb);
+      // Cone de luz amarelado (feixe)
+      const cone = new THREE.Mesh(
+        new THREE.ConeGeometry(1.4, 3.5, 16, 1, true),
+        new THREE.MeshBasicMaterial({ color: 0xffd966, transparent: true, opacity: 0.12, side: THREE.DoubleSide })
+      );
+      cone.position.set(sx, 3.6, -1.6);
+      cone.rotation.x = -Math.PI/2.6;
+      grp.add(cone);
+    });
+
+    // Bandeiras laterais com escudo Uniube (efeito instituicional)
+    [16, 34].forEach(bx => {
+      const bandeira = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.6, 4.2),
+        new THREE.MeshBasicMaterial({ color: 0x1e3a8a })
+      );
+      bandeira.position.set(bx, 2.6, -0.03);
+      bandeira.rotation.y = Math.PI;
+      grp.add(bandeira);
+      // estrela amarela
+      const star = new THREE.Mesh(
+        new THREE.CircleGeometry(0.4, 5),
+        new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
+      );
+      star.position.set(bx, 3.2, -0.025);
+      star.rotation.y = Math.PI;
+      grp.add(star);
+    });
+
+    // Tapete UNIUBE preto na entrada (dentro do prédio)
+    const tapete = new THREE.Mesh(
+      new THREE.BoxGeometry(5, 0.02, 2),
+      new THREE.MeshBasicMaterial({ color: 0x0a0a0a })
+    );
+    tapete.position.set(25, 0.05, 1.5);
+    grp.add(tapete);
+
+    // PAREDES INTERNAS principais
+    const IH = 2.7;
+    const WC = 0xeae6da;
+    // Norte: separação salas 147-156 vs corredor (z=22)
+    this.wall(grp, 1, 22, 22, 22, IH, WC);
+    this.wall(grp, 22, 22, 22, 35, IH, WC);
+    this.wall(grp, 24, 22, BUILDING.BX, 22, IH, WC);
+    this.wall(grp, 24, 22, 24, 35, IH, WC);
+    this.wall(grp, 1, 21, 22, 21, IH, WC);
+    this.wall(grp, 24, 21, BUILDING.BX, 21, IH, WC);
+    // Bloco central
+    this.wall(grp, 12, 14, 12, 21, IH, WC);
+    this.wall(grp, 1, 14, 12, 14, IH, WC);
+    this.wall(grp, 13, 14, 13, 21, IH, WC);
+    this.wall(grp, 13, 14, 22, 14, IH, WC);
+    this.wall(grp, 25, 14, 38, 14, IH, WC);
+    this.wall(grp, 38, 14, 38, 21, IH, WC);
+    this.wall(grp, 39, 14, 46, 14, IH, WC);
+    this.wall(grp, 39, 21, 46, 21, IH, WC);
+    this.wall(grp, 46, 14, 46, 21, IH, WC);
+    this.wall(grp, 46, 17, 49, 17, IH, WC);
+    // Sul
+    this.wall(grp, 25, 8, 38, 8, IH, WC);
+    this.wall(grp, 25, 8, 25, 14, IH, WC);
+    this.wall(grp, 38, 8, 38, 14, IH, WC);
+    this.wall(grp, 39, 8, 46, 8, IH, WC);
+    this.wall(grp, 46, 8, 46, 14, IH, WC);
+    // Biblioteca
+    this.wall(grp, 1, 7, 22, 7, IH, WC);
+    this.wall(grp, 24, 7, 24, 14, IH, WC);
+    this.wall(grp, 22, 7, 22, 14, IH, WC);
+    // Administrativo sul
+    this.wall(grp, 25, 7, BUILDING.BX, 7, IH, WC);
+    this.wall(grp, 25, 4, 49, 4, IH, WC);
+    this.wall(grp, 31, 4, 31, 7, IH, WC);
+    this.wall(grp, 37, 4, 37, 7, IH, WC);
+    this.wall(grp, 43, 4, 43, 7, IH, WC);
+    this.wall(grp, 31, 1, 31, 4, IH, WC);
+    this.wall(grp, 37, 1, 37, 4, IH, WC);
+    this.wall(grp, 43, 1, 43, 4, IH, WC);
+    // Galpão divisórias baixas (2.2m, abertas no topo de 6m)
+    const HALL_DIV = 2.2;
+    this.wall(grp, BUILDING.HOX, 13, BUILDING.HOX+BUILDING.HX, 13, HALL_DIV, WC);
+    this.wall(grp, BUILDING.HOX, 22, BUILDING.HOX+BUILDING.HX, 22, HALL_DIV, WC);
+  },
+
+  buildIconic() {
+    // PAREDE AMARELA "laboratórios"
+    const c1 = document.createElement('canvas');
+    c1.width = 4096; c1.height = 512;
+    const cx1 = c1.getContext('2d');
+    cx1.fillStyle = '#ffd60a'; cx1.fillRect(0, 0, 4096, 512);
+    cx1.fillStyle = '#0a0a0a';
+    cx1.font = 'bold 380px system-ui';
+    cx1.textAlign = 'left'; cx1.textBaseline = 'middle';
+    cx1.fillText('laboratórios', 480, 260);
+    cx1.save();
+    cx1.translate(280, 256);
+    cx1.fillStyle = '#0a0a0a';
+    cx1.beginPath();
+    cx1.moveTo(-110, -150); cx1.lineTo(110, -150); cx1.lineTo(110, 30);
+    cx1.quadraticCurveTo(0, 180, -110, 30);
+    cx1.closePath(); cx1.fill();
+    cx1.fillStyle = '#ffd60a';
+    for (let i = 0; i < 5; i++) {
+      cx1.beginPath();
+      const a = -Math.PI/2 + (i/5)*Math.PI*2;
+      cx1.arc(Math.cos(a)*50, Math.sin(a)*50 - 20, 9, 0, Math.PI*2);
+      cx1.fill();
+    }
+    cx1.restore();
+    const t1 = new THREE.CanvasTexture(c1);
+    const plane1 = new THREE.Mesh(
+      new THREE.PlaneGeometry(21, 2.6),
+      new THREE.MeshBasicMaterial({ map: t1 })
+    );
+    plane1.position.set(11.5, 1.35, 22.005);
+    plane1.rotation.y = Math.PI;
+    this.scene.add(plane1);
+
+    // PAREDE DO MANDELA (azul cobalto + frase)
+    const c2 = document.createElement('canvas');
+    c2.width = 2048; c2.height = 800;
+    const cx2 = c2.getContext('2d');
+    cx2.fillStyle = '#1e3a8a'; cx2.fillRect(0, 0, 2048, 800);
+    cx2.fillStyle = '#ffffff';
+    cx2.beginPath();
+    cx2.moveTo(180, 200); cx2.lineTo(420, 200); cx2.lineTo(420, 480);
+    cx2.quadraticCurveTo(300, 660, 180, 480);
+    cx2.closePath(); cx2.fill();
+    cx2.fillStyle = '#1e3a8a';
+    cx2.font = 'bold 110px serif';
+    cx2.textAlign = 'center'; cx2.textBaseline = 'middle';
+    cx2.fillText('Uniube', 300, 420);
+    cx2.fillStyle = '#ffffff';
+    cx2.font = 'italic 70px Georgia, serif';
+    cx2.textAlign = 'left'; cx2.textBaseline = 'top';
+    const lines = ['"A educação é a arma','mais poderosa que','você pode usar','para mudar o mundo."'];
+    lines.forEach((l, i) => cx2.fillText(l, 540, 130 + i*100));
+    cx2.font = 'bold 50px Georgia, serif';
+    cx2.fillText('— Nelson Mandela', 540, 530);
+    const t2 = new THREE.CanvasTexture(c2);
+    const plane2 = new THREE.Mesh(
+      new THREE.PlaneGeometry(6, 2.4),
+      new THREE.MeshBasicMaterial({ map: t2 })
+    );
+    plane2.position.set(34, 1.25, 6.99);
+    this.scene.add(plane2);
+    // 4 cadeiras escolares marrons
+    for (let i = 0; i < 4; i++) {
+      const cx_ = 31.5 + i*0.7;
+      this.box(this.scene, 0.42, 0.04, 0.42, 0x8b5e3c, cx_-0.21, 0.46, 6.0);
+      this.box(this.scene, 0.42, 0.45, 0.04, 0x8b5e3c, cx_-0.21, 0.50, 5.62);
+    }
+
+    // PAREDE DO GORILA
+    const c3 = document.createElement('canvas');
+    c3.width = 1024; c3.height = 1024;
+    const cx3 = c3.getContext('2d');
+    cx3.fillStyle = '#2c3578'; cx3.fillRect(0, 0, 1024, 1024);
+    cx3.fillStyle = '#0a0a0a';
+    cx3.beginPath();
+    cx3.ellipse(512, 380, 220, 280, 0, 0, Math.PI*2);
+    cx3.fill();
+    for (let i = 0; i < 3; i++) {
+      cx3.beginPath();
+      cx3.moveTo(420 + i*90, 130);
+      cx3.lineTo(450 + i*90, 30);
+      cx3.lineTo(480 + i*90, 130);
+      cx3.closePath(); cx3.fill();
+    }
+    cx3.fillStyle = '#ffffff';
+    cx3.beginPath(); cx3.arc(440, 350, 35, 0, Math.PI*2); cx3.fill();
+    cx3.beginPath(); cx3.arc(580, 350, 35, 0, Math.PI*2); cx3.fill();
+    cx3.fillStyle = '#0a0a0a';
+    cx3.beginPath(); cx3.arc(445, 355, 15, 0, Math.PI*2); cx3.fill();
+    cx3.beginPath(); cx3.arc(585, 355, 15, 0, Math.PI*2); cx3.fill();
+    cx3.fillStyle = '#3a3a3a';
+    cx3.beginPath(); cx3.ellipse(512, 460, 90, 60, 0, 0, Math.PI*2); cx3.fill();
+    cx3.fillStyle = '#0a0a0a';
+    cx3.beginPath(); cx3.arc(495, 460, 8, 0, Math.PI*2); cx3.fill();
+    cx3.beginPath(); cx3.arc(530, 460, 8, 0, Math.PI*2); cx3.fill();
+    cx3.strokeStyle = '#0a0a0a'; cx3.lineWidth = 8;
+    cx3.beginPath(); cx3.moveTo(460, 530); cx3.lineTo(565, 530); cx3.stroke();
+    cx3.fillStyle = '#ffd60a';
+    cx3.font = 'bold 80px system-ui';
+    cx3.textAlign = 'center'; cx3.textBaseline = 'middle';
+    cx3.fillText('CURSO', 512, 800);
+    cx3.fillText('TÉCNICO', 512, 900);
+    cx3.fillRect(200, 730, 624, 8);
+    const t3 = new THREE.CanvasTexture(c3);
+    const plane3 = new THREE.Mesh(
+      new THREE.PlaneGeometry(4, 2.6),
+      new THREE.MeshBasicMaterial({ map: t3 })
+    );
+    plane3.position.set(21.99, 1.35, 25);
+    plane3.rotation.y = -Math.PI/2;
+    this.scene.add(plane3);
+
+    // BANNER GAUDIUM HALL (entre as 2 esteiras)
+    const c4 = document.createElement('canvas');
+    c4.width = 256; c4.height = 1024;
+    const cx4 = c4.getContext('2d');
+    const grad = cx4.createLinearGradient(0, 0, 0, 1024);
+    grad.addColorStop(0, '#1e3a8a'); grad.addColorStop(1, '#0f1f4a');
+    cx4.fillStyle = grad; cx4.fillRect(0, 0, 256, 1024);
+    cx4.save();
+    cx4.translate(128, 240); cx4.rotate(-Math.PI/2);
+    cx4.fillStyle = '#fff';
+    cx4.font = 'bold 64px system-ui';
+    cx4.textAlign = 'right'; cx4.textBaseline = 'middle';
+    cx4.fillText('GAUDIUM HALL', 0, 0);
+    cx4.restore();
+    cx4.save();
+    cx4.translate(128, 720); cx4.rotate(-Math.PI/2);
+    cx4.fillStyle = '#ffd60a';
+    cx4.font = 'bold 32px system-ui';
+    cx4.textAlign = 'center'; cx4.textBaseline = 'middle';
+    cx4.fillText('5 ambientes diferentes', 0, 0);
+    cx4.restore();
+    const t4 = new THREE.CanvasTexture(c4);
+    const banner = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.7, 2.8),
+      new THREE.MeshBasicMaterial({ map: t4, side: THREE.DoubleSide })
+    );
+    banner.position.set(6.75, 2.9, 11);
+    banner.rotation.y = Math.PI/2;
+    this.scene.add(banner);
+
+    // PLACAS DIRECIONAIS
+    this.placaDir(25, 2.6, 14, 2.4, 1.0,
+      ['^ ESTACIONAMENTO AFONSO PENA','^ NUCLEO PRATICAS JURIDICAS','< BIBLIOTECA / XEROX','< SALAS DE AULA']);
+    this.placaDir(28, 2.6, 22, 2.0, 0.9,
+      ['^ LABS ENGENHARIAS','> SANITARIOS','< BIBLIOTECA / XEROX']);
+    this.placaDir(15, 2.6, 8, 1.8, 1.1,
+      ['^ MULTIATENDIMENTO','^ NUCLEO P. JURIDICAS','< SALAS 1o PISO','< LABS INFO 2o PISO','> CANTINA 2o PISO']);
+
+    // FAIXAS LED PISO (saguão entrada)
+    const ledMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    for (let i = 0; i < 3; i++) {
+      const f = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.005, 6), ledMat);
+      f.position.set(20 + i*4, 0.005, 4);
+      this.scene.add(f);
+    }
+
+    // FRASE GANDHI
+    const c5 = document.createElement('canvas');
+    c5.width = 1024; c5.height = 512;
+    const cx5 = c5.getContext('2d');
+    cx5.fillStyle = '#1e3a8a';
+    cx5.font = 'italic 56px Georgia, serif';
+    cx5.textAlign = 'left'; cx5.textBaseline = 'top';
+    ['"Seja a mudança que', 'você quer ver no mundo."'].forEach((l,i) => cx5.fillText(l, 60, 60 + i*80));
+    cx5.font = 'bold 36px Georgia, serif';
+    cx5.fillText('— Mahatma Gandhi', 60, 250);
+    const t5 = new THREE.CanvasTexture(c5);
+    const frase = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.5, 1.25),
+      new THREE.MeshBasicMaterial({ map: t5, transparent: true, opacity: 0.95 })
+    );
+    frase.position.set(34, 1.6, 4.01);
+    this.scene.add(frase);
+
+    // PLACA SALAS 147-153
+    const c6 = document.createElement('canvas');
+    c6.width = 1024; c6.height = 256;
+    const cx6 = c6.getContext('2d');
+    cx6.fillStyle = '#fff'; cx6.fillRect(0, 0, 1024, 256);
+    cx6.fillStyle = '#1a1a1a'; cx6.font = 'bold 84px Arial, sans-serif';
+    cx6.textAlign = 'center'; cx6.textBaseline = 'middle';
+    cx6.fillText('SALAS 147 A 153  >', 512, 128);
+    const t6 = new THREE.CanvasTexture(c6);
+    const placa = new THREE.Mesh(
+      new THREE.PlaneGeometry(3, 0.7),
+      new THREE.MeshBasicMaterial({ map: t6 })
+    );
+    placa.position.set(11, 2.2, 21.99);
+    this.scene.add(placa);
+  },
+
+  placaDir(x, y, z, w, h, lines, rotY) {
+    rotY = rotY || 0;
+    const c = document.createElement('canvas');
+    c.width = 1024; c.height = 512;
+    const cx = c.getContext('2d');
+    cx.fillStyle = '#1e3a8a'; cx.fillRect(0, 0, 1024, 512);
+    cx.strokeStyle = '#fff'; cx.lineWidth = 6;
+    cx.strokeRect(8, 8, 1008, 496);
+    cx.fillStyle = '#ffffff';
+    cx.font = 'bold 40px system-ui';
+    cx.textBaseline = 'middle';
+    lines.forEach((l,i) => cx.fillText(l, 60, 80 + i*65));
+    const t = new THREE.CanvasTexture(c);
+    const placa = new THREE.Mesh(
+      new THREE.BoxGeometry(w, h, 0.06),
+      new THREE.MeshBasicMaterial({ map: t })
+    );
+    placa.position.set(x, y, z);
+    placa.rotation.y = rotY;
+    this.scene.add(placa);
+  },
+
+  buildEscalator() {
+    const grp = new THREE.Group();
+    this.scene.add(grp);
+    const LANES = [
+      { xMin: 2.5, xMax: 6.5, direction: +1 },
+      { xMin: 7.0, xMax: 11.0, direction: -1 }
+    ];
+    LANES.forEach(lane => {
+      const lw = lane.xMax - lane.xMin;
+      const lcx = (lane.xMin + lane.xMax)/2;
+      const len = Math.hypot(6, BUILDING.BY);
+      const angle = Math.atan2(BUILDING.BY, 6);
+      // Plataforma
+      const platform = new THREE.Mesh(
+        new THREE.BoxGeometry(lw, 0.25, len),
+        this.mat(0x707a83)
+      );
+      platform.position.set(lcx, BUILDING.BY/2, 11);
+      platform.rotation.x = angle;
+      grp.add(platform);
+      // Patamares
+      this.box(grp, lw, 0.2, 1.4, 0x707a83, lane.xMin, 0, 13.3);
+      this.box(grp, lw, 0.2, 1.4, 0x707a83, lane.xMin, BUILDING.BY - 0.1, 7.3);
+      // Degraus
+      const stepGeo = new THREE.BoxGeometry(lw-0.15, 0.18, 0.4);
+      const stepMat = this.mat(0x1a1a1a);
+      const N = 14;
+      const im = new THREE.InstancedMesh(stepGeo, stepMat, N);
+      im.userData = { lane, N };
+      grp.add(im);
+      this.escalators.push(im);
+      // Guarda-corpos
+      const glassGeo = new THREE.PlaneGeometry(len, 0.95);
+      const glassMat = new THREE.MeshBasicMaterial({
+        color: 0xa6d8c5, transparent: true, opacity: 0.42, side: THREE.DoubleSide
+      });
+      for (const side of [-1, +1]) {
+        const g = new THREE.Mesh(glassGeo, glassMat);
+        g.position.set(lcx + side*(lw/2 + 0.005), BUILDING.BY/2 + 0.55, 11);
+        g.rotation.y = Math.PI/2; g.rotation.x = -angle;
+        grp.add(g);
+        const rail = new THREE.Mesh(
+          new THREE.BoxGeometry(0.08, 0.08, len+0.4),
+          this.mat(0x141414)
+        );
+        rail.position.set(lcx + side*(lw/2 + 0.005), BUILDING.BY/2 + 1.05, 11);
+        rail.rotation.x = angle;
+        grp.add(rail);
+      }
+    });
+    // Pilar central
+    const div = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, BUILDING.BY + 0.4, 7),
+      this.mat(0x2a2f38)
+    );
+    div.position.set(6.75, (BUILDING.BY + 0.4)/2, 11);
+    grp.add(div);
+  },
+
+  buildRamp() {
+    const grp = new THREE.Group();
+    this.scene.add(grp);
+    const surfMat = this.mat(0xc7c2b6);
+    // Trecho A (z=11-14, x=13-23, sobe y=0 → 1.5)
+    const lenA = Math.hypot(1.5, 3);
+    const angA = Math.atan2(1.5, 3);
+    const rA = new THREE.Mesh(new THREE.BoxGeometry(10, 0.15, lenA), surfMat);
+    rA.position.set(18, 0.75, 12.5);
+    rA.rotation.x = -angA;
+    grp.add(rA);
+    // Patamar
+    this.box(grp, 2, 0.15, 3, 0xc7c2b6, 21, 1.5, 8);
+    // Trecho B (sobe y=1.5 → 3)
+    const lenB = Math.hypot(1.5, 8);
+    const angB = Math.atan2(1.5, 8);
+    const rB = new THREE.Mesh(new THREE.BoxGeometry(lenB, 0.15, 3), surfMat);
+    rB.position.set(17, 2.25, 9.5);
+    rB.rotation.z = angB;
+    grp.add(rB);
+    // Guarda-corpos
+    const glassMat = new THREE.MeshBasicMaterial({
+      color: 0xa6d8c5, transparent: true, opacity: 0.40, side: THREE.DoubleSide
+    });
+    [
+      [10, 0.9, 14.005, [18, 0.9, 14.005], Math.PI],
+      [10, 0.9, 0,      [18, 2.4, 10.995], 0],
+      [8,  0.9, 0,      [17, 2.7, 8.005],  Math.PI],
+      [8,  0.9, 0,      [17, 2.7, 10.995], 0]
+    ].forEach(p => {
+      const g = new THREE.Mesh(new THREE.PlaneGeometry(p[0], p[1]), glassMat);
+      g.position.set(p[3][0], p[3][1], p[3][2]);
+      g.rotation.y = p[4];
+      grp.add(g);
+    });
+  },
+
+  buildElevator() {
+    const g = new THREE.Group();
+    this.scene.add(g);
+    this.box(g, 3, 0.1, 3, 0xb0b6c0, 46, 0.05, 14);
+    const cabin = new THREE.Mesh(
+      new THREE.BoxGeometry(3, 0.4, 3),
+      this.mat(0xd5d8dd)
+    );
+    cabin.position.set(47.5, 0.25, 15.5);
+    g.add(cabin);
+    const doorMat = this.mat(0x4f5660);
+    const doorL = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2.2, 0.1), doorMat);
+    doorL.position.set(46.85, 1.2, 13.95);
+    g.add(doorL);
+    const doorR = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2.2, 0.1), doorMat);
+    doorR.position.set(48.15, 1.2, 13.95);
+    g.add(doorR);
+    // Símbolo ♿
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 256;
+    const x2 = c.getContext('2d');
+    x2.fillStyle = '#1e3a8a'; x2.fillRect(0, 0, 256, 256);
+    x2.fillStyle = '#fff';
+    x2.font = 'bold 180px system-ui';
+    x2.textAlign = 'center'; x2.textBaseline = 'middle';
+    x2.fillText('♿', 128, 138);
+    const t = new THREE.CanvasTexture(c);
+    const sign = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.5, 0.5),
+      new THREE.MeshBasicMaterial({ map: t })
+    );
+    sign.position.set(47.5, 1.6, 13.9);
+    sign.rotation.y = Math.PI;
+    g.add(sign);
+    this.elevator = { doorL, doorR, cabin, state: 'idle', currentFloor: 1, targetFloor: 1, animStart: 0 };
+  },
+
+  buildLibrary() {
+    const grp = new THREE.Group();
+    this.scene.add(grp);
+    const shelfW = 2.6, shelfH = 1.8, shelfD = 0.5;
+    const lines = [
+      { x: 3, count: 3 }, { x: 7, count: 3 }, { x: 11, count: 3 },
+      { x: 15, count: 3 }, { x: 19, count: 3 }
+    ];
+    // Texture de livros
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 128;
+    const cx = c.getContext('2d');
+    cx.fillStyle = '#3a3a3a'; cx.fillRect(0, 0, 512, 128);
+    const colors = ['#7a2e2e','#5c4a2a','#2c4868','#3d6e3a','#7a5a2e','#4b2c5e','#2c5e6e','#7a3a4a'];
+    let xp = 4;
+    while (xp < 512) {
+      const w = 8 + Math.random()*14;
+      cx.fillStyle = colors[Math.floor(Math.random()*colors.length)];
+      cx.fillRect(xp, 18, w, 100);
+      cx.fillStyle = 'rgba(0,0,0,0.3)';
+      cx.fillRect(xp + w - 1, 18, 1, 100);
+      xp += w + 1;
+    }
+    const tex = new THREE.CanvasTexture(c);
+    const bookMat = new THREE.MeshBasicMaterial({ map: tex });
+
+    lines.forEach(line => {
+      for (let i = 0; i < line.count; i++) {
+        const z = 2 + i*1.6;
+        this.box(grp, shelfW, shelfH, shelfD, 0x4a5364, line.x, 0, z);
+        for (let p = 0; p < 3; p++) {
+          const books = new THREE.Mesh(
+            new THREE.BoxGeometry(shelfW-0.1, 0.45, 0.18),
+            bookMat
+          );
+          books.position.set(line.x + shelfW/2, 0.25 + p*0.55, z + shelfD/2);
+          grp.add(books);
+        }
+      }
+    });
+    // Balcão
+    this.box(grp, 4, 1.0, 0.6, 0xc89564, 2, 0, 6.0);
+    // Mesas redondas
+    for (let i = 0; i < 4; i++) {
+      const mx = 21.5 - i*0.6;
+      const mz = 2.5 + i*0.7;
+      const t = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.6, 0.6, 0.05, 16),
+        this.mat(0xc89564)
+      );
+      t.position.set(mx, 0.75, mz);
+      grp.add(t);
+      const leg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 0.75, 8),
+        this.mat(0x3f4148)
+      );
+      leg.position.set(mx, 0.38, mz);
+      grp.add(leg);
+    }
+  },
+
+  buildConvivencia() {
+    const grp = new THREE.Group();
+    this.scene.add(grp);
+    // Mesas + cadeiras + vending
+    const tables = [[44,25],[47,25],[44,29],[47,29],[44,33],[47,33]];
+    tables.forEach(p => {
+      const t = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.55, 0.55, 0.05, 16),
+        this.mat(0xc89564)
+      );
+      t.position.set(p[0], 0.75, p[1]);
+      grp.add(t);
+      const leg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.06, 0.75, 8),
+        this.mat(0x3f4148)
+      );
+      leg.position.set(p[0], 0.38, p[1]);
+      grp.add(leg);
+      // 4 pufes
+      for (let a = 0; a < 4; a++) {
+        const ang = a * Math.PI / 2;
+        const cxc = p[0] + Math.cos(ang) * 1.0;
+        const czc = p[1] + Math.sin(ang) * 1.0;
+        this.box(grp, 0.42, 0.05, 0.42, 0x4a5566, cxc-0.21, 0.45, czc-0.21);
+      }
+    });
+    // Vending machines azuis
+    this.box(grp, 1.2, 1.8, 0.7, 0x1e3a8a, 47, 0, 33.5);
+    this.box(grp, 1.2, 1.8, 0.7, 0x0a4a7a, 45.5, 0, 33.5);
+    // Balcão Castelli
+    this.box(grp, 3, 1.0, 1.2, 0x111111, 41, 0, 33.0);
+    this.box(grp, 3, 0.5, 0.1, 0xc81e1e, 41, 1.0, 33.0);
+  },
+
+  buildGalpao() {
+    const grp = new THREE.Group();
+    this.scene.add(grp);
+    const trussZs = [6, 11, 16, 21, 26, 31];
+    const ty = 5.4;
+    trussZs.forEach(tz => {
+      const pts = [];
+      const xa = 50.5, xb = 71.5;
+      const count = 18;
+      const seg = (xb - xa) / count;
+      const banzoH = 0.45;
+      for (let i = 0; i < count; i++) {
+        const x1 = xa + i*seg;
+        const x2 = xa + (i+1)*seg;
+        pts.push(new THREE.Vector3(x1, ty, tz), new THREE.Vector3(x2, ty, tz));
+        pts.push(new THREE.Vector3(x1, ty-banzoH, tz), new THREE.Vector3(x2, ty-banzoH, tz));
+        if (i % 2 === 0) pts.push(new THREE.Vector3(x1, ty, tz), new THREE.Vector3(x2, ty-banzoH, tz));
+        else pts.push(new THREE.Vector3(x1, ty-banzoH, tz), new THREE.Vector3(x2, ty, tz));
+        pts.push(new THREE.Vector3(x1, ty, tz), new THREE.Vector3(x1, ty-banzoH, tz));
+      }
+      pts.push(new THREE.Vector3(xb, ty, tz), new THREE.Vector3(xb, ty-banzoH, tz));
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      const ls = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0x4a4f57 }));
+      grp.add(ls);
+    });
+    // Vigas longitudinais
+    for (const offset of [0, -0.45]) {
+      const pts = [];
+      for (let i = 0; i < trussZs.length - 1; i++) {
+        pts.push(new THREE.Vector3(50.5, ty+offset, trussZs[i]));
+        pts.push(new THREE.Vector3(50.5, ty+offset, trussZs[i+1]));
+        pts.push(new THREE.Vector3(71.5, ty+offset, trussZs[i]));
+        pts.push(new THREE.Vector3(71.5, ty+offset, trussZs[i+1]));
+        pts.push(new THREE.Vector3(60.5, ty+offset, trussZs[i]));
+        pts.push(new THREE.Vector3(60.5, ty+offset, trussZs[i+1]));
+      }
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      const ls = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0x4a4f57 }));
+      grp.add(ls);
+    }
+    // Bancadas
+    [[[54,7],[60,7],[66,7],[54,11],[60,11],[66,11]],
+     [[54,16],[60,16],[66,16],[54,20],[60,20],[66,20]],
+     [[54,25],[60,25],[66,25],[54,29],[60,29],[66,29]]].forEach(set => {
+      set.forEach(p => {
+        this.box(grp, 1.8, 0.9, 0.7, 0xbbbbbb, p[0]-0.9, 0, p[1]-0.35);
+      });
+    });
+    // Telhado translúcido
+    this.box(grp, BUILDING.HX-0.3, 0.15, BUILDING.HZ-0.3, 0xe8e8e8,
+             BUILDING.HOX+0.15, BUILDING.HY-0.15, BUILDING.HOZ+0.15,
+             { opacity: 0.95 });
+  },
+
+  buildEntradaSec() {
+    // Degraus da saída leste do galpão
+    for (let i = 0; i < 6; i++) {
+      const sx = BUILDING.HOX + BUILDING.HX + i*0.3;
+      const sh = 0.18;
+      this.box(this.scene, 0.3, sh, 4.0, 0x1a1a1a, sx, i*sh, 14);
+    }
+  },
+
+  buildPisoTatil() {
+    // Faixa amarela corredor central N-S
+    const tatil = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 0.02, 34),
+      this.mat(0xfbbf24)
+    );
+    tatil.position.set(24.5, 0.06, 18);
+    this.scene.add(tatil);
+    // Faixa perpendicular entrada
+    const tatil2 = new THREE.Mesh(
+      new THREE.BoxGeometry(20, 0.02, 0.5),
+      this.mat(0xfbbf24)
+    );
+    tatil2.position.set(15.5, 0.06, 2);
+    this.scene.add(tatil2);
+  },
+
+  buildCeilingDecorations() {
+    // Forro decorativo com pingentes (entrada principal)
+    this.forroPingentes(25, 3, 12, 5, 70);
+    // Forro galpão
+    this.forroPingentes(67, 16, 8, 5, 40);
+
+    // Teto removível (toggle)
+    this.grpCeil = new THREE.Group();
+    const ceiling = new THREE.Mesh(
+      new THREE.BoxGeometry(BUILDING.BX, 0.15, BUILDING.BZ),
+      new THREE.MeshBasicMaterial({ color: 0xfafaf6, transparent: true, opacity: 0.78 })
+    );
+    ceiling.position.set(BUILDING.BX/2, BUILDING.BY + 0.05, BUILDING.BZ/2);
+    this.grpCeil.add(ceiling);
+    this.grpCeil.visible = false;
+    this.scene.add(this.grpCeil);
+  },
+
+  forroPingentes(cx, cz, sx, sz, count) {
+    const grp = new THREE.Group();
+    this.scene.add(grp);
+    // Plano preto do forro
+    this.box(grp, sx, 0.05, sz, 0x0a0a0a, cx-sx/2, BUILDING.BY-0.06, cz-sz/2);
+    // Pingentes
+    const pendGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.5, 6);
+    const pendMat = new THREE.MeshBasicMaterial({
+      color: 0xfff4d6, transparent: true, opacity: 0.92
+    });
+    const im = new THREE.InstancedMesh(pendGeo, pendMat, count);
+    const dummy = new THREE.Object3D();
+    let seed = 17;
+    const rnd = () => { seed = (seed*9301 + 49297) % 233280; return seed/233280; };
+    for (let i = 0; i < count; i++) {
+      const px = cx - sx/2 + rnd()*sx;
+      const pz = cz - sz/2 + rnd()*sz;
+      const len = 0.4 + rnd()*0.9;
+      dummy.position.set(px, BUILDING.BY - 0.08 - len/2, pz);
+      dummy.scale.set(1, len/0.5, 1);
+      dummy.updateMatrix();
+      im.setMatrixAt(i, dummy.matrix);
+    }
+    im.instanceMatrix.needsUpdate = true;
+    grp.add(im);
+  },
+
+  buildQRCodes() {
+    QR_CHECKPOINTS.forEach(qr => {
+      const g = this.makeQRSign(qr);
+      this.qrMeshes.push(g);
+      this.scene.add(g);
+    });
+  },
+
+  makeQRSign(qr) {
+    const group = new THREE.Group();
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 128, 128);
+    ctx.fillStyle = '#000';
+    let seed = qr.id.charCodeAt(0) + qr.id.charCodeAt(qr.id.length-1);
+    for (let i = 0; i < 14; i++) {
+      for (let j = 0; j < 14; j++) {
+        seed = (seed*9301 + 49297) % 233280;
+        if (seed/233280 > 0.5) ctx.fillRect(8 + j*8, 8 + i*8, 7, 7);
+      }
+    }
+    [[8,8],[8,84],[84,8]].forEach(p => {
+      ctx.fillStyle = '#000'; ctx.fillRect(p[0], p[1], 36, 36);
+      ctx.fillStyle = '#fff'; ctx.fillRect(p[0]+6, p[1]+6, 24, 24);
+      ctx.fillStyle = '#000'; ctx.fillRect(p[0]+12, p[1]+12, 12, 12);
+    });
+    const tex = new THREE.CanvasTexture(canvas);
+    // Fundo branco
+    const back = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.6, 0.78),
+      new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    back.position.set(0, 0, -0.005);
+    group.add(back);
+    const qrPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.48, 0.48),
+      new THREE.MeshBasicMaterial({ map: tex })
+    );
+    qrPlane.position.set(0, 0.08, 0);
+    group.add(qrPlane);
+    // Faixa amarela inferior
+    const lbl = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.6, 0.18),
+      new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
+    );
+    lbl.position.set(0, -0.27, 0.001);
+    group.add(lbl);
+    // Halo
+    const halo = new THREE.Mesh(
+      new THREE.RingGeometry(0.45, 0.55, 32),
+      new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
+    );
+    halo.position.set(0, 0, -0.01);
+    group.add(halo);
+    // Poste
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.05, qr.y - 0.4, 8),
+      this.mat(0x2a2a36)
+    );
+    post.position.set(0, -(qr.y - 0.2), 0);
+    group.add(post);
+
+    group.position.set(qr.x, qr.y, qr.z);
+    // Rotação
+    if (qr.id === 'qr_saguao') group.rotation.y = 0;
+    else if (qr.id === 'qr_lab_eng' || qr.id === 'qr_conviv') group.rotation.y = -Math.PI/2;
+    else group.rotation.y = qr.z < 16 ? Math.PI : 0;
+
+    group.userData.qrId = qr.id;
+    group.userData.halo = halo;
+    return group;
+  },
+
+  buildLabels() {
+    // Labels DOM em vez de CSS2DRenderer (mais simples)
+    this.labelEls = [];
+    const labelLayer = document.createElement('div');
+    labelLayer.style.position = 'fixed';
+    labelLayer.style.top = '0'; labelLayer.style.left = '0';
+    labelLayer.style.width = '100vw'; labelLayer.style.height = '100vh';
+    labelLayer.style.zIndex = '5';
+    labelLayer.style.pointerEvents = 'none';
+    labelLayer.id = 'labels3DLayer';
+    document.body.appendChild(labelLayer);
+    this.labelLayer = labelLayer;
+
+    ROOMS.forEach(r => {
+      if (r.external) return;
+      const div = document.createElement('div');
+      div.style.position = 'absolute';
+      div.style.background = 'rgba(15,23,42,0.88)';
+      div.style.color = '#f8fafc';
+      const labelColor = CAT_COLORS[r.cat] ? CAT_COLORS[r.cat].label : 0x999999;
+      div.style.border = '1px solid #' + labelColor.toString(16).padStart(6,'0');
+      div.style.padding = '3px 8px';
+      div.style.borderRadius = '5px';
+      div.style.fontSize = '11px';
+      div.style.fontWeight = '600';
+      div.style.whiteSpace = 'nowrap';
+      div.style.transform = 'translate(-50%, -50%)';
+      div.style.fontFamily = "'Inter', sans-serif";
+      div.style.letterSpacing = '-0.005em';
+      div.style.backdropFilter = 'blur(4px)';
+      div.innerHTML = (r.num ? '<span style="color:#e5a93b;font-weight:700;margin-right:5px;">'+r.num+'</span>' : '') + r.name;
+      labelLayer.appendChild(div);
+      this.labelEls.push({ el: div, x: r.x + r.w/2, y: r.cat === 'lab_eng' ? 3.5 : 2.3, z: r.z + r.d/2 });
+    });
+  },
+
+  updateLabels() {
+    if (!this.labelEls || !this.labelsVisible) {
+      if (this.labelEls) this.labelEls.forEach(l => l.el.style.display = 'none');
+      return;
+    }
+    const w = window.innerWidth, h = window.innerHeight;
+    const v = new THREE.Vector3();
+    this.labelEls.forEach(l => {
+      v.set(l.x, l.y, l.z);
+      v.project(this.camera);
+      if (v.z > 1) { l.el.style.display = 'none'; return; }
+      l.el.style.display = '';
+      const sx = (v.x * 0.5 + 0.5) * w;
+      const sy = (1 - (v.y * 0.5 + 0.5)) * h;
+      l.el.style.left = sx + 'px';
+      l.el.style.top = sy + 'px';
+    });
+  },
+
+  buildSafetyEquipment() {
+    // Extintores ao longo dos corredores
+    [[5,11],[20,11],[35,11],[48,11],[5,22],[20,22],[35,22],[48,22],[55,18],[65,18]].forEach(p => {
+      const ext = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.14, 0.6, 8),
+        new THREE.MeshBasicMaterial({ color: 0xd64550 })
+      );
+      ext.position.set(p[0], 0.6, p[1]);
+      this.scene.add(ext);
+    });
+    // Luzes de emergência
+    for (let x = 8; x <= 48; x += 8) {
+      const light = new THREE.Mesh(
+        new THREE.BoxGeometry(0.3, 0.15, 0.15),
+        new THREE.MeshBasicMaterial({ color: 0x4caf6e })
+      );
+      light.position.set(x, 2.7, 11);
+      this.scene.add(light);
+      this.emergencyLights.push(light);
+    }
+  },
+
+  bindEvents() {
+    const canvas = this.renderer.domElement;
+    let isDown = false, lastX = 0, lastY = 0, dragMoved = false, touchDist = 0;
+    const onDown = (x, y) => { isDown = true; lastX = x; lastY = y; dragMoved = false; };
+    const onMove = (x, y) => {
+      if (!isDown || this.cameraMode !== 'orbit') return;
+      const dx = x - lastX, dy = y - lastY;
+      if (Math.abs(dx) + Math.abs(dy) > 4) dragMoved = true;
+      this.orbitTheta -= dx * 0.005;
+      this.orbitPhi = Math.max(0.05, Math.min(Math.PI/2.05, this.orbitPhi - dy * 0.005));
+      lastX = x; lastY = y;
+      this.applyOrbit();
+    };
+    const onUp = (x, y) => {
+      if (!dragMoved) this.handleClick(x, y);
+      isDown = false;
+    };
+    canvas.addEventListener('mousedown', e => onDown(e.clientX, e.clientY));
+    window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', e => onUp(e.clientX, e.clientY));
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      if (this.cameraMode !== 'orbit') return;
+      this.orbitDist = Math.max(10, Math.min(220, this.orbitDist + e.deltaY * 0.1));
+      this.applyOrbit();
+    }, { passive: false });
+    canvas.addEventListener('touchstart', e => {
+      if (e.touches.length === 1) onDown(e.touches[0].clientX, e.touches[0].clientY);
+      else if (e.touches.length === 2) {
+        const a = e.touches[0], b = e.touches[1];
+        touchDist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+      }
+    }, { passive: false });
+    canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (e.touches.length === 1) onMove(e.touches[0].clientX, e.touches[0].clientY);
+      else if (e.touches.length === 2 && this.cameraMode === 'orbit') {
+        const a = e.touches[0], b = e.touches[1];
+        const d = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+        if (touchDist > 0) {
+          this.orbitDist = Math.max(10, Math.min(220, this.orbitDist + (touchDist - d) * 0.3));
+          this.applyOrbit();
+        }
+        touchDist = d;
+      }
+    }, { passive: false });
+    canvas.addEventListener('touchend', e => {
+      if (e.changedTouches.length === 1) onUp(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      isDown = false; touchDist = 0;
+    });
+  },
+
+  handleClick(clientX, clientY) {
+    if (this.cameraMode !== 'orbit') return;
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.qrMeshes, true);
+    if (intersects.length > 0) {
+      let obj = intersects[0].object;
+      while (obj && !obj.userData.qrId) obj = obj.parent;
+      if (obj && obj.userData.qrId) UI.simulateScan(obj.userData.qrId);
+    }
+  },
+
+  applyOrbit() {
+    const r = this.orbitDist;
+    const x = this.orbitTarget.x + r * Math.sin(this.orbitPhi) * Math.cos(this.orbitTheta);
+    const y = this.orbitTarget.y + r * Math.cos(this.orbitPhi);
+    const z = this.orbitTarget.z + r * Math.sin(this.orbitPhi) * Math.sin(this.orbitTheta);
+    this.camera.position.set(x, y, z);
+    this.camera.lookAt(this.orbitTarget);
+  },
+
+  setView(name) {
+    this.cameraMode = 'orbit';
+    if (name === 'iso')   this.animateCameraOrbit(Math.PI*0.20, Math.PI*0.35, 95, new THREE.Vector3(28, 0, 18));
+    if (name === 'top')   this.animateCameraOrbit(Math.PI*0.5,  0.001, 115, new THREE.Vector3(30, 0, 18));
+    if (name === 'entry') this.animateCameraOrbit(-Math.PI*0.5, Math.PI*0.40, 25, new THREE.Vector3(25, 3.5, 4));
+    if (name === 'hall')  this.animateCameraOrbit(Math.PI*0.0, Math.PI*0.45, 50, new THREE.Vector3(60, 2, 18));
+  },
+
+  resetOverview() { this.setView('iso'); },
+  orbitTo(theta) { this.animateCameraOrbit(theta, this.orbitPhi, this.orbitDist, this.orbitTarget.clone()); },
+  flyToRoom(roomId) {
+    const r = ROOMS.find(rr => rr.id === roomId);
+    if (!r) return;
+    this.animateCameraOrbit(this.orbitTheta, Math.PI*0.40, 36, new THREE.Vector3(r.x + r.w/2, 1.5, r.z + r.d/2));
+  },
+
+  animateCameraOrbit(theta, phi, dist, target) {
+    this.cameraAnimating = {
+      theta0: this.orbitTheta, theta1: theta,
+      phi0: this.orbitPhi, phi1: phi,
+      dist0: this.orbitDist, dist1: dist,
+      target0: this.orbitTarget.clone(), target1: target,
+      start: performance.now(), duration: 1100
+    };
+  },
+
+  triggerElevator() {
+    if (!this.elevator || this.elevator.state !== 'idle') return;
+    this.elevator.targetFloor = this.elevator.currentFloor === 1 ? 2 : 1;
+    this.elevator.state = 'closing';
+    this.elevator.animStart = performance.now();
+    UI.setStatus('Elevador indo para o ' + this.elevator.targetFloor + 'º andar...');
+  },
+
+  toggleLabels() {
+    this.labelsVisible = !this.labelsVisible;
+    if (this.labelLayer) this.labelLayer.style.display = this.labelsVisible ? '' : 'none';
+  },
+
+  toggleCeil() {
+    this.ceilVisible = !this.ceilVisible;
+    if (this.grpCeil) this.grpCeil.visible = this.ceilVisible;
+  },
+
+  toggleQRHighlight() {
+    this.qrHighlight = !this.qrHighlight;
+    this.updateQRHighlight();
+  },
+
+  updateQRHighlight() {
+    this.qrMeshes.forEach(qr => {
+      const s = this.qrHighlight ? 1.8 : 1;
+      qr.scale.set(s, s, s);
+    });
+  },
+
+  setRouteLine(points, accessible) {
+    if (this.routeLine) { this.scene.remove(this.routeLine); this.routeLine = null; }
+    if (!points || points.length < 2) return;
+    const color = accessible ? 0xf08a4b : 0xfbbf24;
+    const lifted = points.map(p => new THREE.Vector3(p.x, (p.y || 0) + 0.08, p.z));
+    const curve = new THREE.CatmullRomCurve3(lifted, false, 'catmullrom', 0.3);
+    const geometry = new THREE.TubeGeometry(curve, Math.max(20, points.length*4), 0.15, 8, false);
+    const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.85 });
+    this.routeLine = new THREE.Mesh(geometry, material);
+    this.scene.add(this.routeLine);
+  },
+
+  updateAnimations(dt, elapsed) {
+    if (this.cameraAnimating) {
+      const a = this.cameraAnimating;
+      const t = Math.min(1, (performance.now() - a.start) / a.duration);
+      const ease = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+      this.orbitTheta = a.theta0 + (a.theta1 - a.theta0) * ease;
+      this.orbitPhi = a.phi0 + (a.phi1 - a.phi0) * ease;
+      this.orbitDist = a.dist0 + (a.dist1 - a.dist0) * ease;
+      this.orbitTarget.lerpVectors(a.target0, a.target1, ease);
+      if (this.cameraMode === 'orbit') this.applyOrbit();
+      if (t >= 1) this.cameraAnimating = null;
+    }
+    // Escalator
+    const tNow = elapsed / 1000;
+    this.escalators.forEach(im => {
+      const lane = im.userData.lane;
+      const N = im.userData.N;
+      const lcx = (lane.xMin + lane.xMax) / 2;
+      const dummy = new THREE.Object3D();
+      const speed = 0.5;
+      for (let i = 0; i < N; i++) {
+        let u = ((i/N) + lane.direction * tNow * speed) % 1;
+        if (u < 0) u += 1;
+        const z = 14 - u * 6;
+        const y = u * BUILDING.BY;
+        dummy.position.set(lcx, y + 0.18, z);
+        dummy.updateMatrix();
+        im.setMatrixAt(i, dummy.matrix);
+      }
+      im.instanceMatrix.needsUpdate = true;
+    });
+    // Elevator
+    if (this.elevator) {
+      const el = this.elevator;
+      const now = performance.now();
+      const tt = (now - el.animStart) / 1000;
+      if (el.state === 'closing') {
+        const p = Math.min(1, tt / 1.2);
+        el.doorL.position.x = 46.85 + p * 0.5;
+        el.doorR.position.x = 48.15 - p * 0.5;
+        if (p >= 1) { el.state = 'moving'; el.animStart = now; }
+      } else if (el.state === 'moving') {
+        const p = Math.min(1, tt / 2);
+        if (p >= 1) { el.currentFloor = el.targetFloor; el.state = 'opening'; el.animStart = now; }
+      } else if (el.state === 'opening') {
+        const p = Math.min(1, tt / 1.2);
+        el.doorL.position.x = 47.35 - p * 0.5;
+        el.doorR.position.x = 47.65 + p * 0.5;
+        if (p >= 1) { el.state = 'idle'; UI.setStatus('Elevador no ' + el.currentFloor + 'º andar'); }
+      }
+    }
+    // QR halos
+    this.qrMeshes.forEach((qr, i) => {
+      const halo = qr.userData.halo;
+      if (halo) halo.material.opacity = 0.25 + 0.35 * Math.sin(elapsed * 0.002 + i);
+    });
+    // Alarm flicker
+    if (this.alarmMode) {
+      const flash = Math.sin(elapsed * 0.01) > 0;
+      this.emergencyLights.forEach(l => l.material.color.setHex(flash ? 0xff3050 : 0x401020));
+    } else {
+      this.emergencyLights.forEach(l => l.material.color.setHex(0x4caf6e));
+    }
+    // Vitrine
+    if (this.vitrineActive) {
+      this.orbitTheta += dt * 0.08;
+      this.applyOrbit();
+    }
+  },
+
+  onResize() {
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+  },
+
+  loop() {
+    requestAnimationFrame(() => this.loop());
+    const now = performance.now();
+    if (!this.startTime) this.startTime = now;
+    const dt = Math.min(0.1, (now - this.lastTime) / 1000);
+    this.lastTime = now;
+    const elapsed = now - this.startTime;
+    this.updateAnimations(dt, elapsed);
+    if (Nav.active) Nav.update(dt);
+    if (Tour.active) Tour.update(dt);
+    this.updateLabels();
+    this.renderer.render(this.scene, this.camera);
+  }
+};
+
+// ===================================================================
+// GPS - Dijkstra pathfinding
+// ===================================================================
+const GPS = {
+  buildGraph() { buildGraph(); },
+
+  dijkstra(fromId, toId, accessibleOnly) {
+    accessibleOnly = !!accessibleOnly;
+    const adj = {};
+    NODES.forEach(n => adj[n.id] = []);
+    EDGES.forEach(e => {
+      if (accessibleOnly && !e.accessible) return;
+      adj[e.a].push({ to: e.b, dist: e.dist });
+      adj[e.b].push({ to: e.a, dist: e.dist });
+    });
+    const dist = {}, prev = {};
+    NODES.forEach(n => { dist[n.id] = Infinity; prev[n.id] = null; });
+    if (dist[fromId] === undefined) return null;
+    dist[fromId] = 0;
+    const queue = new Set(NODES.map(n => n.id));
+    while (queue.size > 0) {
+      let u = null, best = Infinity;
+      for (const id of queue) {
+        if (dist[id] < best) { best = dist[id]; u = id; }
+      }
+      if (u === null) break;
+      if (u === toId) break;
+      queue.delete(u);
+      for (const e of (adj[u] || [])) {
+        if (!queue.has(e.to)) continue;
+        const alt = dist[u] + e.dist;
+        if (alt < dist[e.to]) { dist[e.to] = alt; prev[e.to] = u; }
+      }
+    }
+    if (dist[toId] === Infinity) return null;
+    const path = [];
+    let u = toId;
+    while (u) { path.unshift(u); u = prev[u]; }
+    return { path, dist: dist[toId] };
+  },
+
+  getRoute(fromQrId, toRoomId, accessible) {
+    const toNode = 'room_' + toRoomId;
+    const result = this.dijkstra(fromQrId, toNode, accessible);
+    if (!result) return null;
+    const points = result.path.map(id => {
+      const n = NODES.find(nn => nn.id === id);
+      return { x: n.x, y: n.y, z: n.z, id: n.id };
+    });
+    return {
+      points, distance: result.dist,
+      time: result.dist / (accessible ? 0.8 : 1.2),
+      accessible, path: result.path
+    };
+  },
+
+  getDirections(route) {
+    if (!route || !route.points.length) return [];
+    const dirs = [];
+    const added = new Set();
+    for (let i = 0; i < route.path.length; i++) {
+      const id = route.path[i];
+      if (id === 'escal_base' && !added.has('escal')) { dirs.push('Suba pela escada rolante (Gaudium Hall)'); added.add('escal'); }
+      else if ((id === 'rampa_base') && !added.has('ramp')) { dirs.push('Use a rampa em L (acessível)'); added.add('ramp'); }
+      else if ((id === 'elev_pad' || id === 'room_elev') && !added.has('elev')) { dirs.push('Use o elevador (acessível)'); added.add('elev'); }
+      else if (id.startsWith('room_')) {
+        const rid = id.replace('room_', '');
+        const r = ROOMS.find(rr => rr.id === rid);
+        if (r && i === route.path.length - 1) dirs.push('📍 Destino: ' + r.name + (r.num ? ' · Sala ' + r.num : ''));
+      }
+    }
+    if (dirs.length < 2) dirs.unshift('Siga pelo corredor central');
+    return dirs.slice(0, 6);
+  }
+};
+
+// ===================================================================
+// NAV - Navegação primeira-pessoa
+// ===================================================================
+const Nav = {
+  active: false, route: null, curve: null, progress: 0, totalLength: 0,
+  paused: false, destRoom: null, startMs: 0, swayPhase: 0,
+
+  prepare(route, destRoomId) {
+    this.route = route;
+    this.destRoom = ROOMS.find(r => r.id === destRoomId);
+    const pts = route.points.map(p => new THREE.Vector3(p.x, (p.y||0) + 1.65, p.z));
+    if (pts.length < 2) return;
+    this.curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.25);
+    this.totalLength = this.curve.getLength();
+  },
+
+  start() {
+    if (!this.route || !this.curve) return;
+    this.active = true;
+    this.paused = false;
+    this.progress = 0;
+    this.startMs = performance.now();
+    T.cameraMode = 'follow';
+    document.body.classList.add('nav-active');
+    document.getElementById('navTopbarActions').style.display = 'flex';
+    document.getElementById('navDestName').textContent = this.destRoom.name + (this.destRoom.num ? ' · ' + this.destRoom.num : '');
+    document.getElementById('navMeta').textContent = Math.round(this.route.distance) + 'm · ~' + Nav.fmtTime(this.route.time);
+    document.getElementById('canvas2d-minimap').style.display = 'block';
+    UI.closeGpsPanel();
+    UI.setStatus('Navegando para ' + this.destRoom.name, 'nav');
+    this.resizeMinimap();
+  },
+
+  resizeMinimap() {
+    const mini = document.getElementById('canvas2d-minimap');
+    if (window.innerWidth < 600) {
+      mini.style.top = '108px'; mini.style.right = '10px';
+      mini.style.bottom = 'auto'; mini.style.left = 'auto';
+      mini.style.width = '160px'; mini.style.height = '120px';
+    } else {
+      mini.style.top = 'auto'; mini.style.bottom = '90px';
+      mini.style.right = '20px'; mini.style.left = 'auto';
+      mini.style.width = '280px'; mini.style.height = '200px';
+    }
+  },
+
+  togglePause() {
+    this.paused = !this.paused;
+    document.getElementById('btnPauseNav').textContent = this.paused ? '▶' : '⏸';
+  },
+
+  update(dt) {
+    if (this.paused) return;
+    const baseSpeed = this.route.accessible ? 0.8 : 1.2;
+    const speed = baseSpeed * T.navSpeed;
+    this.progress = Math.min(1, this.progress + (speed * dt) / this.totalLength);
+    this.swayPhase += dt;
+    const t = this.progress;
+    const pos = this.curve.getPoint(t);
+    const lookAt = t < 0.99 ? this.curve.getPoint(Math.min(1, t + 0.005)) : pos.clone().add(new THREE.Vector3(0,0,1));
+    // Câmera estática (sem trepidação/bobbing)
+    T.camera.position.set(pos.x, pos.y, pos.z);
+    T.camera.lookAt(lookAt);
+    this.updateHud(t);
+    this.drawMinimap();
+    if (this.progress >= 1) this.triggerArrival();
+  },
+
+  updateHud(t) {
+    const idx = Math.floor(t * (this.route.path.length - 1));
+    const nextIdx = Math.min(this.route.path.length - 1, idx + 2);
+    const remaining = (1 - t) * this.totalLength;
+    let text = 'Siga em frente', arrow = '→';
+    if (nextIdx < this.route.path.length) {
+      const nextId = this.route.path[nextIdx];
+      if (nextId === 'escal_base') { text = 'Pegue a escada rolante'; arrow = '↗'; }
+      else if (nextId === 'rampa_base') { text = 'Suba pela rampa'; arrow = '↗'; }
+      else if (nextId === 'elev_pad' || nextId === 'room_elev') { text = 'Pegue o elevador'; arrow = '↕'; }
+      else if (nextId.startsWith('room_')) {
+        const rid = nextId.replace('room_', '');
+        const r = ROOMS.find(rr => rr.id === rid);
+        if (r) { text = 'Entre em ' + r.name; arrow = '↑'; }
+      }
+    }
+    if (remaining < 3) text = 'Quase lá: ' + this.destRoom.name;
+    document.getElementById('navManeuver').textContent = text;
+    document.getElementById('navManeuverDist').textContent = remaining.toFixed(1) + 'm';
+    document.getElementById('navHudArrow').textContent = arrow;
+  },
+
+  drawMinimap() {
+    const canvas = document.getElementById('canvas2d-minimap');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const totalW = BUILDING.BX + BUILDING.HX + 8;
+    const totalD = BUILDING.BZ + 4;
+    const scale = Math.min(W / totalW, H / totalD) * 0.92;
+    const ox = (W - totalW * scale) / 2;
+    const oz = (H - totalD * scale) / 2;
+    ctx.fillStyle = '#0c1730'; ctx.fillRect(0, 0, W, H);
+    // Prédio principal
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.fillRect(ox, oz, BUILDING.BX * scale, BUILDING.BZ * scale);
+    // Galpão
+    ctx.fillStyle = 'rgba(255,214,10,0.07)';
+    ctx.fillRect(ox + BUILDING.HOX*scale, oz + BUILDING.HOZ*scale, BUILDING.HX*scale, BUILDING.HZ*scale);
+    // Salas
+    ROOMS.forEach(r => {
+      if (r.external) return;
+      const c = CAT_COLORS[r.cat] ? CAT_COLORS[r.cat].label : 0x999999;
+      ctx.fillStyle = '#' + c.toString(16).padStart(6, '0') + '55';
+      ctx.fillRect(ox + r.x * scale, oz + r.z * scale, r.w * scale, r.d * scale);
+      ctx.strokeStyle = '#' + c.toString(16).padStart(6, '0');
+      ctx.lineWidth = 1;
+      ctx.strokeRect(ox + r.x * scale, oz + r.z * scale, r.w * scale, r.d * scale);
+    });
+    // Rota
+    const routeColor = this.route.accessible ? '#f08a4b' : '#fbbf24';
+    ctx.strokeStyle = routeColor;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.setLineDash([8, 6]);
+    ctx.lineDashOffset = -(performance.now() / 50) % 14;
+    ctx.beginPath();
+    this.route.points.forEach((p, i) => {
+      const x = ox + p.x * scale, y = oz + p.z * scale;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Posição atual
+    const cur = this.curve.getPoint(this.progress);
+    const px = ox + cur.x * scale, py = oz + cur.z * scale;
+    const pulse = 1 + 0.3 * Math.sin(performance.now() * 0.005);
+    ctx.fillStyle = routeColor;
+    ctx.beginPath(); ctx.arc(px, py, 6 * pulse, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = routeColor + '88';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(px, py, 10 * pulse, 0, Math.PI*2); ctx.stroke();
+  },
+
+  triggerArrival() {
+    if (T.arrivalCelebrating) return;
+    T.arrivalCelebrating = true;
+    this.active = false;
+    const dest = this.destRoom;
+    const elapsed = (performance.now() - this.startMs) / 1000;
+    document.getElementById('arrivalDestName').textContent = dest.name + (dest.num ? ' · Sala ' + dest.num : '');
+    document.getElementById('arrivalDistance').textContent = Math.round(this.route.distance) + 'm';
+    document.getElementById('arrivalTime').textContent = Nav.fmtTime(elapsed);
+    document.getElementById('arrivalOverlay').classList.add('open');
+    Confetti.start();
+    if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch(e){} }
+    const cx = dest.x + dest.w/2, cz = dest.z + dest.d/2;
+    T.cameraMode = 'orbit';
+    T.orbitTarget.set(cx, 1, cz);
+    T.orbitDist = 28; T.orbitPhi = Math.PI * 0.38;
+    T.applyOrbit();
+    T.vitrineActive = true;
+    UI.setStatus('🎉 Chegou ao destino!', 'nav');
+  },
+
+  end() {
+    this.active = false;
+    T.vitrineActive = false;
+    T.arrivalCelebrating = false;
+    document.body.classList.remove('nav-active');
+    document.getElementById('navTopbarActions').style.display = 'none';
+    document.getElementById('canvas2d-minimap').style.display = 'none';
+    document.getElementById('arrivalOverlay').classList.remove('open');
+    T.cameraMode = 'orbit';
+    T.resetOverview();
+    UI.setStatus('Pronto · Clique num QR ou abra o menu');
+  },
+
+  fmtTime(sec) {
+    if (sec < 60) return Math.round(sec) + 's';
+    const m = Math.floor(sec / 60), s = Math.round(sec % 60);
+    return m + 'm ' + s + 's';
+  }
+};
+
+// ===================================================================
+// TOUR - Campus tour
+// ===================================================================
+const Tour = {
+  active: false, waypoints: null, curIdx: 0, segProgress: 0, segDuration: 4, curve: null, paused: false,
+
+  start() {
+    this.active = true;
+    this.curIdx = 0;
+    this.segProgress = 0;
+    this.waypoints = CAMPUS_TOUR;
+    T.cameraMode = 'follow';
+    document.body.classList.add('nav-active');
+    document.getElementById('navTopbarActions').style.display = 'flex';
+    document.getElementById('tourHud').classList.add('visible');
+    UI.setStatus('🎬 Tour do Campus', 'nav');
+    this.advanceToNext();
+  },
+
+  advanceToNext() {
+    if (this.curIdx >= this.waypoints.length - 1) { this.end(); return; }
+    const cur = this.waypoints[this.curIdx];
+    const next = this.waypoints[this.curIdx + 1];
+    document.getElementById('tourName').textContent = next.name;
+    document.getElementById('tourDesc').textContent = next.desc;
+    document.getElementById('tourProgress').style.width = ((this.curIdx + 1) / (this.waypoints.length - 1) * 100) + '%';
+    const startV = new THREE.Vector3(cur.x, cur.y, cur.z);
+    const endV = new THREE.Vector3(next.x, next.y, next.z);
+    const mid = startV.clone().lerp(endV, 0.5);
+    this.curve = new THREE.CatmullRomCurve3([startV, mid, endV], false);
+    this.segProgress = 0;
+    const d = startV.distanceTo(endV);
+    this.segDuration = Math.max(2.5, Math.min(6, d / 4));
+  },
+
+  update(dt) {
+    if (!this.active || this.paused) return;
+    this.segProgress += dt / this.segDuration;
+    if (this.segProgress >= 1) this.segProgress = 1;
+    const cur = this.waypoints[this.curIdx];
+    const next = this.waypoints[this.curIdx + 1];
+    if (!next) { this.end(); return; }
+    const pos = this.curve.getPoint(this.segProgress);
+    const lookT = Math.min(1, this.segProgress + 0.1);
+    const lookPos = this.curve.getPoint(lookT);
+    const lookTarget = new THREE.Vector3().lerpVectors(
+      lookPos, new THREE.Vector3(next.look.x, next.look.y, next.look.z), this.segProgress
+    );
+    // Câmera estática (sem bob)
+    T.camera.position.set(pos.x, pos.y, pos.z);
+    T.camera.lookAt(lookTarget);
+    if (this.segProgress >= 1) {
+      this.curIdx++;
+      if (this.curIdx >= this.waypoints.length - 1) this.end();
+      else this.advanceToNext();
+    }
+  },
+
+  skip() { this.curIdx++; if (this.curIdx >= this.waypoints.length - 1) this.end(); else this.advanceToNext(); },
+
+  end() {
+    this.active = false;
+    document.body.classList.remove('nav-active');
+    document.getElementById('navTopbarActions').style.display = 'none';
+    document.getElementById('tourHud').classList.remove('visible');
+    T.cameraMode = 'orbit';
+    T.resetOverview();
+    UI.setStatus('Tour encerrado');
+  }
+};
+
+// ===================================================================
+// CONFETTI
+// ===================================================================
+const Confetti = {
+  particles: [], canvas: null, ctx: null, running: false, lastT: 0,
+
+  start() {
+    this.canvas = document.getElementById('confetti-canvas');
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+    this.ctx = this.canvas.getContext('2d');
+    this.canvas.classList.add('active');
+    this.particles = [];
+    const colors = ['#fbbf24', '#ffffff', '#1e3a8a', '#f0b860', '#3457c9', '#ff5577'];
+    for (let i = 0; i < 180; i++) {
+      this.particles.push({
+        x: Math.random() * this.canvas.width,
+        y: -20 - Math.random() * 100,
+        vx: (Math.random() - 0.5) * 80,
+        vy: Math.random() * 80 + 60,
+        size: 4 + Math.random() * 6,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rot: Math.random() * Math.PI,
+        rotV: (Math.random() - 0.5) * 3,
+        life: 4 + Math.random() * 2
+      });
+    }
+    if (!this.running) {
+      this.running = true;
+      this.lastT = performance.now();
+      requestAnimationFrame(t => this.loop(t));
+    }
+  },
+
+  loop(t) {
+    if (!this.running) return;
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    const dt = Math.min(0.05, (t - this.lastT) / 1000);
+    this.lastT = t;
+    this.particles = this.particles.filter(p => p.life > 0 && p.y < this.canvas.height + 50);
+    this.particles.forEach(p => {
+      p.vy += 600 * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.rot += p.rotV * dt;
+      p.life -= dt;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.5);
+      ctx.restore();
+    });
+    if (this.particles.length === 0) {
+      this.running = false;
+      this.canvas.classList.remove('active');
+      return;
+    }
+    requestAnimationFrame(t => this.loop(t));
+  }
+};
+
+// ===================================================================
+// DEMO - Apresentação guiada
+// ===================================================================
+const Demo = {
+  active: false, step: 0, timer: null,
+
+  start() { this.active = true; this.step = 0; this.runStep(); },
+
+  runStep() {
+    if (this.step >= DEMO_STEPS.length) { this.end(); return; }
+    const s = DEMO_STEPS[this.step];
+    document.getElementById('demoCounter').textContent = 'Passo ' + (this.step+1) + ' de ' + DEMO_STEPS.length;
+    document.getElementById('demoTitle').textContent = s.title;
+    document.getElementById('demoBody').textContent = s.body;
+    const tooltip = document.getElementById('demoTooltip');
+    tooltip.classList.add('visible');
+    tooltip.style.left = '50%';
+    tooltip.style.bottom = '24px';
+    tooltip.style.top = 'auto';
+    tooltip.style.right = 'auto';
+    tooltip.style.transform = 'translateX(-50%)';
+    tooltip.style.width = window.innerWidth < 600 ? 'calc(100vw - 24px)' : 'auto';
+    tooltip.style.maxWidth = '420px';
+    try { if (s.action) s.action(); } catch(e) { console.warn(e); }
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.next(), s.duration);
+  },
+
+  next() { if (this.timer) clearTimeout(this.timer); this.step++; this.runStep(); },
+
+  skip() { this.end(); },
+
+  end() {
+    this.active = false;
+    if (this.timer) clearTimeout(this.timer);
+    document.getElementById('demoTooltip').classList.remove('visible');
+    if (Nav.active) Nav.end();
+    UI.setStatus('Pronto · Clique num QR ou abra o menu');
+  }
+};
+
+// ===================================================================
+// KANBAN - preenche o board
+// ===================================================================
+const Kanban = {
+  init() {
+    const board = document.getElementById('kanbanBoard');
+    if (!board) return;
+    board.innerHTML = '';
+    const cols = [
+      { id: 'backlog', title: 'Backlog' },
+      { id: 'doing',   title: 'Em Desenvolvimento' },
+      { id: 'done',    title: 'Concluído' }
+    ];
+    cols.forEach(c => {
+      const col = document.createElement('div');
+      col.className = 'kanban-col';
+      col.setAttribute('data-col', c.id);
+      // header
+      const head = document.createElement('div');
+      head.className = 'kanban-col-head';
+      head.innerHTML = '<span class="dot"></span><span class="title">' + c.title + '</span><span class="count">' + KANBAN_CARDS[c.id].length + '</span>';
+      col.appendChild(head);
+      // cards container
+      const cards = document.createElement('div');
+      cards.className = 'kanban-cards';
+      KANBAN_CARDS[c.id].forEach(card => {
+        const div = document.createElement('div');
+        div.className = 'kanban-card';
+        div.setAttribute('data-tag', card.tag);
+        div.innerHTML = '<div class="title">' + card.title + '</div>' +
+                        '<div class="body" style="color:var(--text-dim);font-size:12px;margin:4px 0 6px;">' + card.body + '</div>' +
+                        '<div class="meta"><span class="chip">' + card.tag + '</span></div>';
+        cards.appendChild(div);
+      });
+      col.appendChild(cards);
+      board.appendChild(col);
+    });
+  }
+};
+
+// ===================================================================
+// UI - bindings, events, etc
+// ===================================================================
+const UI = {
+  pcdGlobal: false,
+  pcdPanel: false,
+  currentScanQrId: null,
+
+  init() {
+    // Preenche dropdown de destinos
+    const sel = document.getElementById('destSelect');
+    const usable = ROOMS.filter(r => !r.external);
+    const groups = {
+      'Salas 147–156': usable.filter(r => r.cat === 'aula' && r.num && r.num[0] === '1'),
+      'Laboratórios Engenharias': usable.filter(r => r.cat === 'lab_eng'),
+      'Administrativo · Apoio': usable.filter(r => r.cat === 'admin' || r.cat === 'apoio'),
+      'Biblioteca · Banheiros': usable.filter(r => r.cat === 'biblio' || r.cat === 'wc'),
+      'Convivência · Vertical': usable.filter(r => r.cat === 'circ' || r.cat === 'elev')
+    };
+    Object.entries(groups).forEach(([gname, rooms]) => {
+      if (!rooms.length) return;
+      const og = document.createElement('optgroup');
+      og.label = gname;
+      rooms.forEach(r => {
+        const o = document.createElement('option');
+        o.value = r.id;
+        o.textContent = r.num ? r.num + ' · ' + r.name : r.name;
+        og.appendChild(o);
+      });
+      sel.appendChild(og);
+    });
+
+    Kanban.init();
+
+    // Bindings
+    document.getElementById('btnMenu').onclick = () => this.openMenu();
+    document.getElementById('btnCloseMenu').onclick = () => this.closeMenu();
+    document.getElementById('menuScrim').onclick = () => this.closeMenu();
+    document.getElementById('btnClosePanel').onclick = () => this.closeGpsPanel();
+    document.getElementById('btnEndNavTop').onclick = () => { if (Tour.active) Tour.end(); else Nav.end(); };
+    document.getElementById('btnTour').onclick = () => { Tour.start(); this.closeMenu(); };
+    document.getElementById('btnDemo').onclick = () => { Demo.start(); this.closeMenu(); };
+    document.getElementById('btnCalculateRoute').onclick = () => this.calculateRoute();
+    document.getElementById('btnBackPanel').onclick = () => this.closeGpsPanel();
+    document.getElementById('btnStartNav').onclick = () => Nav.start();
+    document.getElementById('btnPauseNav').onclick = () => Nav.togglePause();
+    document.getElementById('btnEndNav').onclick = () => Nav.end();
+    document.getElementById('btnTourSkip').onclick = () => Tour.skip();
+    document.getElementById('btnTourEnd').onclick = () => Tour.end();
+    document.getElementById('btnDemoSkip').onclick = () => Demo.skip();
+    document.getElementById('btnDemoNext').onclick = () => Demo.next();
+    document.getElementById('btnArrivalMap').onclick = () => this.dismissArrival(false);
+    document.getElementById('btnArrivalNew').onclick = () => this.dismissArrival(true);
+
+    // Theme toggle (se existir)
+    const btnTheme = document.getElementById('btnTheme');
+    if (btnTheme) btnTheme.onclick = () => this.toggleTheme();
+
+    // Menu items
+    document.getElementById('miDemo').onclick = () => { Demo.start(); this.closeMenu(); };
+    document.getElementById('miTour').onclick = () => { Tour.start(); this.closeMenu(); };
+    document.getElementById('miKanban').onclick = () => { this.openKanban(); this.closeMenu(); };
+    document.getElementById('btnCloseKanban').onclick = () => this.closeKanban();
+    document.getElementById('miScanHall').onclick = () => { this.simulateScan('qr_saguao'); this.closeMenu(); };
+    document.getElementById('miScanBib').onclick = () => { this.simulateScan('qr_biblio'); this.closeMenu(); };
+    document.getElementById('miScanLab').onclick = () => { this.simulateScan('qr_lab_eng'); this.closeMenu(); };
+    document.getElementById('miOverview').onclick = () => { T.resetOverview(); this.closeMenu(); };
+    document.getElementById('miTop').onclick = () => { T.setView('top'); this.closeMenu(); };
+    document.getElementById('miEntry').onclick = () => { T.setView('entry'); this.closeMenu(); };
+    document.getElementById('miHall').onclick = () => { T.setView('hall'); this.closeMenu(); };
+    document.getElementById('miElev').onclick = () => T.triggerElevator();
+    document.getElementById('miLabels').onclick = () => T.toggleLabels();
+    document.getElementById('miQR').onclick = () => T.toggleQRHighlight();
+    document.getElementById('miRoof').onclick = () => T.toggleCeil();
+    if (document.getElementById('miDoors')) document.getElementById('miDoors').onclick = () => this.toggleDoors();
+    document.getElementById('miAlarm').onclick = () => this.toggleAlarm();
+
+    document.getElementById('togglePCD').onclick = () => this.toggleSetting('pcd');
+    document.getElementById('toggleReduceMotion').onclick = () => this.toggleSetting('reduceMotion');
+    if (document.getElementById('toggleContrast')) document.getElementById('toggleContrast').onclick = () => this.toggleSetting('contrast');
+    document.getElementById('togglePanelPCD').onclick = () => this.togglePanelPCD();
+    document.getElementById('speedSlider').oninput = (e) => this.setSpeed(e.target.value);
+
+    window.addEventListener('keydown', e => this.handleKey(e));
+    window.addEventListener('resize', () => Nav.resizeMinimap());
+
+    document.querySelectorAll('button').forEach(b => {
+      b.addEventListener('contextmenu', e => e.preventDefault());
+    });
+  },
+
+  openMenu() {
+    document.getElementById('sideMenu').classList.add('open');
+    document.getElementById('menuScrim').classList.add('open');
+  },
+  closeMenu() {
+    document.getElementById('sideMenu').classList.remove('open');
+    document.getElementById('menuScrim').classList.remove('open');
+  },
+
+  openKanban() { document.getElementById('kanbanModal').classList.add('open'); },
+  closeKanban() { document.getElementById('kanbanModal').classList.remove('open'); },
+
+  openGpsPanel() { document.getElementById('gpsPanel').classList.add('open'); },
+  closeGpsPanel() {
+    document.getElementById('gpsPanel').classList.remove('open');
+    document.getElementById('routeSummary').classList.remove('visible');
+    document.getElementById('directionsList').innerHTML = '';
+    document.getElementById('navActions').style.display = 'none';
+    if (T.routeLine) { T.scene.remove(T.routeLine); T.routeLine = null; }
+  },
+
+  simulateScan(qrId) {
+    const qr = QR_CHECKPOINTS.find(q => q.id === qrId);
+    if (!qr) return;
+    this.currentScanQrId = qrId;
+    document.getElementById('gpsLocationName').textContent = qr.name;
+    document.getElementById('gpsToken').textContent = 'uniube.app/gps?from=' + qrId;
+    document.getElementById('destSelect').value = '';
+    document.getElementById('routeSummary').classList.remove('visible');
+    document.getElementById('directionsList').innerHTML = '';
+    document.getElementById('navActions').style.display = 'none';
+    if (T.routeLine) { T.scene.remove(T.routeLine); T.routeLine = null; }
+    this.pcdPanel = this.pcdGlobal;
+    document.getElementById('togglePanelPCD').classList.toggle('on', this.pcdPanel);
+    this.openGpsPanel();
+    if (qr.roomId) T.flyToRoom(qr.roomId);
+    else T.animateCameraOrbit(T.orbitTheta, Math.PI*0.4, 35, new THREE.Vector3(qr.x, 1.5, qr.z));
+    UI.setStatus('📱 Checkpoint: ' + qr.name);
+  },
+
+  togglePanelPCD() {
+    this.pcdPanel = !this.pcdPanel;
+    document.getElementById('togglePanelPCD').classList.toggle('on', this.pcdPanel);
+    if (document.getElementById('routeSummary').classList.contains('visible')) this.calculateRoute();
+  },
+
+  toggleSetting(name) {
+    const btnMap = { pcd: 'togglePCD', reduceMotion: 'toggleReduceMotion', contrast: 'toggleContrast' };
+    const btn = document.getElementById(btnMap[name]);
+    if (!btn) return;
+    btn.classList.toggle('on');
+    const on = btn.classList.contains('on');
+    if (name === 'pcd') {
+      this.pcdGlobal = on;
+      this.pcdPanel = on;
+      document.getElementById('togglePanelPCD').classList.toggle('on', on);
+    } else if (name === 'reduceMotion') {
+      T.reduceMotion = on;
+    } else if (name === 'contrast') {
+      document.body.classList.toggle('high-contrast', on);
+    }
+  },
+
+  setSpeed(v) {
+    T.navSpeed = parseFloat(v);
+    document.getElementById('speedValue').textContent = (+v).toFixed(1) + 'x';
+  },
+
+  calculateRoute() {
+    if (!this.currentScanQrId) { this.setStatus('⚠ Escolha um checkpoint primeiro'); return; }
+    const dest = document.getElementById('destSelect').value;
+    if (!dest) { this.setStatus('⚠ Escolha um destino'); return; }
+    const accessible = this.pcdPanel;
+    const route = GPS.getRoute(this.currentScanQrId, dest, accessible);
+    if (!route) { this.setStatus('⚠ Não foi possível calcular rota'); return; }
+    document.getElementById('routeDistance').textContent = Math.round(route.distance) + 'm';
+    document.getElementById('routeTime').textContent = Nav.fmtTime(route.time);
+    document.getElementById('routeType').textContent = accessible
+      ? '♿ Rota acessível (rampa em L / elevador)'
+      : '🚶 Rota padrão (escada rolante)';
+    document.getElementById('routeSummary').classList.add('visible');
+    const dirs = GPS.getDirections(route);
+    const ul = document.getElementById('directionsList');
+    ul.innerHTML = '';
+    dirs.forEach((d, i) => {
+      const li = document.createElement('li');
+      const dn = document.createElement('div');
+      dn.className = 'step-n';
+      dn.textContent = (i+1);
+      li.appendChild(dn);
+      const dt = document.createElement('div');
+      dt.textContent = d;
+      li.appendChild(dt);
+      ul.appendChild(li);
+    });
+    T.setRouteLine(route.points, accessible);
+    document.getElementById('navActions').style.display = 'flex';
+    Nav.prepare(route, dest);
+    this.setStatus('Rota calculada · ' + Math.round(route.distance) + 'm');
+  },
+
+  dismissArrival(newRoute) {
+    document.getElementById('arrivalOverlay').classList.remove('open');
+    T.arrivalCelebrating = false;
+    T.vitrineActive = false;
+    document.getElementById('confetti-canvas').classList.remove('active');
+    Confetti.running = false;
+    Nav.end();
+    if (newRoute) setTimeout(() => this.simulateScan(this.currentScanQrId || 'qr_saguao'), 200);
+  },
+
+  toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    const btn = document.getElementById('btnTheme');
+    if (btn) btn.textContent = next === 'dark' ? '🌙' : '☀️';
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) themeMeta.content = next === 'dark' ? '#0c1730' : '#ffffff';
+  },
+
+  alarmMode: false,
+  toggleAlarm() {
+    this.alarmMode = !this.alarmMode;
+    T.alarmMode = this.alarmMode;
+    document.getElementById('alarmBanner').classList.toggle('active', this.alarmMode);
+    document.getElementById('alarmVignette').classList.toggle('active', this.alarmMode);
+    document.getElementById('statusPill').classList.toggle('alarm', this.alarmMode);
+    if (this.alarmMode) this.setStatus('🚨 EMERGÊNCIA — Evacue!', 'alarm');
+    else this.setStatus('Pronto');
+  },
+
+  toggleDoors() { /* placeholder - implementação futura */ },
+
+  setStatus(text, mode) {
+    mode = mode || 'ready';
+    const pill = document.getElementById('statusPill');
+    document.getElementById('statusText').textContent = text;
+    pill.classList.remove('alarm', 'nav');
+    if (mode === 'alarm') pill.classList.add('alarm');
+    else if (mode === 'nav') pill.classList.add('nav');
+  },
+
+  handleKey(e) {
+    if (e.target.matches('input, select, textarea')) return;
+    const k = e.key;
+    if (k === '1') T.resetOverview();
+    else if (k === '2') T.setView('top');
+    else if (k === '3') T.setView('entry');
+    else if (k === '4') T.setView('hall');
+    else if (k === 'e' || k === 'E') T.triggerElevator();
+    else if (k === 'l' || k === 'L') T.toggleLabels();
+    else if (k === 'q' || k === 'Q') T.toggleQRHighlight();
+    else if (k === 'c' || k === 'C') T.toggleCeil();
+    else if ((k === 'a' || k === 'A') && e.shiftKey) this.toggleAlarm();
+    else if (k === 'n' || k === 'N') { if (Nav.curve) Nav.start(); }
+    else if (k === 'Escape') {
+      if (document.getElementById('arrivalOverlay').classList.contains('open')) this.dismissArrival(false);
+      else if (Nav.active) Nav.end();
+      else if (Tour.active) Tour.end();
+      else if (Demo.active) Demo.end();
+      else if (document.getElementById('kanbanModal').classList.contains('open')) this.closeKanban();
+      else this.closeGpsPanel();
+      this.closeMenu();
+    }
+    else if (k === 'h' || k === 'H') this.openMenu();
+    else if (k === 'k' || k === 'K') this.openKanban();
+    else if (k === ' ' && Nav.active) { e.preventDefault(); Nav.togglePause(); }
+  }
+};
+
+// ===================================================================
+// INIT
+// ===================================================================
+function init() {
+  try {
+    GPS.buildGraph();
+    T.init();
+    UI.init();
+    setTimeout(() => {
+      const ldr = document.getElementById('loader');
+      if (ldr) {
+        ldr.classList.add('hidden');
+        setTimeout(() => { try { ldr.remove(); } catch(e){} }, 500);
+      }
+    }, 400);
+    console.log('✅ UNIUBE Via Centro v5-hybrid carregado.');
+    console.log('   Prédio: ' + BUILDING.BX + '×' + BUILDING.BZ + '×' + BUILDING.BY + 'm | Galpão: ' + BUILDING.HX + '×' + BUILDING.HZ + '×' + BUILDING.HY + 'm');
+    console.log('   Nós no grafo: ' + NODES.length + ' | Arestas: ' + EDGES.length);
+    console.log('   QR Checkpoints: ' + QR_CHECKPOINTS.length + ' | Salas: ' + ROOMS.filter(r => !r.external).length);
+  } catch (err) {
+    console.error('❌ Erro init:', err);
+    const ldr = document.getElementById('loader');
+    if (ldr) ldr.innerHTML = '<div style="text-align:center; padding: 20px; color: #f4f6fb;"><div style="font-size: 48px; margin-bottom: 16px;">⚠️</div><div>Erro ao carregar o modelo 3D.</div><div style="font-size: 12px; color: #888; margin-top: 8px;">' + (err.message || err) + '</div></div>';
+  }
+}
+
+if (!window.WebGLRenderingContext) {
+  document.getElementById('loader').innerHTML = '<div style="text-align:center; padding:20px; color:#f4f6fb;"><div style="font-size:48px;">⚠️</div><div>Seu navegador não suporta WebGL.</div></div>';
+} else {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+}
+</script>
+</body>
+</html>
