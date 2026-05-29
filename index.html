@@ -1,589 +1,886 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>UniMaps · Via Centro Uniube</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --ink:#061226; --navy:#0b2350; --navy-2:#0c2c63;
-    --blue:#1f6fe8; --blue-bright:#3b8bff; --blue-soft:#9cc2ff;
-    --white:#ffffff; --mute:#9fb6da;
-    --ok:#1fd18b; --amber:#f2b21c;
-    --font:'Sora',ui-sans-serif,system-ui,sans-serif;
-    --techno:'Orbitron',var(--font);
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
-  html,body{height:100%;overflow:hidden;background:#040b18}
-  body{font-family:var(--font);color:var(--white);
-    background:radial-gradient(120% 90% at 50% 0%,#0a1d3d 0%,#061227 45%,#03070f 100%);
-    user-select:none;touch-action:none}
-  canvas{display:block}
-  #labels{position:fixed;inset:0;pointer-events:none;z-index:5}
-  .vignette{position:fixed;inset:0;z-index:6;pointer-events:none;
-    box-shadow:inset 0 0 220px 30px rgba(0,8,22,.85);
-    background:radial-gradient(120% 120% at 50% 50%,transparent 55%,rgba(2,7,16,.55) 100%)}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="description" content="Pavilhão 3D interativo da Amostra Tech UNIUBE 2026 — Trabalho Integrador ADS" />
+  <title>Amostra Tech UNIUBE 2026 · Pavilhão 3D</title>
 
-  /* ---- brand ---- */
-  .pin{display:inline-block;vertical-align:middle}
-  .brand{display:flex;align-items:center;gap:10px;line-height:.9}
-  .brand .wm{display:flex;flex-direction:column}
-  .brand .uni{font-family:var(--techno);font-weight:800;font-size:22px;letter-spacing:.5px;color:#fff}
-  .brand .maps{font-family:var(--techno);font-weight:600;font-size:12px;letter-spacing:6px;color:var(--blue-soft);margin-top:1px}
+  <!--
+    ===========================================================================
+    AMOSTRA TECH UNIUBE 2026 — Pavilhão 3D
+    Trabalho Integrador · Arthur Moreira Martins · ADS UNIUBE
+    Apresentação: 16/06/2026
 
-  /* ---- start screen ---- */
-  #start{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:22px;padding:28px;
-    background:radial-gradient(120% 90% at 50% 10%,#0d2photographer 0%,#061227 40%,#03070f 100%);
-    background:radial-gradient(120% 90% at 50% 10%,#102c5e 0%,#061227 42%,#03070f 100%)}
-  #start .logo{transform:scale(1.4);margin-bottom:6px}
-  #start .here{background:rgba(31,111,232,.12);border:1px solid rgba(60,139,255,.4);
-    border-radius:16px;padding:14px 18px;text-align:center;max-width:340px;width:100%}
-  #start .here .lbl{font-size:11px;letter-spacing:2px;color:var(--blue-soft);text-transform:uppercase}
-  #start .here .val{font-size:19px;font-weight:600;margin-top:4px}
-  .field{width:100%;max-width:340px}
-  .field label{display:block;font-size:11px;letter-spacing:1.5px;color:var(--mute);text-transform:uppercase;margin:0 0 6px 2px}
-  select{width:100%;font-family:inherit;font-size:15px;color:#fff;background:#0a1f44;
-    border:1px solid rgba(60,139,255,.35);border-radius:12px;padding:13px 14px;outline:none;appearance:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%239cc2ff' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:right 12px center}
-  .go{width:100%;max-width:340px;font-family:var(--techno);font-weight:600;letter-spacing:1px;font-size:16px;
-    color:#fff;background:linear-gradient(180deg,var(--blue-bright),var(--blue));border:0;border-radius:14px;
-    padding:16px;cursor:pointer;box-shadow:0 10px 30px rgba(31,111,232,.4);transition:transform .12s,box-shadow .12s}
-  .go:active{transform:translateY(1px);box-shadow:0 6px 18px rgba(31,111,232,.35)}
-  #start .src{font-size:11px;color:var(--mute);text-align:center}
-  #start .src b{color:var(--blue-soft);font-weight:600}
+    Disciplinas integradas:
+      · Computação Gráfica  (Three.js / WebGL, materiais, iluminação)
+      · Estrutura de Dados  (matriz de adjacência + TSP Nearest Neighbor) [próx]
+      · Programação Web     (ES2022, single-file, sem build step)
+      · IHC                 (HUD overlay, OrbitControls, responsivo)
 
-  /* ---- HUD ---- */
-  #hud{position:fixed;inset:0;z-index:10;pointer-events:none;display:none}
-  #hud.on{display:block}
-  .topbrand{position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;transform:scale(.7);transform-origin:top left;opacity:.92}
-  #banner{position:absolute;left:50%;top:max(16px,env(safe-area-inset-top));transform:translateX(-50%);
-    width:min(420px,calc(100% - 28px));background:rgba(6,18,38,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
-    border:1px solid rgba(60,139,255,.35);border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:14px}
-  #banner .arr{font-size:30px;line-height:1;color:var(--blue-bright);min-width:34px;text-align:center}
-  #banner .txt .a{font-size:17px;font-weight:600}
-  #banner .txt .b{font-size:12px;color:var(--mute);margin-top:1px}
+    Itera-se nesta ordem:
+      [X] Cena básica + 5 estandes posicionados (esta versão)
+      [ ] Click nos estandes → modal HTML
+      [ ] TSP Nearest Neighbor + rota amarela 3D
+      [ ] Polimento visual + acessibilidade
+    ===========================================================================
+  -->
 
-  #mini{position:absolute;right:14px;top:calc(max(16px,env(safe-area-inset-top)) + 96px);
-    width:128px;height:128px;border-radius:16px;overflow:hidden;border:1px solid rgba(60,139,255,.35);
-    background:rgba(6,18,38,.7);box-shadow:0 8px 24px rgba(0,0,0,.4)}
-  #mini canvas{width:100%;height:100%}
+  <style>
+    /* ========================================================================
+       PALETA — alinhada à identidade UNIUBE / Via Centro
+       Base:    slate-900 → blue-900 → indigo-900
+       Acentos: sky-400, violet-400, amber-400 (rota TSP)
+       ====================================================================== */
+    :root {
+      --bg-1:        #0f172a;   /* slate-900    */
+      --bg-2:        #1e3a8a;   /* blue-900     */
+      --bg-3:        #312e81;   /* indigo-900   */
+      --fg:          #e2e8f0;   /* slate-200    */
+      --fg-dim:      #94a3b8;   /* slate-400    */
+      --accent:      #38bdf8;   /* sky-400      */
+      --accent-2:    #a78bfa;   /* violet-400   */
+      --tsp:         #fbbf24;   /* amber-400 — usado p/ rota do TSP */
+      --panel-bg:    rgba(15, 23, 42, 0.72);
+      --panel-border:rgba(148, 163, 184, 0.18);
+      --shadow:      0 10px 30px rgba(0, 0, 0, 0.45);
+      --radius:      14px;
+      --radius-sm:   8px;
 
-  #bottom{position:absolute;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);
-    width:min(420px,calc(100% - 28px));background:rgba(6,18,38,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
-    border:1px solid rgba(60,139,255,.3);border-radius:18px;padding:14px 16px}
-  .prog{height:6px;border-radius:4px;background:rgba(60,139,255,.18);overflow:hidden}
-  .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--blue-bright));transition:width .2s linear}
-  .meta{display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px}
-  .meta .dest{font-size:14px;font-weight:600}
-  .meta .dest small{display:block;color:var(--mute);font-weight:400;font-size:11px;letter-spacing:.5px}
-  .meta .nums{text-align:right}
-  .meta .nums b{font-family:var(--techno);font-size:18px;color:var(--blue-bright)}
-  .meta .nums small{display:block;color:var(--mute);font-size:11px}
+      /* Cores dos estandes (também usadas no Three.js) */
+      --booth-e1: #22d3ee;   /* cyan-400    — Entrada     */
+      --booth-e2: #a78bfa;   /* violet-400  — IA          */
+      --booth-e3: #fb923c;   /* orange-400  — Web         */
+      --booth-e4: #34d399;   /* emerald-400 — Banco       */
+      --booth-e5: #f87171;   /* red-400     — Saída       */
+    }
 
-  .ctrls{position:absolute;right:14px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 116px);
-    display:flex;flex-direction:column;gap:9px;pointer-events:auto}
-  .cbtn{width:46px;height:46px;border-radius:13px;border:1px solid rgba(60,139,255,.32);
-    background:rgba(6,18,38,.8);color:var(--blue-soft);font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:.15s}
-  .cbtn:active{transform:scale(.93)}
-  .cbtn.on{background:var(--blue);border-color:var(--blue-bright);color:#fff}
-  .cbtn small{font-size:9px}
+    * { box-sizing: border-box; }
 
-  #arrive{position:fixed;inset:0;z-index:15;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-    background:rgba(4,11,24,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);padding:28px;text-align:center}
-  #arrive.on{display:flex}
-  #arrive .big{font-family:var(--techno);font-size:26px;color:var(--ok)}
-  #arrive .rn{font-size:18px;font-weight:600}
-  #arrive .sub{color:var(--mute);font-size:13px;max-width:320px}
-  #arrive .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-  .pill{font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:rgba(31,111,232,.18);
-    border:1px solid rgba(60,139,255,.4);border-radius:12px;padding:11px 16px;cursor:pointer}
-  .pill.solid{background:var(--blue);border-color:var(--blue-bright)}
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--fg);
+      background:
+        radial-gradient(ellipse at top, rgba(167, 139, 250, 0.12), transparent 60%),
+        linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 55%, var(--bg-3) 100%);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-  #lo2d,#err{position:fixed;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;color:var(--mute);font-size:13px}
-  #err{display:none;max-width:300px;color:#ffb4b4}
+    /* ---------- Camada WebGL (Three.js) ---------- */
+    #app {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+    #app canvas {
+      display: block;
+      outline: none;
+      touch-action: none;     /* permite OrbitControls em mobile sem scroll concorrente */
+    }
 
-  .room-label{font-family:var(--font);font-size:11px;font-weight:500;color:var(--blue-soft);
-    background:rgba(6,18,38,.55);border:1px solid rgba(60,139,255,.25);border-radius:7px;padding:2px 7px;
-    white-space:nowrap;transform:translate(-50%,-50%);transition:color .2s,border-color .2s,background .2s}
-  .room-label.near{color:#fff;border-color:var(--blue-bright);background:rgba(31,111,232,.4)}
-  .room-label.dest{color:#fff;border-color:var(--blue-bright);background:rgba(31,111,232,.5);font-weight:600}
-</style>
-</head>
-<body>
+    /* ---------- Camada CSS2D para rótulos flutuantes 3D ---------- */
+    #labels {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .booth-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--fg);
+      background: rgba(15, 23, 42, 0.82);
+      border: 1px solid var(--panel-border);
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+      transform: translateY(-6px);
+      user-select: none;
+    }
+    .booth-label .code {
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.16);
+      color: var(--accent);
+    }
 
-<div id="labels"></div>
-<div class="vignette"></div>
+    /* ========================================================================
+       HUD (Heads-Up Display) — overlays acima do canvas
+       ====================================================================== */
 
-<!-- START -->
-<div id="start">
-  <div class="logo">
-    <div class="brand">
-      <svg class="pin" width="40" height="48" viewBox="0 0 40 48"><path d="M20 0C9 0 0 8.7 0 19.4 0 33 20 48 20 48s20-15 20-28.6C40 8.7 31 0 20 0z" fill="#1f6fe8"/><circle cx="20" cy="19" r="7.5" fill="#061227"/></svg>
-      <div class="wm"><span class="uni">Uni</span><span class="maps">MAPS</span></div>
-    </div>
-  </div>
-  <div class="here">
-    <div class="lbl">Você está em</div>
-    <div class="val" id="originName">Portaria principal</div>
-  </div>
-  <div class="field">
-    <label>Para onde você vai?</label>
-    <select id="destSel"></select>
-  </div>
-  <button class="go" id="goBtn">Iniciar rota</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento</div>
-</div>
+    /* Badge identificadora no topo-esquerdo */
+    .hud-top {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 16px 10px 12px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 999px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      max-width: calc(100vw - 32px);
+    }
+    .hud-top .dot {
+      flex: 0 0 auto;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1;   transform: scale(1);    }
+      50%      { opacity: 0.5; transform: scale(0.78); }
+    }
+    .hud-top strong {
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+    .hud-top .sep {
+      color: var(--panel-border);
+      font-weight: 300;
+    }
+    .hud-top em {
+      font-style: normal;
+      color: var(--fg-dim);
+      font-size: 12px;
+      white-space: nowrap;
+    }
 
-<!-- HUD -->
-<div id="hud">
-  <div class="topbrand"><div class="brand"><svg class="pin" width="26" height="32" viewBox="0 0 40 48"><path d="M20 0C9 0 0 8.7 0 19.4 0 33 20 48 20 48s20-15 20-28.6C40 8.7 31 0 20 0z" fill="#1f6fe8"/><circle cx="20" cy="19" r="7.5" fill="#061227"/></svg><div class="wm"><span class="uni">Uni</span><span class="maps">MAPS</span></div></div></div>
+    /* Painel de controles no canto inferior-esquerdo */
+    .hud-controls {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      z-index: 10;
+      max-width: 270px;
+      padding: 13px 15px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      font-size: 12.5px;
+      line-height: 1.65;
+    }
+    .hud-controls h3 {
+      margin: 0 0 5px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+    }
+    .hud-controls p { margin: 0 0 2px; color: var(--fg-dim); }
+    .hud-controls kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      font: 600 11px ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      color: var(--fg);
+      background: rgba(148, 163, 184, 0.12);
+      border: 1px solid var(--panel-border);
+      border-radius: 5px;
+      margin-right: 2px;
+    }
 
-  <div id="banner"><div class="arr" id="bArr">↑</div><div class="txt"><div class="a" id="bA">Siga em frente</div><div class="b" id="bB">início da rota</div></div></div>
+    /* Legenda dos estandes no canto inferior-direito */
+    .hud-legend {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 10;
+      min-width: 200px;
+      max-width: 240px;
+      padding: 13px 15px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      font-size: 12.5px;
+    }
+    .hud-legend h3 {
+      margin: 0 0 8px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+    }
+    .hud-legend ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+    }
+    .hud-legend li {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      line-height: 1.3;
+    }
+    .hud-legend .chip {
+      flex: 0 0 auto;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 10px;
+      color: rgba(15, 23, 42, 0.92);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.12), 0 4px 12px rgba(0,0,0,0.35);
+    }
+    .hud-legend .chip.e1 { background: var(--booth-e1); }
+    .hud-legend .chip.e2 { background: var(--booth-e2); }
+    .hud-legend .chip.e3 { background: var(--booth-e3); }
+    .hud-legend .chip.e4 { background: var(--booth-e4); }
+    .hud-legend .chip.e5 { background: var(--booth-e5); }
+    .hud-legend .name { color: var(--fg);     font-weight: 500; }
+    .hud-legend .role { color: var(--fg-dim); font-size: 11.5px; display: block; }
 
-  <div id="mini"><canvas id="miniC" width="256" height="256"></canvas></div>
+    /* Estado de carregamento (enquanto Three.js baixa do CDN) */
+    .loader {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: var(--bg-1);
+      transition: opacity 400ms ease;
+    }
+    .loader.hidden { opacity: 0; pointer-events: none; }
+    .loader .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(148, 163, 184, 0.18);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--fg-dim);
+      letter-spacing: 0.04em;
+    }
 
-  <div class="ctrls">
-    <button class="cbtn" id="btnView" title="Câmera"><small>1ª</small></button>
-    <button class="cbtn" id="btnPlay" title="Pausar">⏸</button>
-    <button class="cbtn" id="btnAcc" title="Rota acessível">♿</button>
-    <button class="cbtn" id="btnRe" title="Reiniciar">↻</button>
-  </div>
-
-  <div id="bottom">
-    <div class="prog"><i id="progBar"></i></div>
-    <div class="meta">
-      <div class="dest">Indo para<small id="destName">Sala de Docentes · Via 158</small></div>
-      <div class="nums"><b id="distNum">— m</b><small id="etaNum">—</small></div>
-    </div>
-  </div>
-</div>
-
-<!-- ARRIVE -->
-<div id="arrive">
-  <svg class="pin" width="56" height="68" viewBox="0 0 40 48"><path d="M20 0C9 0 0 8.7 0 19.4 0 33 20 48 20 48s20-15 20-28.6C40 8.7 31 0 20 0z" fill="#1fd18b"/><circle cx="20" cy="19" r="7.5" fill="#061227"/></svg>
-  <div class="big">Você chegou</div>
-  <div class="rn" id="arrName">Sala de Docentes · Via 158</div>
-  <div class="sub" id="arrSub">Trajeto de demonstração — distâncias estimadas.</div>
-  <div class="row">
-    <button class="pill solid" id="arrInv">Rota de volta</button>
-    <button class="pill" id="arrRe">Refazer</button>
-  </div>
-</div>
-
-<div id="lo2d">Carregando UniMaps…</div>
-<div id="err"></div>
-
-<!-- config (preenchido pelo usuário; vazio = modo offline) -->
-<script src="config.js"></script>
-
-<script type="importmap">
-{ "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-}}
-</script>
-
-<script type="module">
-import * as THREE from 'three';
-import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-
-// ============================================================
-// DADOS EMBUTIDOS (fallback offline) — exportados do editor 2D.
-// Mundo em metros (x: leste-oeste, y: norte-sul; y cresce p/ "baixo"/sul).
-// Mapeamento 3D: X = x, Z = y, Y = altura.
-// ============================================================
-const EMBED = {
-  world: { w: 52, h: 42 },
-  blocks: [
-    { id:'predio', name:'Prédio (1º pavimento)', x:2, y:2, w:48, h:38, cat:'predio' },
-    { id:'portaria', name:'Portaria principal', x:36, y:36.5, w:8, h:3, cat:'entrada' },
-    { id:'unitecne', name:'Unitecne / Nupeia', x:31, y:23, w:4.5, h:16.5, cat:'neutro' },
-    { id:'coord', name:'Coordenadores de cursos', x:44.5, y:23, w:4.5, h:16.5, cat:'neutro' },
-    { id:'multi', name:'Multiatendimento', x:36, y:16.5, w:10, h:3.5, cat:'neutro' },
-    { id:'escada', name:'Escadas rolantes', x:28.5, y:15, w:6, h:2.5, cat:'vertical' },
-    { id:'via159', name:'Via 159 · Sala de estudos', x:19.5, y:12.5, w:8.5, h:7.5, cat:'neutro' },
-    { id:'via161', name:'Via 161 · depósito', x:14, y:14, w:4, h:5, cat:'neutro' },
-    { id:'amarela', name:'Parede amarela', x:2, y:15.5, w:2, h:13, cat:'amarela' },
-    { id:'via158', name:'Sala de Docentes · Via 158', x:5, y:13.5, w:7.5, h:6.5, cat:'destino' },
-    { id:'s1', name:'Sala de aula', x:6, y:25, w:2.5, h:6, cat:'neutro' },
-    { id:'s2', name:'Sala de aula', x:9.5, y:25, w:2.5, h:6, cat:'neutro' },
-    { id:'s3', name:'Sala de aula', x:15.5, y:25, w:2.5, h:6, cat:'neutro' },
-    { id:'s4', name:'Sala de aula', x:19, y:25, w:2.5, h:6, cat:'neutro' },
-    { id:'s5', name:'Sala de aula', x:25, y:25, w:2.5, h:6, cat:'neutro' },
-    { id:'s6', name:'Sala de aula', x:28, y:25, w:2.5, h:6, cat:'neutro' },
-  ],
-  // Grafo do A* (nós + arestas). 'tipo' marca arestas de escada (filtradas no modo acessível).
-  nodes: {
-    portaria:{ x:40, y:37.5, name:'Portaria principal', tipo:'entrada' },
-    n_j:{ x:40, y:22 }, n_a:{ x:31, y:22 }, n_b:{ x:23, y:22 },
-    n_c:{ x:16, y:22 }, n_d:{ x:8.5, y:22 },
-    via158:{ x:8.75, y:16.8, name:'Sala de Docentes · Via 158', tipo:'destino' },
-    n_esc:{ x:31, y:17, name:'Escadas rolantes', tipo:'escada' },
-  },
-  edges: [
-    ['portaria','n_j'], ['n_j','n_a'], ['n_a','n_b'], ['n_b','n_c'], ['n_c','n_d'], ['n_d','via158'],
-    ['n_a','n_esc','escada'],
-  ],
-  destinations: [
-    { node:'via158', label:'Sala de Docentes · Via 158' },
-    { node:'portaria', label:'Portaria principal (voltar)' },
-  ],
-  qr: { portaria:'portaria', via158:'via158' },
-};
-
-// ---------- carregar dados (Supabase opcional) ----------
-async function loadData(){
-  const cfg = window.UNIMAPS_CONFIG || {};
-  if (cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY){
-    try{
-      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-      const sb = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-      const [{data:blocos},{data:nos},{data:arestas}] = await Promise.all([
-        sb.from('blocos').select('*'),
-        sb.from('nos').select('*'),
-        sb.from('arestas').select('*'),
-      ]);
-      if (blocos?.length && nos?.length && arestas?.length){
-        const nodes={}; nos.forEach(n=>nodes[n.id]={x:n.x,y:n.y,name:n.nome,tipo:n.tipo});
-        const edges=arestas.map(a=>[a.de,a.para,a.tipo]);
-        document.getElementById('srcLabel').textContent='Supabase (online)';
-        return { world:EMBED.world, blocks:blocos.map(b=>({id:b.id,name:b.nome,x:b.x,y:b.y,w:b.w,h:b.h,cat:b.cat})),
-          nodes, edges, destinations:EMBED.destinations, qr:EMBED.qr };
+    /* ---------- Responsividade ---------- */
+    @media (max-width: 640px) {
+      .hud-top {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        font-size: 12px;
+        padding: 8px 13px 8px 10px;
       }
-    }catch(e){ console.warn('Supabase indisponível, usando dados offline.', e); }
-  }
-  return EMBED;
-}
+      .hud-top em, .hud-top .sep { display: none; }
+      .hud-controls {
+        bottom: 10px;
+        left: 10px;
+        max-width: calc(50vw - 14px);
+        padding: 10px 12px;
+        font-size: 11.5px;
+      }
+      .hud-legend {
+        bottom: 10px;
+        right: 10px;
+        min-width: 0;
+        max-width: calc(50vw - 14px);
+        padding: 10px 12px;
+      }
+      .hud-legend .role { display: none; }
+      .hud-legend .chip { width: 18px; height: 18px; font-size: 9px; }
+      .booth-label { font-size: 10px; padding: 3px 8px; }
+    }
+    /* Hide controls panel on really narrow screens — leaves room for the scene */
+    @media (max-width: 380px) {
+      .hud-controls { display: none; }
+      .hud-legend  { max-width: calc(100vw - 20px); }
+    }
+  </style>
+</head>
 
-// ============================================================ A*
-function buildGraph(data){
-  const adj={};
-  for (const k in data.nodes) adj[k]=[];
-  const dist=(a,b)=>Math.hypot(data.nodes[a].x-data.nodes[b].x, data.nodes[a].y-data.nodes[b].y);
-  for (const e of data.edges){
-    const [a,b,tipo]=e, w=dist(a,b);
-    adj[a].push({to:b,w,tipo:tipo||'corredor'});
-    if (tipo!=='escada') adj[b].push({to:a,w,tipo:tipo||'corredor'}); // escada = mão única (sobe)
-  }
-  return { nodes:data.nodes, adj, dist };
-}
-function astar(G, start, goal, allowEscada){
-  const h=(a,b)=>G.dist(a,b);
-  const open=new Set([start]), came={}, g={[start]:0}, f={[start]:h(start,goal)};
-  while(open.size){
-    let cur=null,best=Infinity;
-    for(const n of open) if((f[n]??Infinity)<best){best=f[n];cur=n;}
-    if(cur===goal){ const p=[cur]; while(came[cur]!==undefined){cur=came[cur];p.unshift(cur);} return p; }
-    open.delete(cur);
-    for(const e of (G.adj[cur]||[])){
-      if(!allowEscada && e.tipo==='escada') continue;
-      const tg=(g[cur]??Infinity)+e.w;
-      if(tg<(g[e.to]??Infinity)){ came[e.to]=cur; g[e.to]=tg; f[e.to]=tg+h(e.to,goal); open.add(e.to); }
+<body>
+  <!-- Camada WebGL onde a cena 3D será renderizada -->
+  <div id="app" aria-label="Cena 3D do pavilhão"></div>
+
+  <!-- Camada CSS2D para rótulos flutuantes acoplados aos estandes -->
+  <div id="labels" aria-hidden="true"></div>
+
+  <!-- HUD: badge identificador -->
+  <header class="hud-top" role="banner">
+    <span class="dot" aria-hidden="true"></span>
+    <strong>Amostra Tech UNIUBE 2026</strong>
+    <span class="sep">·</span>
+    <em>Pavilhão 3D · Trabalho Integrador ADS</em>
+  </header>
+
+  <!-- HUD: instruções de navegação -->
+  <aside class="hud-controls" aria-label="Controles de navegação">
+    <h3>Navegação</h3>
+    <p><kbd>Arrastar</kbd> orbitar câmera</p>
+    <p><kbd>Scroll</kbd> aproximar / afastar</p>
+    <p><kbd>Botão&nbsp;dir.</kbd> deslocar (pan)</p>
+  </aside>
+
+  <!-- HUD: legenda dos 5 estandes -->
+  <aside class="hud-legend" aria-label="Lista de estandes">
+    <h3>Estandes</h3>
+    <ul>
+      <li><span class="chip e1">E1</span><span><span class="name">Entrada</span>           <span class="role">Recepção</span></span></li>
+      <li><span class="chip e2">E2</span><span><span class="name">IA</span>                <span class="role">Chatbot Claude</span></span></li>
+      <li><span class="chip e3">E3</span><span><span class="name">Web</span>               <span class="role">Kanban</span></span></li>
+      <li><span class="chip e4">E4</span><span><span class="name">Banco</span>             <span class="role">Supabase</span></span></li>
+      <li><span class="chip e5">E5</span><span><span class="name">Saída</span>             <span class="role">Encerramento</span></span></li>
+    </ul>
+  </aside>
+
+  <!-- Tela de loading enquanto Three.js carrega do CDN -->
+  <div class="loader" id="loader">
+    <div class="spinner" aria-hidden="true"></div>
+    <p>Carregando o pavilhão…</p>
+  </div>
+
+  <!--
+    Import map: aponta o specifier "three" pro CDN jsDelivr.
+    Compatível com a CSP do vercel.json (script-src libera cdn.jsdelivr.net).
+    Versão fixada para reproducibilidade do trabalho acadêmico.
+  -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
     }
   }
-  return null;
-}
+  </script>
 
-// ============================================================ CENA
-let scene,camera,renderer,labelRenderer,clock;
-let DATA, GRAPH;
-const W2=v=>v; // metros = unidades 3D
-const COL={ predio:0x1f6fe8, neutro:0x2b5fb0, entrada:0x1fd18b, destino:0x3b8bff, vertical:0xf2b21c, amarela:0xf2c200 };
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls }                  from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject }     from 'three/addons/renderers/CSS2DRenderer.js';
 
-function initThree(){
-  scene=new THREE.Scene();
-  scene.fog=new THREE.Fog(0x05101f, 16, 64);
-  camera=new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.1, 300);
-  renderer=new THREE.WebGLRenderer({antialias:true, alpha:true});
-  renderer.setSize(innerWidth,innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  renderer.outputColorSpace=THREE.SRGBColorSpace;
-  document.body.appendChild(renderer.domElement);
-  renderer.domElement.style.position='fixed'; renderer.domElement.style.inset='0'; renderer.domElement.style.zIndex='1';
+    /* ========================================================================
+       CONFIGURAÇÃO DO PAVILHÃO
+       Dimensões em METROS. Y é a vertical (Y=0 no chão).
+       O pavilhão é PENTAGONAL — homenagem ao formato do Via Centro UNIUBE,
+       que tem uma parede diagonal característica no lado direito.
 
-  labelRenderer=new CSS2DRenderer();
-  labelRenderer.setSize(innerWidth,innerHeight);
-  document.getElementById('labels').appendChild(labelRenderer.domElement);
+       Vista de cima (eixos X horizontal, Z para a frente da tela):
+            Z+ (entrada / frente)
+            ────────────────────
+           |                    \
+           |                     \    ← parede diagonal (DNA do Via Centro)
+           |                      \
+           |                       |
+           |                       |
+            ─────────────────────
+            Z- (saída / fundo)
+       ====================================================================== */
 
-  scene.add(new THREE.AmbientLight(0x6f9fff, 0.55));
-  scene.add(new THREE.HemisphereLight(0x9cc2ff, 0x05101f, 0.5));
-  const dir=new THREE.DirectionalLight(0xcfe3ff, 0.7); dir.position.set(30,40,10); scene.add(dir);
+    const PAVILION = {
+      // Vértices do polígono do chão (sentido anti-horário visto de cima).
+      // Y=0 implícito; estes são pares [x, z].
+      floorShape: [
+        [-15,  11],   // canto frontal esquerdo
+        [ 15,  11],   // canto frontal direito (onde fica a "diagonal")
+        [ 15,  -6],   // início do corte diagonal
+        [  8, -11],   // fim do corte diagonal (parede oblíqua)
+        [-15, -11],   // canto traseiro esquerdo
+      ],
+      wallHeight: 5,
+      wallThickness: 0.18,
+    };
 
-  clock=new THREE.Clock();
-  addEventListener('resize',onResize);
-}
-function onResize(){ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight); labelRenderer.setSize(innerWidth,innerHeight); }
+    /*
+      Posicionamento dos estandes (X, Z em metros, Y = 0 no chão).
+      Ver justificativa no chat: rota Nearest Neighbor a partir de E1
+      é E1→E2→E3→E4→E5, custo total = 41 (com a matriz fornecida).
+    */
+    const BOOTHS = [
+      {
+        id: 'E1',
+        nome: 'Entrada',
+        descricaoCurta: 'Recepção · Boas-vindas',
+        descricaoLonga: 'Ponto de partida da visita. Apresentação do evento, mapa dos módulos e fluxo recomendado pelo algoritmo TSP.',
+        pos: [-10, 0,  9],
+        cor: 0x22d3ee,           // cyan-400
+      },
+      {
+        id: 'E2',
+        nome: 'Estande de IA',
+        descricaoCurta: 'Chatbot Claude',
+        descricaoLonga: 'Demonstração de integração com a API Anthropic. Chatbot conversacional treinado para responder dúvidas sobre o curso de ADS na UNIUBE.',
+        pos: [  8, 0,  5],
+        cor: 0xa78bfa,           // violet-400
+      },
+      {
+        id: 'E3',
+        nome: 'Estande Web',
+        descricaoCurta: 'Kanban interativo',
+        descricaoLonga: 'Aplicação web demonstrando drag-and-drop, estado reativo e persistência. Exemplo de organização ágil de tarefas.',
+        pos: [  8, 0,  0],
+        cor: 0xfb923c,           // orange-400
+      },
+      {
+        id: 'E4',
+        nome: 'Estande de Banco',
+        descricaoCurta: 'Persistência Supabase',
+        descricaoLonga: 'Backend-as-a-Service com PostgreSQL gerenciado, Row Level Security e API automática. Demonstração de CRUD com autenticação.',
+        pos: [  8, 0, -5],
+        cor: 0x34d399,           // emerald-400
+      },
+      {
+        id: 'E5',
+        nome: 'Saída',
+        descricaoCurta: 'Encerramento',
+        descricaoLonga: 'Recapitulação do percurso, créditos do trabalho integrador e referências bibliográficas. Disciplinas integradas: CG, EDA, Programação Web e IHC.',
+        pos: [-8, 0, -9],
+        cor: 0xf87171,           // red-400
+      },
+    ];
 
-const roomMeshes=[];
-function buildWorld(){
-  const Wd=DATA.world;
-  // piso glossy escuro
-  const floor=new THREE.Mesh(new THREE.PlaneGeometry(Wd.w+20,Wd.h+20),
-    new THREE.MeshStandardMaterial({color:0x07142b, roughness:0.35, metalness:0.55}));
-  floor.rotation.x=-Math.PI/2; floor.position.set(Wd.w/2,0,Wd.h/2); scene.add(floor);
-  // grade holográfica
-  const grid=new THREE.GridHelper(Wd.w+20, Math.round(Wd.w+20), 0x1f6fe8, 0x123a6e);
-  grid.position.set(Wd.w/2,0.02,Wd.h/2); grid.material.transparent=true; grid.material.opacity=0.22; scene.add(grid);
+    /*
+      Matriz de adjacência do TSP (Caixeiro Viajante).
+      Ordem das linhas/colunas: [E1, E2, E3, E4, E5]
+      Custos NÃO-euclidianos (modelo do problema, não distância real).
+      Será usada na próxima iteração para Nearest Neighbor.
+    */
+    const TSP_MATRIX = [
+      [  0, 12, 18, 22, 15 ],   // E1 → ...
+      [ 12,  0, 10, 16, 20 ],   // E2 → ...
+      [ 18, 10,  0,  8, 14 ],   // E3 → ...
+      [ 22, 16,  8,  0, 11 ],   // E4 → ...
+      [ 15, 20, 14, 11,  0 ],   // E5 → ...
+    ];
 
-  for(const b of DATA.blocks){
-    if(b.cat==='predio'){ buildPerimeter(b); continue; }
-    const col=COL[b.cat]||COL.neutro;
-    const h = b.cat==='vertical'?1.6 : 3;
-    const geo=new THREE.BoxGeometry(b.w,h,b.h);
-    const mat=new THREE.MeshStandardMaterial({color:col, transparent:true, opacity:0.14,
-      roughness:0.6, metalness:0.2, emissive:col, emissiveIntensity:0.12});
-    const m=new THREE.Mesh(geo,mat);
-    m.position.set(b.x+b.w/2, h/2, b.y+b.h/2);
-    scene.add(m);
-    const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),
-      new THREE.LineBasicMaterial({color:col, transparent:true, opacity:0.8}));
-    edges.position.copy(m.position); scene.add(edges);
-    m.userData={ baseE:0.12, edges, col };
-    roomMeshes.push(m);
-    // label CSS2D
-    const div=document.createElement('div'); div.className='room-label'+(b.cat==='destino'?' dest':'');
-    div.textContent=b.name;
-    const lbl=new CSS2DObject(div); lbl.position.set(b.x+b.w/2, h+0.5, b.y+b.h/2);
-    scene.add(lbl); m.userData.label=div; m.userData.center=new THREE.Vector3(b.x+b.w/2,1,b.y+b.h/2);
-  }
-}
-function buildPerimeter(b){
-  const t=0.3, hh=3.2, col=0x1f6fe8;
-  const segs=[ [b.x,b.y,b.w,t],[b.x,b.y+b.h-t,b.w,t],[b.x,b.y,t,b.h],[b.x+b.w-t,b.y,t,b.h] ];
-  for(const [x,y,w,d] of segs){
-    const geo=new THREE.BoxGeometry(w,hh,d);
-    const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,transparent:true,opacity:0.06,emissive:col,emissiveIntensity:0.08}));
-    m.position.set(x+w/2,hh/2,y+d/2); scene.add(m);
-    const e=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.45}));
-    e.position.copy(m.position); scene.add(e);
-  }
-}
+    /* ========================================================================
+       ESTADO GLOBAL DO RENDERIZADOR
+       ====================================================================== */
 
-// ---------- rota (curva + tubo holográfico) ----------
-let routeGroup, flowTex, routeCurve, routeLen, pathPts, turnEvents=[], avatar, blob;
-function buildRoute(path){
-  if(routeGroup){ scene.remove(routeGroup); }
-  routeGroup=new THREE.Group(); scene.add(routeGroup);
-  pathPts = path.map(id=>new THREE.Vector3(DATA.nodes[id].x, 0.08, DATA.nodes[id].y));
-  routeCurve=new THREE.CatmullRomCurve3(pathPts,false,'catmullrom',0.0);
-  routeLen=routeCurve.getLength();
+    let scene, camera, renderer, labelRenderer, controls;
+    let boothMeshes = [];   // referência aos meshes dos estandes (p/ raycaster futuro)
+    let clock;              // p/ animações suaves no animate()
 
-  if(!flowTex){
-    const c=document.createElement('canvas'); c.width=32; c.height=64; const x=c.getContext('2d');
-    x.clearRect(0,0,32,64);
-    for(let i=0;i<3;i++){ x.fillStyle='rgba(180,215,255,'+(0.9-i*0.2)+')';
-      const yy=i*22; x.beginPath(); x.moveTo(4,yy+16); x.lineTo(16,yy+2); x.lineTo(28,yy+16);
-      x.lineTo(28,yy+24); x.lineTo(16,yy+10); x.lineTo(4,yy+24); x.closePath(); x.fill(); }
-    flowTex=new THREE.CanvasTexture(c); flowTex.wrapS=flowTex.wrapT=THREE.RepeatWrapping;
-    flowTex.repeat.set(1, Math.max(6,routeLen/2));
-  } else { flowTex.repeat.set(1, Math.max(6,routeLen/2)); }
+    /* ========================================================================
+       INIT — bootstrap da cena
+       ====================================================================== */
 
-  const glow=new THREE.Mesh(new THREE.TubeGeometry(routeCurve, Math.max(40,routeLen*3), 0.42, 8, false),
-    new THREE.MeshBasicMaterial({color:0x1f6fe8, transparent:true, opacity:0.18, blending:THREE.AdditiveBlending, depthWrite:false}));
-  routeGroup.add(glow);
-  const core=new THREE.Mesh(new THREE.TubeGeometry(routeCurve, Math.max(40,routeLen*3), 0.16, 8, false),
-    new THREE.MeshBasicMaterial({map:flowTex, color:0x9cc2ff, transparent:true, opacity:0.95, blending:THREE.AdditiveBlending, depthWrite:false}));
-  routeGroup.add(core);
+    function init() {
+      const container = document.getElementById('app');
 
-  // pino no destino
-  const dest=pathPts[pathPts.length-1];
-  const pin=new THREE.Group();
-  const cone=new THREE.Mesh(new THREE.ConeGeometry(0.5,1.1,16),new THREE.MeshStandardMaterial({color:0x3b8bff,emissive:0x3b8bff,emissiveIntensity:0.8}));
-  cone.rotation.x=Math.PI; cone.position.y=1.2; pin.add(cone);
-  const ball=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,16),new THREE.MeshStandardMaterial({color:0x3b8bff,emissive:0x3b8bff,emissiveIntensity:0.9}));
-  ball.position.y=2.0; pin.add(ball);
-  pin.position.set(dest.x,0,dest.z); routeGroup.add(pin); routeGroup.userData={pin};
+      // ---------- SCENE ----------
+      scene = new THREE.Scene();
+      // Fundo combinando com o gradiente CSS — base #0f172a com leve toque indigo
+      scene.background = new THREE.Color(0x0f172a);
+      // Fog exponencial dá profundidade e esconde o limite das paredes
+      scene.fog = new THREE.FogExp2(0x1e293b, 0.018);
 
-  // avatar (3ª pessoa)
-  if(!avatar){
-    avatar=new THREE.Group();
-    const body=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.32,1.05,16),new THREE.MeshStandardMaterial({color:0x1f6fe8,emissive:0x1f6fe8,emissiveIntensity:0.3,roughness:0.4}));
-    body.position.y=0.85; avatar.add(body);
-    const head=new THREE.Mesh(new THREE.SphereGeometry(0.26,16,16),new THREE.MeshStandardMaterial({color:0x9cc2ff,emissive:0x3b8bff,emissiveIntensity:0.3}));
-    head.position.y=1.6; avatar.add(head);
-    blob=new THREE.Mesh(new THREE.CircleGeometry(0.5,24),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.35}));
-    blob.rotation.x=-Math.PI/2; blob.position.y=0.03; avatar.add(blob);
-    scene.add(avatar);
-  }
-  computeTurns(path);
-}
+      // ---------- CAMERA ----------
+      // Perspectiva ampla pra dar sensação de "espaço" mesmo num pavilhão pequeno
+      const aspect = container.clientWidth / container.clientHeight;
+      camera = new THREE.PerspectiveCamera(55, aspect, 0.1, 200);
+      camera.position.set(22, 18, 24);
+      camera.lookAt(0, 0, 0);
 
-// ---------- instruções turn-by-turn ----------
-function computeTurns(path){
-  turnEvents=[]; let cum=0;
-  const pts=path.map(id=>new THREE.Vector2(DATA.nodes[id].x, DATA.nodes[id].y));
-  for(let i=1;i<pts.length;i++){
-    const segLen=pts[i].distanceTo(pts[i-1]);
-    if(i<pts.length-1){
-      const dIn=pts[i].clone().sub(pts[i-1]).normalize();
-      const dOut=pts[i+1].clone().sub(pts[i]).normalize();
-      const cross=dIn.x*dOut.y - dIn.y*dOut.x; // y-down: cross<0 = esquerda
-      const dot=Math.max(-1,Math.min(1,dIn.dot(dOut)));
-      const ang=Math.acos(dot);
-      if(ang>0.35){ turnEvents.push({ at:cum+segLen, type: cross<0?'left':'right' }); }
+      // ---------- RENDERER (WebGL) ----------
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        powerPreference: 'high-performance',
+      });
+      // Cap de pixel ratio: evita render em 3x num iPhone (custaria 9x os pixels)
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.05;
+      container.appendChild(renderer.domElement);
+
+      // ---------- LABEL RENDERER (CSS2D, p/ rótulos flutuantes) ----------
+      labelRenderer = new CSS2DRenderer({
+        element: document.getElementById('labels'),
+      });
+      labelRenderer.setSize(container.clientWidth, container.clientHeight);
+
+      // ---------- CONTROLS ----------
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;          // inércia suave
+      controls.dampingFactor = 0.07;
+      controls.target.set(0, 1.2, 0);         // foco ligeiramente acima do chão
+      controls.minDistance = 6;
+      controls.maxDistance = 60;
+      controls.maxPolarAngle = Math.PI * 0.49; // impede que a câmera vá pra baixo do chão
+      controls.minPolarAngle = Math.PI * 0.08;
+      controls.update();
+
+      // ---------- CONTEÚDO DA CENA ----------
+      createLighting();
+      createPavilion();
+      createBooths();
+      createGroundGrid();        // grid discreto no chão p/ referência espacial
+
+      // ---------- LISTENERS ----------
+      window.addEventListener('resize', onWindowResize, { passive: true });
+
+      // ---------- LOOP ----------
+      clock = new THREE.Clock();
+      animate();
+
+      // Esconde o loader agora que a cena tá montada
+      requestAnimationFrame(() => {
+        const loader = document.getElementById('loader');
+        loader.classList.add('hidden');
+        setTimeout(() => loader.remove(), 500);
+      });
     }
-    cum+=segLen;
-  }
-  turnEvents.push({ at:cum, type:'arrive' });
-}
 
-// ============================================================ ESTADO
-let state={ mode:'fp', playing:true, traveled:0, speed:2.6, allowEscada:true, origin:'portaria', dest:'via158', total:0 };
+    /* ========================================================================
+       ILUMINAÇÃO — 3-point lighting + ambiente atmosférico
+       ====================================================================== */
 
-function startRoute(){
-  const path=astar(GRAPH, state.origin, state.dest, state.allowEscada);
-  if(!path){ showErr('Não há rota entre esses pontos no grafo.'); return; }
-  buildRoute(path);
-  state.traveled=0; state.total=routeLen; state.playing=true;
-  document.getElementById('btnPlay').textContent='⏸';
-  document.getElementById('arrive').classList.remove('on');
-  document.getElementById('destName').textContent=DATA.nodes[state.dest].name||state.dest;
-  document.getElementById('start').style.display='none';
-  document.getElementById('hud').classList.add('on');
-  drawMiniBase();
-}
+    function createLighting() {
+      // Ambient: preenchimento global suave, tonalidade fria
+      const ambient = new THREE.AmbientLight(0x6b7c93, 0.45);
+      scene.add(ambient);
 
-function showErr(m){ const e=document.getElementById('err'); e.textContent=m; e.style.display='block'; }
+      // Hemisphere: simula luz do céu (topo) e bounce do chão (baixo)
+      const hemi = new THREE.HemisphereLight(
+        0x93c5fd,   // sky-300 (céu)
+        0x1e1b4b,   // indigo-950 (chão)
+        0.55
+      );
+      hemi.position.set(0, 20, 0);
+      scene.add(hemi);
 
-// ---------- HUD ----------
-const ARR={left:'↰',right:'↱',straight:'↑',arrive:'◎'};
-function updateHUD(){
-  const rem=Math.max(0,state.total-state.traveled);
-  document.getElementById('progBar').style.width=(100*state.traveled/state.total)+'%';
-  document.getElementById('distNum').textContent=Math.round(rem)+' m';
-  const eta=Math.max(0,Math.round(rem/1.3)); // a pé ~1,3 m/s
-  document.getElementById('etaNum').textContent=eta>0?('~'+(eta<60?eta+' s':Math.ceil(eta/60)+' min')):'chegando';
-  // próximo evento
-  const ev=turnEvents.find(e=>e.at>state.traveled+0.2);
-  const bA=document.getElementById('bA'), bB=document.getElementById('bB'), bArr=document.getElementById('bArr');
-  if(!ev || ev.type==='arrive'){
-    bArr.textContent=ARR.arrive; bA.textContent='Chegando ao destino'; bB.textContent=DATA.nodes[state.dest].name||'';
-  } else {
-    const d=Math.round(ev.at-state.traveled);
-    bArr.textContent=ARR[ev.type];
-    bA.textContent= ev.type==='left'?'Vire à esquerda': ev.type==='right'?'Vire à direita':'Siga em frente';
-    bB.textContent= d>2? ('em '+d+' m') : 'agora';
-  }
-}
+      // Key light: direcional principal, projeta sombras
+      const key = new THREE.DirectionalLight(0xfff4e0, 1.1);
+      key.position.set(15, 22, 12);
+      key.target.position.set(0, 0, 0);
+      key.castShadow = true;
+      key.shadow.mapSize.set(2048, 2048);
+      key.shadow.camera.near = 1;
+      key.shadow.camera.far = 60;
+      key.shadow.camera.left   = -22;
+      key.shadow.camera.right  =  22;
+      key.shadow.camera.top    =  20;
+      key.shadow.camera.bottom = -20;
+      key.shadow.bias = -0.0005;
+      key.shadow.radius = 4;
+      scene.add(key);
+      scene.add(key.target);
 
-// ---------- minimapa ----------
-let miniCtx, miniScale, miniOff;
-function drawMiniBase(){
-  const cv=document.getElementById('miniC'); miniCtx=cv.getContext('2d');
-  const Wd=DATA.world, pad=10, S=Math.min((256-2*pad)/Wd.w,(256-2*pad)/Wd.h);
-  miniScale=S; miniOff={x:pad,y:pad};
-  miniBaseDraw();
-}
-function m2c(x,y){ return [miniOff.x+x*miniScale, miniOff.y+y*miniScale]; }
-function miniBaseDraw(){
-  const ctx=miniCtx; ctx.clearRect(0,0,256,256);
-  ctx.fillStyle='#061227'; ctx.fillRect(0,0,256,256);
-  for(const b of DATA.blocks){ if(b.cat==='predio')continue;
-    const [x,y]=m2c(b.x,b.y); ctx.fillStyle = b.cat==='destino'?'rgba(59,139,255,.55)': b.cat==='entrada'?'rgba(31,209,139,.5)':'rgba(43,95,176,.35)';
-    ctx.fillRect(x,y,b.w*miniScale,b.h*miniScale);
-  }
-  // rota
-  ctx.strokeStyle='#3b8bff'; ctx.lineWidth=3; ctx.lineJoin='round'; ctx.beginPath();
-  pathPts.forEach((p,i)=>{ const [x,y]=m2c(p.x,p.z); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.stroke();
-}
-function miniDot(px,pz){
-  miniBaseDraw();
-  const [x,y]=m2c(px,pz); const ctx=miniCtx;
-  ctx.fillStyle='#9cc2ff'; ctx.beginPath(); ctx.arc(x,y,7,0,7); ctx.fill();
-  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y,3.5,0,7); ctx.fill();
-}
+      // Fill light: violeta sutil pelo lado oposto, suaviza sombras
+      const fill = new THREE.DirectionalLight(0xa78bfa, 0.35);
+      fill.position.set(-14, 12, -8);
+      scene.add(fill);
 
-// ============================================================ LOOP
-let camRoll=0;
-function animate(){
-  const dt=Math.min(0.05,clock.getDelta()), t=clock.elapsedTime;
-  if(flowTex) flowTex.offset.y -= dt*0.5;
-  if(routeGroup?.userData?.pin){ const p=routeGroup.userData.pin; p.children[1].position.y=2.0+Math.sin(t*2)*0.12; p.rotation.y=t*0.6; }
-
-  if(state.playing && state.total>0){
-    state.traveled+=state.speed*dt;
-    if(state.traveled>=state.total){ state.traveled=state.total; arrive(); }
-  }
-  if(state.total>0){
-    const u=Math.min(1,state.traveled/state.total);
-    const pos=routeCurve.getPointAt(u);
-    const tan=routeCurve.getTangentAt(u).normalize();
-    // próxima curva → leve roll
-    const ev=turnEvents.find(e=>e.at>state.traveled+0.2 && e.type!=='arrive');
-    let targetRoll=0;
-    if(ev){ const d=ev.at-state.traveled; if(d<4) targetRoll=(ev.type==='left'?1:-1)*0.06*(1-d/4); }
-    camRoll+=(targetRoll-camRoll)*0.1;
-
-    if(state.mode==='fp'){
-      const bob=state.playing?Math.sin(t*8)*0.04:0;
-      camera.position.set(pos.x, 1.62+bob, pos.z);
-      const look=pos.clone().add(tan.clone().multiplyScalar(6)); look.y=1.5+Math.sin(t*4)*0.02;
-      camera.up.set(Math.sin(camRoll),Math.cos(camRoll),0); camera.lookAt(look);
-      if(avatar)avatar.visible=false;
-    } else {
-      if(avatar){ avatar.visible=true; avatar.position.set(pos.x,0,pos.z);
-        avatar.rotation.y=Math.atan2(tan.x,tan.z); }
-      const back=tan.clone().multiplyScalar(-4.2);
-      camera.up.set(0,1,0);
-      camera.position.set(pos.x+back.x, 3.0, pos.z+back.z);
-      camera.lookAt(pos.x+tan.x*2, 1.1, pos.z+tan.z*2);
+      // Rim light: leve realce vindo de baixo/trás, separa estandes do fundo
+      const rim = new THREE.DirectionalLight(0x38bdf8, 0.25);
+      rim.position.set(0, 6, -18);
+      scene.add(rim);
     }
-    miniDot(pos.x,pos.z);
-    // luzes reagindo à presença: realça sala mais próxima
-    let near=null,nd=1e9;
-    for(const m of roomMeshes){ const d=m.userData.center.distanceTo(new THREE.Vector3(pos.x,1,pos.z)); if(d<nd){nd=d;near=m;} }
-    for(const m of roomMeshes){ const on=(m===near && nd<6);
-      m.material.emissiveIntensity += ((on?0.5:0.12)-m.material.emissiveIntensity)*0.1;
-      m.userData.label.classList.toggle('near', on && !m.userData.label.classList.contains('dest')); }
-    updateHUD();
-  }
-  renderer.render(scene,camera); labelRenderer.render(scene,camera);
-  requestAnimationFrame(animate);
-}
-function arrive(){ if(!state.playing)return; state.playing=false;
-  document.getElementById('btnPlay').textContent='▶';
-  document.getElementById('arrName').textContent=DATA.nodes[state.dest].name||state.dest;
-  document.getElementById('arrive').classList.add('on'); }
 
-// ============================================================ UI
-function bindUI(){
-  document.getElementById('goBtn').onclick=()=>{ state.dest=document.getElementById('destSel').value; if(state.dest===state.origin) state.dest = state.origin==='portaria'?'via158':'portaria'; startRoute(); };
-  document.getElementById('btnPlay').onclick=e=>{ if(state.traveled>=state.total) return; state.playing=!state.playing; e.target.textContent=state.playing?'⏸':'▶'; };
-  document.getElementById('btnRe').onclick=()=>{ state.traveled=0; state.playing=true; document.getElementById('btnPlay').textContent='⏸'; document.getElementById('arrive').classList.remove('on'); };
-  document.getElementById('btnView').onclick=e=>{ state.mode=state.mode==='fp'?'tp':'fp'; e.target.querySelector('small').textContent=state.mode==='fp'?'1ª':'3ª'; e.target.classList.toggle('on',state.mode==='tp'); };
-  document.getElementById('btnAcc').onclick=e=>{ state.allowEscada=!state.allowEscada; e.target.classList.toggle('on',!state.allowEscada);
-    const path=astar(GRAPH,state.origin,state.dest,state.allowEscada); if(path){ buildRoute(path); state.traveled=0; state.total=routeLen; state.playing=true; document.getElementById('btnPlay').textContent='⏸'; drawMiniBase(); } };
-  document.getElementById('arrRe').onclick=()=>{ state.traveled=0; state.playing=true; document.getElementById('btnPlay').textContent='⏸'; document.getElementById('arrive').classList.remove('on'); };
-  document.getElementById('arrInv').onclick=()=>{ const o=state.origin; state.origin=state.dest; state.dest=o;
-    document.getElementById('originName').textContent=DATA.nodes[state.origin].name||state.origin; startRoute(); };
-}
+    /* ========================================================================
+       PAVILHÃO — chão pentagonal + paredes
+       Forma referencia o "DNA" do prédio Via Centro: parede diagonal característica.
+       ====================================================================== */
 
-// ============================================================ BOOT
-(async function(){
-  try{
-    DATA=await loadData(); GRAPH=buildGraph(DATA);
-    // QR: ?origem=...  define o nó de origem (checkpoint físico)
-    const q=new URLSearchParams(location.search).get('origem');
-    if(q && DATA.qr[q]) state.origin=DATA.qr[q];
-    else if(q && DATA.nodes[q]) state.origin=q;
-    document.getElementById('originName').textContent=DATA.nodes[state.origin]?.name||'Portaria principal';
-    // destinos
-    const sel=document.getElementById('destSel');
-    DATA.destinations.filter(d=>d.node!==state.origin).forEach(d=>{ const o=document.createElement('option'); o.value=d.node; o.textContent=d.label; sel.appendChild(o); });
-    state.dest=sel.value||'via158';
-    document.getElementById('destName').textContent=DATA.nodes[state.dest]?.name||'';
-    initThree(); buildWorld();
-    document.getElementById('lo2d').style.display='none';
-    bindUI(); animate();
-  }catch(e){ console.error(e); showErr('Erro ao iniciar: '+e.message); document.getElementById('lo2d').style.display='none'; }
-})();
-</script>
+    function createPavilion() {
+      const pavilion = new THREE.Group();
+      pavilion.name = 'pavilion';
+
+      // ---------- CHÃO ----------
+      // Construído via THREE.Shape para suportar polígono arbitrário
+      const floorShape = new THREE.Shape();
+      const [x0, z0] = PAVILION.floorShape[0];
+      floorShape.moveTo(x0, z0);
+      for (let i = 1; i < PAVILION.floorShape.length; i++) {
+        const [x, z] = PAVILION.floorShape[i];
+        floorShape.lineTo(x, z);
+      }
+      floorShape.closePath();
+
+      const floorGeo = new THREE.ShapeGeometry(floorShape);
+      // Rotaciona para o plano XZ (Shape é desenhada em XY)
+      floorGeo.rotateX(-Math.PI / 2);
+
+      const floorMat = new THREE.MeshStandardMaterial({
+        color: 0x1e293b,         // slate-800
+        roughness: 0.35,         // semi-polido (referência: granito do Via Centro)
+        metalness: 0.15,
+      });
+      const floor = new THREE.Mesh(floorGeo, floorMat);
+      floor.receiveShadow = true;
+      floor.position.y = 0;
+      pavilion.add(floor);
+
+      // ---------- PAREDES ----------
+      // Uma parede por aresta do polígono. Cada parede é um BoxGeometry
+      // orientado pela direção da aresta.
+      const wallMat = new THREE.MeshStandardMaterial({
+        color: 0xe2e8f0,         // slate-200 (paredes claras como no Via Centro real)
+        roughness: 0.85,
+        metalness: 0.02,
+      });
+
+      // Parede com acento azul índigo (referência: parede inclinada da foto interna)
+      const wallAccentMat = new THREE.MeshStandardMaterial({
+        color: 0x312e81,         // indigo-900
+        roughness: 0.7,
+        metalness: 0.05,
+      });
+
+      const pts = PAVILION.floorShape;
+      for (let i = 0; i < pts.length; i++) {
+        const [ax, az] = pts[i];
+        const [bx, bz] = pts[(i + 1) % pts.length];
+
+        const dx = bx - ax;
+        const dz = bz - az;
+        const length = Math.hypot(dx, dz);
+        const angle  = Math.atan2(dz, dx);   // rotação Y da parede
+        const cx     = (ax + bx) / 2;
+        const cz     = (az + bz) / 2;
+
+        // A "parede diagonal" (aresta 2 do polígono: índice 2→3) recebe o material acentuado
+        const isDiagonal = (i === 2);
+
+        const wallGeo = new THREE.BoxGeometry(
+          length,
+          PAVILION.wallHeight,
+          PAVILION.wallThickness
+        );
+        const wall = new THREE.Mesh(wallGeo, isDiagonal ? wallAccentMat : wallMat);
+        wall.position.set(cx, PAVILION.wallHeight / 2, cz);
+        wall.rotation.y = -angle;            // BoxGeometry padrão alinha o lado longo em X
+        wall.castShadow = true;
+        wall.receiveShadow = true;
+        wall.userData.isWall = true;
+        pavilion.add(wall);
+      }
+
+      // ---------- BASE / "PLINTO" do chão ----------
+      // Borda escura levemente extrudada do chão, dá peso visual e sensação de "dentro"
+      const plintoGeo = new THREE.ShapeGeometry(floorShape);
+      plintoGeo.rotateX(-Math.PI / 2);
+      const plintoMat = new THREE.MeshStandardMaterial({
+        color: 0x0b1220,
+        roughness: 0.9,
+        metalness: 0.0,
+        side: THREE.DoubleSide,
+      });
+      const plinto = new THREE.Mesh(plintoGeo, plintoMat);
+      plinto.position.y = -0.02;
+      plinto.scale.multiplyScalar(1.08);    // ligeiramente maior que o chão
+      pavilion.add(plinto);
+
+      scene.add(pavilion);
+    }
+
+    /* ========================================================================
+       GRID — referência sutil no chão para escala/orientação
+       ====================================================================== */
+
+    function createGroundGrid() {
+      // Grid 30x30 com células de 1m — bom pra avaliador ver as proporções
+      const grid = new THREE.GridHelper(30, 30, 0x38bdf8, 0x334155);
+      grid.material.opacity = 0.15;
+      grid.material.transparent = true;
+      grid.position.y = 0.01;
+      grid.name = 'groundGrid';
+      scene.add(grid);
+    }
+
+    /* ========================================================================
+       ESTANDES — 5 plataformas com pilar + topo + rótulo flutuante
+       Versão deste sprint: placeholders visuais já posicionados (não-interativos).
+       Próxima iteração: raycaster + click → modal HTML.
+       ====================================================================== */
+
+    function createBooths() {
+      const boothsGroup = new THREE.Group();
+      boothsGroup.name = 'booths';
+
+      for (const data of BOOTHS) {
+        const [x, , z] = data.pos;
+        const booth = new THREE.Group();
+        booth.name = data.id;
+        booth.position.set(x, 0, z);
+        booth.userData = { ...data };       // metadados para raycaster futuro
+
+        // -- BASE: plataforma cilíndrica baixa, cor do estande --
+        const baseGeo = new THREE.CylinderGeometry(1.6, 1.7, 0.25, 32);
+        const baseMat = new THREE.MeshStandardMaterial({
+          color: data.cor,
+          roughness: 0.4,
+          metalness: 0.25,
+          emissive: data.cor,
+          emissiveIntensity: 0.12,
+        });
+        const base = new THREE.Mesh(baseGeo, baseMat);
+        base.position.y = 0.125;
+        base.castShadow = true;
+        base.receiveShadow = true;
+        booth.add(base);
+
+        // -- ANEL inferior (decoração emissiva, lê bem em luz baixa) --
+        const ringGeo = new THREE.TorusGeometry(1.65, 0.04, 12, 64);
+        const ringMat = new THREE.MeshStandardMaterial({
+          color: data.cor,
+          emissive: data.cor,
+          emissiveIntensity: 1.2,
+          roughness: 0.3,
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = 0.02;
+        booth.add(ring);
+
+        // -- PILAR central (totem) --
+        const pilarGeo = new THREE.CylinderGeometry(0.18, 0.18, 2.4, 16);
+        const pilarMat = new THREE.MeshStandardMaterial({
+          color: 0x1e293b,
+          roughness: 0.5,
+          metalness: 0.6,
+        });
+        const pilar = new THREE.Mesh(pilarGeo, pilarMat);
+        pilar.position.y = 0.25 + 1.2;
+        pilar.castShadow = true;
+        booth.add(pilar);
+
+        // -- TOPO emissivo (esfera brilhante na cor do estande) --
+        const topoGeo = new THREE.IcosahedronGeometry(0.45, 1);
+        const topoMat = new THREE.MeshStandardMaterial({
+          color: data.cor,
+          emissive: data.cor,
+          emissiveIntensity: 0.8,
+          roughness: 0.25,
+          metalness: 0.4,
+        });
+        const topo = new THREE.Mesh(topoGeo, topoMat);
+        topo.position.y = 0.25 + 2.4 + 0.35;
+        topo.castShadow = true;
+        topo.userData.isTopo = true;        // p/ animação no animate()
+        booth.add(topo);
+
+        // -- Point light sutil acima do estande (atmosfera) --
+        const pl = new THREE.PointLight(data.cor, 0.7, 8, 2);
+        pl.position.y = 3.4;
+        booth.add(pl);
+
+        // -- RÓTULO FLUTUANTE (CSS2DObject) --
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'booth-label';
+        labelDiv.innerHTML = `<span class="code">${data.id}</span>${data.nome}`;
+        const labelObj = new CSS2DObject(labelDiv);
+        labelObj.position.set(0, 3.9, 0);
+        booth.add(labelObj);
+
+        boothMeshes.push(booth);
+        boothsGroup.add(booth);
+      }
+
+      scene.add(boothsGroup);
+    }
+
+    /* ========================================================================
+       LOOP — renderização contínua
+       ====================================================================== */
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const t = clock.getElapsedTime();
+
+      // Anima as esferas no topo dos estandes: rotação suave + leve flutuação
+      for (const booth of boothMeshes) {
+        booth.traverse((obj) => {
+          if (obj.userData && obj.userData.isTopo) {
+            obj.rotation.y = t * 0.6;
+            obj.position.y = 0.25 + 2.4 + 0.35 + Math.sin(t * 1.5 + booth.position.x) * 0.06;
+          }
+        });
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+    }
+
+    /* ========================================================================
+       RESIZE
+       ====================================================================== */
+
+    function onWindowResize() {
+      const container = document.getElementById('app');
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(w, h);
+      labelRenderer.setSize(w, h);
+    }
+
+    /* ========================================================================
+       BOOTSTRAP
+       ====================================================================== */
+
+    // Tratamento de erro: se algo falhar (CDN bloqueado pela CSP, p.ex.),
+    // mostra mensagem ao invés de tela preta silenciosa.
+    try {
+      init();
+    } catch (err) {
+      console.error('[AmostraTech] Falha ao iniciar a cena:', err);
+      const loader = document.getElementById('loader');
+      if (loader) {
+        loader.innerHTML =
+          '<p style="max-width:380px;text-align:center;line-height:1.5;color:#fca5a5">' +
+          '<strong>Falha ao carregar a cena 3D.</strong><br>' +
+          'Verifique se a CSP do projeto libera <code>cdn.jsdelivr.net</code> ' +
+          'em <code>script-src</code> e se o navegador suporta WebGL 2.<br><br>' +
+          '<span style="font-size:11px;opacity:.7">' + (err.message || err) + '</span></p>';
+      }
+    }
+  </script>
 </body>
 </html>
