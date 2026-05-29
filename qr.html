@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>UniMaps · Gerador de QR</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Sora',system-ui,sans-serif}
+  body{min-height:100vh;background:radial-gradient(120% 90% at 50% 0%,#102c5e,#061227 45%,#03070f);color:#fff;
+    display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 18px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .uni{font-family:'Orbitron';font-weight:800;font-size:24px}
+  .maps{font-family:'Orbitron';font-weight:600;font-size:12px;letter-spacing:6px;color:#9cc2ff}
+  p{color:#9fb6da;font-size:13px;text-align:center;max-width:420px;line-height:1.5}
+  .field{width:100%;max-width:420px}
+  label{display:block;font-size:11px;letter-spacing:1.5px;color:#9fb6da;text-transform:uppercase;margin:0 0 6px 2px}
+  input,select{width:100%;font-family:inherit;font-size:15px;color:#fff;background:#0a1f44;border:1px solid rgba(60,139,255,.35);
+    border-radius:12px;padding:13px 14px;outline:none}
+  .cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+  .card{background:#fff;border-radius:18px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px;width:230px}
+  .card h3{color:#0b2350;font-size:15px}
+  .card .url{color:#5b6b86;font-size:10px;word-break:break-all;text-align:center}
+  .card canvas{border-radius:8px}
+  .tip{font-size:12px;color:#9cc2ff}
+</style>
+</head>
+<body>
+  <div class="brand"><span class="uni">Uni</span><span class="maps">MAPS</span></div>
+  <p>Gere os QR codes dos pontos físicos. Cole a URL do seu app publicado no Vercel; cada QR abre a rota já com a <b>origem</b> correta (o "você está aqui").</p>
+  <div class="field">
+    <label>URL do app (Vercel)</label>
+    <input id="base" type="text" placeholder="https://unimaps.vercel.app" value="https://unimaps.vercel.app">
+  </div>
+  <div class="cards" id="cards"></div>
+  <p class="tip">Dica: imprima o QR "Portaria" na portaria e o "Via 158" na porta da sala — o trajeto de ida e volta sai do mesmo grafo.</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    const PONTOS=[
+      {codigo:'portaria', nome:'Portaria principal'},
+      {codigo:'via158',   nome:'Sala de Docentes · Via 158'},
+    ];
+    const cards=document.getElementById('cards'), base=document.getElementById('base');
+    function render(){
+      cards.innerHTML='';
+      const root=base.value.replace(/\/+$/,'');
+      PONTOS.forEach(p=>{
+        const url=`${root}/?origem=${p.codigo}`;
+        const c=document.createElement('div'); c.className='card';
+        const h=document.createElement('h3'); h.textContent=p.nome;
+        const q=document.createElement('div');
+        const u=document.createElement('div'); u.className='url'; u.textContent=url;
+        c.appendChild(h); c.appendChild(q); c.appendChild(u); cards.appendChild(c);
+        new QRCode(q,{text:url,width:180,height:180,colorDark:'#0b2350',colorLight:'#ffffff'});
+      });
+    }
+    base.addEventListener('input',render); render();
+  </script>
+</body>
+</html>
