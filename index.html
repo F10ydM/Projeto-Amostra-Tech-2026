@@ -136,7 +136,7 @@
     <select id="destSel"></select>
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v3</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v4</b></div>
 </div>
 
 <!-- HUD -->
@@ -391,10 +391,10 @@ function buildRoute(path){
     flowTex.repeat.set(1, Math.max(6,routeLen/2));
   } else { flowTex.repeat.set(1, Math.max(6,routeLen/2)); }
 
-  const glow=new THREE.Mesh(new THREE.TubeGeometry(routeCurve, Math.max(40,routeLen*3), 0.42, 8, false),
+  const glow=new THREE.Mesh(new THREE.TubeGeometry(routeCurve, Math.max(40,Math.round(routeLen*3)), 0.42, 8, false),
     new THREE.MeshBasicMaterial({color:0x1f6fe8, transparent:true, opacity:0.18, blending:THREE.AdditiveBlending, depthWrite:false}));
   routeGroup.add(glow);
-  const core=new THREE.Mesh(new THREE.TubeGeometry(routeCurve, Math.max(40,routeLen*3), 0.16, 8, false),
+  const core=new THREE.Mesh(new THREE.TubeGeometry(routeCurve, Math.max(40,Math.round(routeLen*3)), 0.16, 8, false),
     new THREE.MeshBasicMaterial({map:flowTex, color:0x9cc2ff, transparent:true, opacity:0.95, blending:THREE.AdditiveBlending, depthWrite:false}));
   routeGroup.add(core);
 
