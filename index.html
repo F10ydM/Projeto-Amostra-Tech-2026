@@ -167,6 +167,42 @@
     box-shadow:0 2px 8px rgba(0,0,0,.35)}
   .room-label.near{color:#fff;border-color:var(--blue-bright);background:rgba(31,111,232,.4)}
   .room-label.dest{color:#fff;border-color:var(--blue-bright);background:rgba(31,111,232,.5);font-weight:600}
+
+  /* ===== PAINEL DE ACESSIBILIDADE ===== */
+  #a11yPanel{position:absolute;left:14px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 230px);
+    width:min(280px,calc(100% - 28px));background:rgba(6,18,38,.94);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+    border:1px solid rgba(60,139,255,.4);border-radius:16px;padding:14px;z-index:20;display:none;pointer-events:auto;
+    box-shadow:0 12px 34px rgba(0,0,0,.5)}
+  #a11yPanel.on{display:block}
+  .a11yHead{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:15px;margin-bottom:10px}
+  .a11yHead button{background:none;border:0;color:var(--mute);font-size:16px;cursor:pointer;padding:4px}
+  .a11yRow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(60,139,255,.14);font-size:13px}
+  .a11yBtns{display:flex;gap:6px}
+  .a11yBtns button{min-width:38px;height:34px;border-radius:9px;border:1px solid rgba(60,139,255,.35);
+    background:rgba(12,28,58,.9);color:var(--blue-soft);font-weight:700;cursor:pointer}
+  .tgl{height:34px;padding:0 14px;border-radius:9px;border:1px solid rgba(60,139,255,.35);
+    background:rgba(12,28,58,.9);color:var(--blue-soft);font-weight:600;cursor:pointer;font-size:13px}
+  .tgl[aria-checked="true"]{background:var(--blue);border-color:var(--blue-bright);color:#fff}
+  .a11yHint{margin-top:10px;font-size:11px;color:var(--mute);line-height:1.4}
+
+  /* alto contraste */
+  body.hc #hud, body.hc #a11yPanel{filter:contrast(1.15)}
+  body.hc #banner,body.hc #bottom,body.hc #a11yPanel{background:#000 !important;border-color:#7ab8ff !important}
+  body.hc .a11yRow{border-color:rgba(122,184,255,.5)}
+  body.hc #banner .txt .a,body.hc .meta .dest,body.hc .a11yHead{color:#fff}
+  body.hc .room-label{background:#000 !important;border-color:#7ab8ff !important;color:#fff}
+  body.hc .cbtn,body.hc .tbtn{border-color:#7ab8ff}
+  /* reduzir animações */
+  body.reduce-motion *{transition:none !important;animation:none !important}
+
+  @media (max-width:560px), (max-height:520px){
+    .ctrls{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 188px)}
+    #a11yPanel{left:10px;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 250px);width:calc(100% - 20px);max-width:300px}
+    .a11yRow{padding:10px 0}              /* alvos de toque maiores no mobile */
+    .a11yBtns button,.tgl{height:40px}
+    /* o widget do VLibras não cobrir o painel inferior */
+    div[vw]{bottom:96px !important}
+  }
 </style>
 </head>
 <body>
@@ -191,7 +227,7 @@
     <select id="destSel"></select>
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v15</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v18</b></div>
 </div>
 
 <!-- HUD -->
@@ -207,6 +243,34 @@
     <button class="cbtn" id="btnAcc" title="Rota acessível (evita escada rolante)" aria-label="Rota acessível">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M9 7v5h4l3 6 1.8-.9-2.6-5.1H11V7z"/><path d="M14 14.5a4.5 4.5 0 1 1-5-4.47v2.06A2.5 2.5 0 1 0 12.4 15z"/></svg>
     </button>
+    <button class="cbtn" id="btnA11y" title="Acessibilidade" aria-label="Abrir opções de acessibilidade">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="3.5" r="2"/><path d="M3 8h18v2h-6v11h-2v-6h-2v6H9V10H3z"/></svg>
+    </button>
+  </div>
+
+  <!-- PAINEL DE ACESSIBILIDADE -->
+  <div id="a11yPanel" role="dialog" aria-label="Acessibilidade" aria-modal="false">
+    <div class="a11yHead"><span>Acessibilidade</span><button id="a11yClose" aria-label="Fechar">✕</button></div>
+    <div class="a11yRow"><span>Tamanho do texto</span>
+      <div class="a11yBtns">
+        <button id="fsMinus" aria-label="Diminuir fonte">A−</button>
+        <button id="fsReset" aria-label="Fonte padrão">A</button>
+        <button id="fsPlus" aria-label="Aumentar fonte">A+</button>
+      </div>
+    </div>
+    <div class="a11yRow"><span>Alto contraste</span>
+      <button class="tgl" id="tglContrast" role="switch" aria-checked="false">Ativar</button>
+    </div>
+    <div class="a11yRow"><span>Ler instruções em voz</span>
+      <button class="tgl" id="tglTTS" role="switch" aria-checked="false">Ativar</button>
+    </div>
+    <div class="a11yRow"><span>Reduzir animações</span>
+      <button class="tgl" id="tglMotion" role="switch" aria-checked="false">Ativar</button>
+    </div>
+    <div class="a11yRow"><span>Rota acessível (evita escada)</span>
+      <button class="tgl" id="tglAcc" role="switch" aria-checked="false">Ativar</button>
+    </div>
+    <div class="a11yHint">Tradução em Libras: use o botão do VLibras no canto da tela.</div>
   </div>
 
   <div id="bottom">
@@ -552,46 +616,96 @@ function addRosto(grp,r,hy,variant){
 const SKIN=[0xf2c9a0,0xe0a878,0xc68642,0x8d5524,0xffd9b3];
 const HAIR=[0x2b2118,0x4a3527,0x6b4a2e,0x111111,0x7a6a55,0x9a9a9a];
 const NPC_SHIRT=[0xc0392b,0x2e7d6b,0x6a4ea3,0xd98a1f,0x37618e,0xb05074,0x4a8c3f,0x5a6470]; // cores variadas (NÃO Uniube)
+const PANTS=[0x222831,0x2a2f45,0x3a3f4a,0x4a3b2e,0x2e3b34];
+const BAG=[0xc0392b,0x2e4a8c,0x2e7d6b,0x4a4a52];
+// cache de materiais por cor (evita criar material por boneco → FPS)
+const _matC={};
+function matStd(color,rough=0.85){ const k=color+'|'+rough;
+  return _matC[k] || (_matC[k]=new THREE.MeshStandardMaterial({color,roughness:rough})); }
+const _sph=new THREE.SphereGeometry(1,10,8);   // esfera unitária reutilizável (juntas)
+function joint(grp,r,mat,x,y,z){ const m=new THREE.Mesh(_sph,mat); m.scale.setScalar(r);
+  m.position.set(x,y,z); m.castShadow=false; grp.add(m); return m; }
 function pessoa(g,x,z,seed=0,sit=false){
   const grp=new THREE.Group();
-  // PRNG estável a partir de x,z,seed (mesma pessoa sempre igual)
   let s=Math.abs(Math.floor((x*73.1+z*131.7+seed*0.013))%997)+1;
   const rnd=()=>{s=(s*9301+49297)%233280;return s/233280;};
   const female=rnd()>0.5;
-  const skin=SKIN[Math.floor(rnd()*SKIN.length)];
-  const hair=HAIR[Math.floor(rnd()*HAIR.length)];
-  const matSkin=new THREE.MeshStandardMaterial({color:skin,roughness:0.85});
-  const matHair=new THREE.MeshStandardMaterial({color:hair,roughness:0.9});
-  // NPCs usam camiseta de cor variada (a roupa Uniube é exclusiva do boneco-guia)
-  const matShirt=new THREE.MeshStandardMaterial({color:NPC_SHIRT[Math.floor(rnd()*NPC_SHIRT.length)],roughness:0.85});
-  const matLeg=new THREE.MeshStandardMaterial({color:female?0x2a2f45:0x222831,roughness:0.92});
+  const matSkin=matStd(SKIN[Math.floor(rnd()*SKIN.length)]);
+  const matHair=matStd(HAIR[Math.floor(rnd()*HAIR.length)],0.92);
+  const matShirt=matStd(NPC_SHIRT[Math.floor(rnd()*NPC_SHIRT.length)]);
+  const matLeg=matStd(PANTS[Math.floor(rnd()*PANTS.length)],0.9);
+  const matShoe=matStd(0x14161c,0.6);
   const faceVar=Math.floor(rnd()*6);
+  const tall=0.92+rnd()*0.16;       // variação de altura
+  const wide=0.92+rnd()*0.16;       // variação de porte
+  const rig=new THREE.Group(); rig.scale.set(wide,tall,wide); grp.add(rig);
 
-  const bh=sit?0.5:0.62;           // altura do tronco
-  const baseY=sit?0.45:0.78;       // onde o tronco começa
-  // tronco com camiseta (a frente exibe o wordmark)
-  const torso=box(grp,0.40,bh,0.24,matShirt,0,baseY+bh/2,0);
-  // braços
-  for(const sgx of[-1,1]) box(grp,0.10,bh*0.9,0.12,matShirt,sgx*0.26,baseY+bh*0.5,0,false);
-  // cabeça + cabelo + ROSTO
-  const hr=0.12;
-  const head=new THREE.Mesh(new THREE.SphereGeometry(hr,14,12),matSkin);
-  const hy=baseY+bh+hr; head.position.set(0,hy,0); head.castShadow=true; grp.add(head);
-  const cap=new THREE.Mesh(new THREE.SphereGeometry(hr*1.13,14,12,0,Math.PI*2,0,Math.PI*0.62),matHair);
-  cap.position.set(0,hy+0.02,0); grp.add(cap);
-  addRosto(grp,hr,hy,faceVar);
-  if(female){ // cabelo mais longo atrás
-    box(grp,0.22,0.26,0.10,matHair,0,hy-0.06,-0.10,false); }
-  // pernas / saia
   if(sit){
-    box(grp,0.40,0.42,0.40,matLeg,0,0.22,0.03,false);   // assento (cadeira insinuada)
-    box(grp,0.34,0.30,0.16,matLeg,0,0.5,0.12,false);    // coxas
-  } else if(female && rnd()>0.5){
-    box(grp,0.42,0.34,0.26,matLeg,0,0.5,0,false);        // saia
-    for(const sgx of[-1,1]) box(grp,0.11,0.5,0.12,matSkin,sgx*0.09,0.25,0,false); // pernas
+    // sentado: tronco + coxas insinuadas
+    box(rig,0.40,0.46,0.26,matShirt,0,0.70,0);
+    box(rig,0.38,0.16,0.40,matLeg,0,0.46,0.10,false);   // coxas
+    box(rig,0.40,0.40,0.40,matStd(0x2a2f38,0.6),0,0.22,0.02,false); // assento
   } else {
-    for(const sgx of[-1,1]) box(grp,0.14,0.78,0.15,matLeg,sgx*0.10,0.39,0,false); // calça
+    const hip=0.78;
+    // tronco trapezoidal (ombros mais largos que a cintura)
+    box(rig,0.44,0.30,0.25,matShirt,0,hip+0.50,0);      // peito/ombros
+    box(rig,0.36,0.26,0.22,matShirt,0,hip+0.22,0);      // cintura
+    joint(rig,0.115,matShirt,-0.22,hip+0.62,0);          // ombro L
+    joint(rig,0.115,matShirt, 0.22,hip+0.62,0);          // ombro R
+    // BRAÇOS com cotovelo + mão
+    for(const sx of[-1,1]){
+      box(rig,0.085,0.26,0.10,matShirt,sx*0.26,hip+0.46,0,false);  // braço sup
+      joint(rig,0.06,matSkin,sx*0.26,hip+0.32,0);                  // cotovelo
+      box(rig,0.075,0.24,0.09,matSkin,sx*0.26,hip+0.18,0,false);   // antebraço
+      joint(rig,0.055,matSkin,sx*0.26,hip+0.05,0);                 // mão
+    }
+    // PERNAS com joelho + pé (ou saia)
+    if(female && rnd()>0.55){
+      box(rig,0.40,0.30,0.26,matLeg,0,hip-0.02,0,false);           // saia
+      for(const sx of[-1,1]){ box(rig,0.085,0.42,0.09,matSkin,sx*0.10,0.22,0,false);
+        box(rig,0.10,0.07,0.22,matShoe,sx*0.10,0.035,0.04,false); }
+    } else {
+      for(const sx of[-1,1]){
+        box(rig,0.13,0.34,0.14,matLeg,sx*0.10,hip-0.10,0,false);   // coxa
+        joint(rig,0.075,matLeg,sx*0.10,hip-0.30,0);                // joelho
+        box(rig,0.11,0.32,0.12,matLeg,sx*0.10,hip-0.48,0,false);   // canela
+        box(rig,0.12,0.08,0.24,matShoe,sx*0.10,0.04,0.04,false);   // pé
+      }
+    }
   }
+  // PESCOÇO + CABEÇA + cabelo variado + rosto
+  const hy=(sit?1.02:1.62);
+  box(rig,0.10,0.10,0.10,matSkin,0,hy-0.16,0,false);              // pescoço
+  const hr=0.135;
+  const head=new THREE.Mesh(_sph,matSkin); head.scale.set(hr,hr*1.08,hr);
+  head.position.set(0,hy,0); head.castShadow=true; rig.add(head);
+  // cabelo: 0 calota, 1 calota+franja, 2 longo, 3 coque, 4 careca/curtíssimo
+  const hairType=Math.floor(rnd()*5);
+  if(hairType!==4){
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(hr*1.12,12,10,0,Math.PI*2,0,Math.PI*0.62),matHair);
+    cap.position.set(0,hy+0.02,0); rig.add(cap);
+  }
+  if(hairType===1) box(rig,hr*2,0.04,0.04,matHair,0,hy+0.06,hr*0.95,false);     // franja
+  if(hairType===2) box(rig,hr*1.9,0.30,0.10,matHair,0,hy-0.10,-0.09,false);     // cabelo longo
+  if(hairType===3) joint(rig,0.07,matHair,0,hy+hr*1.1,-0.02);                   // coque
+  addRosto(rig,hr,hy,faceVar);
+  // óculos ocasionais
+  if(rnd()>0.78){ const mg=matStd(0x15171c,0.4);
+    box(rig,0.10,0.05,0.02,mg,-0.055,hy+0.02,hr*1.0,false);
+    box(rig,0.10,0.05,0.02,mg, 0.055,hy+0.02,hr*1.0,false); }
+  // barba ocasional (homens)
+  if(!female && rnd()>0.7) box(rig,hr*1.4,0.08,0.06,matHair,0,hy-0.10,hr*0.7,false);
+
+  // ACESSÓRIOS: mochila (em pé) ou crachá
+  if(!sit && rnd()>0.5){
+    const mb=matStd(BAG[Math.floor(rnd()*BAG.length)],0.8);
+    box(rig,0.30,0.40,0.16,mb,0,1.28,-0.20,false);                 // mochila nas costas
+    box(rig,0.05,0.22,0.05,mb,-0.16,1.45,-0.02,false);             // alça L
+    box(rig,0.05,0.22,0.05,mb, 0.16,1.45,-0.02,false);             // alça R
+  } else if(rnd()>0.6){
+    box(rig,0.10,0.14,0.01,matStd(0xedeef0,0.5),0,1.28,0.13,false);// crachá no peito
+  }
+
   grp.position.set(x,0,z); g.add(grp); return grp;
 }
 
@@ -748,7 +862,7 @@ function buildWorld(){
   // forro PRETO de pingentes (no recorte, ligeiramente acima p/ evitar coplanaridade de borda)
   forroPendentes(ceilG, PZ.x+PZ.w/2, PZ.z+PZ.d/2, PZ.w, PZ.d, IS_MOBILE?40:72);
 
-  // ---------- PAREDE AZUL com citação do Mandela (na entrada) ----------
+  // ---------- PAREDE AZUL com citação do Mandela (parede DIREITA da sala Coordenadores) ----------
   {
     const t=cvtex(1024,640,(c,W,H)=>{c.fillStyle='#16307a';c.fillRect(0,0,W,H);
       c.fillStyle='rgba(255,255,255,.95)';c.font='italic 600 56px Georgia,serif';c.textAlign='left';
@@ -756,8 +870,10 @@ function buildWorld(){
         .forEach((l,i)=>c.fillText(l,70,150+i*86));
       c.font='600 40px sans-serif';c.fillStyle='#9fc4ff';c.fillText('— Nelson Mandela',70,520);});
     const m=new THREE.Mesh(new THREE.PlaneGeometry(4.2,2.6),new THREE.MeshStandardMaterial({map:t,roughness:0.85}));
-    const u=getBlock('unitecne');
-    m.position.set((u?u.x:31)-0.02, 1.5, 30); m.rotation.y=Math.PI/2; envWorld.add(m);
+    const co=getBlock('coord');
+    // parede direita (leste) da sala, virada para dentro da sala
+    const px=(co?co.x+co.w:49)-0.02, pz=(co?co.y+co.h/2:31);
+    m.position.set(px, 1.5, pz); m.rotation.y=-Math.PI/2; envWorld.add(m);
   }
 
   // (balcão de atendimento removido — não existe no local real)
@@ -1071,37 +1187,35 @@ function buildRoute(path){
   routeLen=routeCurve.getLength();
   routeMeters=routeLen*DIST_CAL;   // distância "real" exibida (calibrada p/ bater com o prédio)
   camInit=false;   // reinicia a suavização da câmera para a nova rota
+  _lastSpoken='';   // reinicia o controle de fala (TTS)
 
-  // ---- FAIXA VERMELHA NO CHÃO (fita ao longo do percurso, com chevrons animados) ----
-  if(!faixaTex){
-    faixaTex=cvtex(64,128,(x,w,h)=>{ x.fillStyle='#d61f2b'; x.fillRect(0,0,w,h);
-      x.fillStyle='rgba(255,255,255,0.92)';
-      for(let i=0;i<4;i++){ const yy=i*36;
-        x.beginPath(); x.moveTo(8,yy+24); x.lineTo(32,yy+6); x.lineTo(56,yy+24);
-        x.lineTo(56,yy+15); x.lineTo(32,yy+15); x.lineTo(8,yy+15); x.closePath(); x.fill(); } });
-    faixaTex.wrapS=faixaTex.wrapT=THREE.RepeatWrapping;
-  }
-  faixaTex.repeat.set(1, Math.max(4, Math.round(routeLen/1.6)));
-  // fita SEMPRE rente ao piso: usa uma curva achatada (Y fixo), então não vira
-  // "cilindro" ao acompanhar a subida da escada rolante.
+  // ---- ROTA AZUL ESTILO GOOGLE MAPS (fita lisa com contorno, rente ao piso) ----
+  // curva achatada (Y fixo) p/ não virar "cilindro" ao subir a escada
   const flatPts = pathPts.map(p=>new THREE.Vector3(p.x, 0.06, p.z));
   const flatCurve = new THREE.CatmullRomCurve3(flatPts,false,'catmullrom',0.0);
   const segN=Math.max(40,Math.round(routeLen*4));   // inteiro (correção do bug v4)
-  const fita=new THREE.Mesh(new THREE.TubeGeometry(flatCurve, segN, 0.34, 4, false),
-    new THREE.MeshStandardMaterial({map:faixaTex,color:0xffffff,emissive:0x6a0a10,emissiveIntensity:0.35,
-      roughness:0.6, polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3, depthWrite:false}));
-  fita.scale.y=0.05;            // achata a fita no piso
-  fita.position.y=0.0;
-  fita.renderOrder=3; routeGroup.add(fita);
+  const fita=new THREE.Group();
+  // borda (azul escuro de contorno, mais larga) — igual ao "casing" do Maps
+  const borda=new THREE.Mesh(new THREE.TubeGeometry(flatCurve, segN, 0.44, 6, false),
+    new THREE.MeshStandardMaterial({color:0x1a56c4, roughness:0.45, metalness:0.0,
+      polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3, depthWrite:false}));
+  borda.scale.y=0.04; borda.renderOrder=3; borda.position.y=0.01; fita.add(borda);
+  // núcleo (azul vivo do Maps, com brilho) — mais estreito, por cima da borda
+  const nucleo=new THREE.Mesh(new THREE.TubeGeometry(flatCurve, segN, 0.30, 6, false),
+    new THREE.MeshStandardMaterial({color:0x4c9bff, emissive:0x2b8bff, emissiveIntensity:0.7, roughness:0.35,
+      polygonOffset:true, polygonOffsetFactor:-4, polygonOffsetUnits:-4, depthWrite:false}));
+  nucleo.scale.y=0.05; nucleo.renderOrder=4; nucleo.position.y=0.02; fita.add(nucleo);
+  routeGroup.add(fita);
+  faixaTex=null;   // (não usa mais textura animada de chevrons)
 
-  // marcador de destino: ANEL no chão (sem objeto vertical que vira "cilindro")
+  // marcador de destino: ANEL no chão (azul, estilo Maps)
   const dest=pathPts[pathPts.length-1];
-  const ringMat=new THREE.MeshBasicMaterial({color:0xff3b46,transparent:true,opacity:0.85,side:THREE.DoubleSide,depthWrite:false});
+  const ringMat=new THREE.MeshBasicMaterial({color:0x2b8bff,transparent:true,opacity:0.9,side:THREE.DoubleSide,depthWrite:false});
   const pin=new THREE.Group();
   const ring=new THREE.Mesh(new THREE.RingGeometry(0.45,0.7,40),ringMat);
   ring.rotation.x=-Math.PI/2; ring.position.y=0.06; pin.add(ring);
   const dot=new THREE.Mesh(new THREE.CircleGeometry(0.32,32),
-    new THREE.MeshBasicMaterial({color:0xe11d2a,transparent:true,opacity:0.55,side:THREE.DoubleSide,depthWrite:false}));
+    new THREE.MeshBasicMaterial({color:0x1f6fe8,transparent:true,opacity:0.6,side:THREE.DoubleSide,depthWrite:false}));
   dot.rotation.x=-Math.PI/2; dot.position.y=0.055; pin.add(dot);
   pin.position.set(dest.x,0,dest.z); pin.visible=false; routeGroup.add(pin);
   routeGroup.userData={pin,fita,ring};
@@ -1117,30 +1231,45 @@ function buildRoute(path){
       emissive:0x0a2a5a,emissiveIntensity:0.25});   // leve brilho p/ "destacar" o guia
     const mLeg=new THREE.MeshStandardMaterial({color:0x1c2333,roughness:0.85});
     const mShoe=new THREE.MeshStandardMaterial({color:0x0e0f14,roughness:0.6,metalness:0.1});
+    const sphG=new THREE.SphereGeometry(1,12,10);
     const mk=(g,w,h,d,mat,x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
       m.position.set(x,y,z);m.castShadow=true;g.add(m);return m;};
+    const jt=(g,r,mat,x,y,z)=>{const m=new THREE.Mesh(sphG,mat);m.scale.setScalar(r);m.position.set(x,y,z);g.add(m);return m;};
     const hip=0.92;
-    // tronco levemente trapezoidal (ombros) via dois boxes
-    mk(rig,0.48,0.46,0.27,mShirt,0,hip+0.42,0);                 // tronco superior (ombros)
-    mk(rig,0.42,0.22,0.25,mShirt,0,hip+0.12,0);                 // cintura
-    mk(rig,0.13,0.10,0.13,mSkin,0,hip+0.70,0);                  // pescoço
+    // tronco trapezoidal
+    mk(rig,0.48,0.34,0.27,mShirt,0,hip+0.50,0);                 // peito/ombros
+    mk(rig,0.40,0.26,0.24,mShirt,0,hip+0.20,0);                 // cintura
+    jt(rig,0.13,mShirt,-0.24,hip+0.64,0); jt(rig,0.13,mShirt,0.24,hip+0.64,0); // ombros
+    mk(rig,0.13,0.10,0.13,mSkin,0,hip+0.72,0);                  // pescoço
     const hr=0.155;
-    const head=new THREE.Mesh(new THREE.SphereGeometry(hr,20,18),mSkin);
-    head.position.set(0,hip+0.86,0);head.castShadow=true;rig.add(head);
-    const cap=new THREE.Mesh(new THREE.SphereGeometry(hr*1.12,20,18,0,Math.PI*2,0,Math.PI*0.62),mHair);
-    cap.position.set(0,hip+0.88,0);rig.add(cap);
+    const head=new THREE.Mesh(sphG,mSkin); head.scale.set(hr,hr*1.06,hr);
+    head.position.set(0,hip+0.88,0);head.castShadow=true;rig.add(head);
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(hr*1.12,14,12,0,Math.PI*2,0,Math.PI*0.6),mHair);
+    cap.position.set(0,hip+0.90,0);rig.add(cap);
     // ROSTO do guia
     const face=new THREE.Mesh(new THREE.PlaneGeometry(hr*1.5,hr*1.5),
       new THREE.MeshBasicMaterial({map:faceTex(0),transparent:true,alphaTest:0.4,depthWrite:false}));
-    face.position.set(0,hip+0.87,hr*1.02); face.renderOrder=5; rig.add(face);
-    const armL=new THREE.Group(); armL.position.set(-0.31,hip+0.62,0); rig.add(armL);
-    const armR=new THREE.Group(); armR.position.set( 0.31,hip+0.62,0); rig.add(armR);
-    mk(armL,0.13,0.5,0.14,mShirt,0,-0.20,0); mk(armL,0.115,0.24,0.115,mSkin,0,-0.52,0);
-    mk(armR,0.13,0.5,0.14,mShirt,0,-0.20,0); mk(armR,0.115,0.24,0.115,mSkin,0,-0.52,0);
+    face.position.set(0,hip+0.89,hr*1.02); face.renderOrder=5; rig.add(face);
+    // crachá Uniube no peito
+    mk(rig,0.11,0.15,0.012,new THREE.MeshStandardMaterial({color:0xedeef0,roughness:0.5}),0,hip+0.40,0.135);
+    // BRAÇOS articulados: braço sup + cotovelo + antebraço + mão
+    const armL=new THREE.Group(); armL.position.set(-0.30,hip+0.62,0); rig.add(armL);
+    const armR=new THREE.Group(); armR.position.set( 0.30,hip+0.62,0); rig.add(armR);
+    for(const a of [armL,armR]){
+      mk(a,0.10,0.26,0.12,mShirt,0,-0.14,0);   // braço superior
+      jt(a,0.065,mSkin,0,-0.28,0);             // cotovelo
+      mk(a,0.085,0.24,0.10,mSkin,0,-0.42,0);   // antebraço
+      jt(a,0.058,mSkin,0,-0.55,0);             // mão
+    }
+    // PERNAS articuladas: coxa + joelho + canela + pé
     const legL=new THREE.Group(); legL.position.set(-0.12,hip,0); rig.add(legL);
     const legR=new THREE.Group(); legR.position.set( 0.12,hip,0); rig.add(legR);
-    mk(legL,0.17,0.64,0.18,mLeg,0,-0.35,0); mk(legL,0.19,0.13,0.32,mShoe,0,-0.68,0.06);
-    mk(legR,0.17,0.64,0.18,mLeg,0,-0.35,0); mk(legR,0.19,0.13,0.32,mShoe,0,-0.68,0.06);
+    for(const l of [legL,legR]){
+      mk(l,0.15,0.34,0.16,mLeg,0,-0.18,0);     // coxa
+      jt(l,0.08,mLeg,0,-0.36,0);               // joelho
+      mk(l,0.13,0.32,0.14,mLeg,0,-0.52,0);     // canela
+      mk(l,0.16,0.12,0.30,mShoe,0,-0.70,0.06); // pé
+    }
     // anel-base (marcador "você") — fora do rig, no chão, com pulso
     blob=new THREE.Mesh(new THREE.RingGeometry(0.30,0.46,32),new THREE.MeshBasicMaterial({color:0x38e1ff,transparent:true,opacity:0.75,side:THREE.DoubleSide,depthWrite:false}));
     blob.rotation.x=-Math.PI/2; blob.position.y=0.04; avatar.add(blob);
@@ -1170,7 +1299,13 @@ function computeTurns(path){
 }
 
 // ============================================================ ESTADO
-let state={ mode:'fp', playing:true, traveled:0, speed:2.6, allowEscada:true, origin:'ext_entrada', dest:'via158', total:0, celebrate:false, celT:0 };
+let state={ mode:'fp', playing:true, traveled:0, speed:2.6, allowEscada:true, origin:'ext_entrada', dest:'via158', total:0, celebrate:false, celT:0, tts:false, reduceMotion:false };
+let _lastSpoken='';
+function falar(txt){
+  if(!('speechSynthesis' in window)) return;
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(txt);
+    u.lang='pt-BR'; u.rate=1.0; u.pitch=1.0; speechSynthesis.speak(u); }catch(e){}
+}
 let ready=false, bootErr=null;   // ready=cena 3D pronta; bootErr=mensagem de falha na inicialização
 
 function startRoute(){
@@ -1206,11 +1341,17 @@ function updateHUD(){
   const bA=document.getElementById('bA'), bB=document.getElementById('bB'), bArr=document.getElementById('bArr');
   if(!ev || ev.type==='arrive'){
     bArr.textContent=ARR.arrive; bA.textContent='Chegando ao destino'; bB.textContent=DATA.nodes[state.dest].name||'';
+    if(state.tts){ const key='arrive'; if(_lastSpoken!==key){ _lastSpoken=key; falar('Você está chegando ao destino: '+(DATA.nodes[state.dest].name||'')); } }
   } else {
     const d=Math.round((ev.at-state.traveled)*DIST_CAL);
     bArr.textContent=ARR[ev.type];
     bA.textContent= ev.type==='left'?'Vire à esquerda': ev.type==='right'?'Vire à direita':'Siga em frente';
     bB.textContent= d>2? ('em '+d+' m') : 'agora';
+    // leitura em voz: anuncia a manobra ao se aproximar (uma vez por evento)
+    if(state.tts){ const key=ev.at+'|'+ev.type;
+      if(d<=8 && _lastSpoken!==key){ _lastSpoken=key;
+        const instr = ev.type==='left'?'Vire à esquerda': ev.type==='right'?'Vire à direita':'Siga em frente';
+        falar(d>2? (instr+' em '+d+' metros') : instr); } }
   }
 }
 
@@ -1383,8 +1524,41 @@ function bindUI(){
     state.traveled=Math.min(state.total,state.traveled+5); };
   document.getElementById('btnRe').onclick=()=>{ state.traveled=0; state.playing=true; setPlayIcon(true); document.getElementById('arrive').classList.remove('on'); pararCelebracao(); };
   document.getElementById('btnView').onclick=e=>{ state.mode=state.mode==='fp'?'tp':'fp'; e.currentTarget.querySelector('small').textContent=state.mode==='fp'?'1ª':'3ª'; e.currentTarget.classList.toggle('on',state.mode==='tp'); };
-  document.getElementById('btnAcc').onclick=e=>{ state.allowEscada=!state.allowEscada; e.currentTarget.classList.toggle('on',!state.allowEscada);
-    const path=astar(GRAPH,state.origin,state.dest,state.allowEscada); if(path){ buildRoute(path); state.traveled=0; state.total=routeLen; state.playing=true; setPlayIcon(true); pararCelebracao(); drawMiniBase(); } };
+  document.getElementById('btnAcc').onclick=e=>{ toggleAcessivel(); };
+
+  // ===== PAINEL DE ACESSIBILIDADE =====
+  const $=id=>document.getElementById(id);
+  const a11y=$('a11yPanel');
+  $('btnA11y').onclick=()=>a11y.classList.toggle('on');
+  $('a11yClose').onclick=()=>a11y.classList.remove('on');
+  // tamanho de fonte (escala a UI via variável no <html>)
+  let fontScale=1;
+  const applyFont=()=>{ document.documentElement.style.fontSize=(100*fontScale)+'%'; };
+  $('fsPlus').onclick=()=>{ fontScale=Math.min(1.5,fontScale+0.1); applyFont(); };
+  $('fsMinus').onclick=()=>{ fontScale=Math.max(0.8,fontScale-0.1); applyFont(); };
+  $('fsReset').onclick=()=>{ fontScale=1; applyFont(); };
+  // alto contraste
+  $('tglContrast').onclick=e=>{ const on=document.body.classList.toggle('hc');
+    e.currentTarget.setAttribute('aria-checked',on); e.currentTarget.textContent=on?'Ativado':'Ativar'; };
+  // reduzir animações
+  $('tglMotion').onclick=e=>{ const on=document.body.classList.toggle('reduce-motion');
+    e.currentTarget.setAttribute('aria-checked',on); e.currentTarget.textContent=on?'Ativado':'Ativar';
+    state.reduceMotion=on; };
+  // leitura em voz (TTS) das instruções
+  $('tglTTS').onclick=e=>{ state.tts=!state.tts;
+    e.currentTarget.setAttribute('aria-checked',state.tts); e.currentTarget.textContent=state.tts?'Ativado':'Ativar';
+    if(state.tts){ falar('Leitura em voz ativada.'); } else if(window.speechSynthesis){ speechSynthesis.cancel(); } };
+  // rota acessível (mesma ação do botão lateral, sincronizada)
+  $('tglAcc').onclick=()=>toggleAcessivel();
+  function toggleAcessivel(){
+    state.allowEscada=!state.allowEscada;
+    const acOn=!state.allowEscada;
+    document.getElementById('btnAcc').classList.toggle('on',acOn);
+    const t=$('tglAcc'); t.setAttribute('aria-checked',acOn); t.textContent=acOn?'Ativado':'Ativar';
+    if(state.tts) falar(acOn?'Rota acessível ativada. Evitando escada rolante.':'Rota acessível desativada.');
+    const path=astar(GRAPH,state.origin,state.dest,state.allowEscada);
+    if(path){ buildRoute(path); state.traveled=0; state.total=routeLen; state.playing=true; setPlayIcon(true); pararCelebracao(); drawMiniBase(); }
+  }
   // barra de progresso clicável (seek)
   document.getElementById('progTrack').onclick=ev=>{ if(state.total<=0) return;
     const r=ev.currentTarget.getBoundingClientRect(); const f=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width));
@@ -1427,6 +1601,19 @@ function bindUI(){
     document.getElementById('lo2d').style.display='none';
   }
 })();
+</script>
+
+<!-- VLibras · tradutor de Libras oficial (governo) -->
+<div vw class="enabled">
+  <div vw-access-button class="active"></div>
+  <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
+</div>
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>
+  // inicializa o VLibras quando o script carregar (silencioso se offline)
+  window.addEventListener('load', function(){
+    try { new window.VLibras.Widget('https://vlibras.gov.br/app'); } catch(e){}
+  });
 </script>
 </body>
 </html>
