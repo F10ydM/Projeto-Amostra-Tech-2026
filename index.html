@@ -273,7 +273,7 @@
     <select id="destSel"></select>
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v28</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v31</b></div>
 </div>
 
 <!-- HUD -->
@@ -1811,27 +1811,30 @@ function bindUI(){
   bindUI();   // liga os botões PRIMEIRO — assim "Iniciar rota" responde mesmo se o 3D falhar
   try{
     DATA=await loadData(); GRAPH=buildGraph(DATA);
-    // QR: ?origem=...  define o nó de origem (checkpoint físico) e AUTO-INICIA a rota
-    const q=new URLSearchParams(location.search).get('origem');
-    let autoStart=false;
-    if(q && DATA.qr[q]){ state.origin=DATA.qr[q]; autoStart=true; }
-    else if(q && DATA.nodes[q]){ state.origin=q; autoStart=true; }
+    // QR: aceita ?origem=... (completo) OU ?o=... (curto, gera QR menos denso)
+    const params=new URLSearchParams(location.search);
+    const SHORT={ p:'portaria', e:'portaria', d:'docentes', '158':'docentes', '120':'sala120' };
+    let q=params.get('origem');
+    if(!q){ const s=params.get('o'); if(s) q=SHORT[s]||s; }   // ?o=120 → 'sala120'
+    let hasQR=false;
+    if(q && DATA.qr[q]){ state.origin=DATA.qr[q]; hasQR=true; }
+    else if(q && DATA.nodes[q]){ state.origin=q; hasQR=true; }
     document.getElementById('originName').textContent=DATA.nodes[state.origin]?.name||'Portaria principal';
-    // destinos (exclui a origem)
+    // TODOS os QR abrem a TELA DE SELEÇÃO com o ponto de partida já definido pelo QR escaneado.
+    // (a tela #start fica visível; o usuário escolhe o destino e toca em "Iniciar rota")
     const sel=document.getElementById('destSel');
     DATA.destinations.filter(d=>d.node!==state.origin).forEach(d=>{ const o=document.createElement('option'); o.value=d.node; o.textContent=d.label; sel.appendChild(o); });
-    // destino padrão: se a origem é uma sala-destino → volta p/ portaria; senão → vai p/ docentes 158
+    // destino padrão sugerido: sala-destino → volta p/ portaria; demais → docentes 158
     if(state.origin==='via158' || state.origin==='via120'){ state.dest='portaria'; }
     else { state.dest='via158'; }
     if([...sel.options].some(o=>o.value===state.dest)) sel.value=state.dest;
-    else state.dest = sel.value || 'via158';
+    else state.dest = sel.value || (sel.options[0] && sel.options[0].value) || 'via158';
     document.getElementById('destName').textContent=DATA.nodes[state.dest]?.name||'';
     initThree(); buildWorld();
     ready=true;
     document.getElementById('lo2d').style.display='none';
     animate();
-    // QR escaneado → começa a andar automaticamente, pulando a tela inicial
-    if(autoStart){ startRoute(); }
+    // (nenhum QR inicia a rota automaticamente — todos passam pela seleção)
   }catch(e){
     console.error(e);
     bootErr='Falha ao montar o mapa 3D: '+e.message+'. Abra o Console (F12) e me mande o erro completo.';
