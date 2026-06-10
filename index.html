@@ -236,7 +236,7 @@
     <select id="destSel"></select>
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v21</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v22</b></div>
 </div>
 
 <!-- HUD -->
@@ -1478,6 +1478,8 @@ function animate(){
     camRoll+=(targetRoll-camRoll)*Math.min(1,dt*3);
 
     if(state.mode==='fp' && !state.celebrate && state.playing){
+      const fovFP = IS_MOBILE ? 68 : 60;
+      if(camera.fov!==fovFP){ camera.fov=fovFP; camera.updateProjectionMatrix(); }
       const bob=Math.sin(t*8)*0.035;
       camera.position.set(pos.x, 1.62+bob, pos.z);
       _vTmp.copy(pos).addScaledVector(smTan,6); _vTmp.y=1.5+Math.sin(t*4)*0.02;
@@ -1499,8 +1501,13 @@ function animate(){
         if(!state.celebrate){ avatar.position.x=pos.x; avatar.position.z=pos.z; avatar.rotation.y=avYaw; } }
       camera.up.set(0,1,0);
       // OVER-THE-SHOULDER: câmera baixa (altura do ombro), próxima, deslocada p/ o ombro direito.
-      // Fica abaixo do teto (~2.7 m) e evita a sensação de colisão da câmera alta de cima.
-      const back=2.6, shoulder=0.7, camH=1.72, lookH=1.45, lookAhead=5;
+      // No MOBILE (tela vertical estreita) recua e sobe um pouco, reduz o ombro e olha mais à frente,
+      // deixando o boneco menor e a rota mais limpa — menos poluição visual.
+      const back     = IS_MOBILE ? 3.4  : 2.6;
+      const shoulder = IS_MOBILE ? 0.42 : 0.7;
+      const camH     = IS_MOBILE ? 1.95 : 1.72;
+      const lookH    = IS_MOBILE ? 1.30 : 1.45;
+      const lookAhead= IS_MOBILE ? 7.0  : 5.0;
       // vetor lateral (perpendicular à direção, no plano do chão)
       const sideX=smTan.z, sideZ=-smTan.x;   // 90° de smTan
       camera.position.set(
@@ -1509,8 +1516,11 @@ function animate(){
         pos.z - smTan.z*back + sideZ*shoulder);
       camera.lookAt(pos.x + smTan.x*lookAhead + sideX*shoulder*0.5, lookH,
                     pos.z + smTan.z*lookAhead + sideZ*shoulder*0.5);
+      // FOV um pouco maior no mobile abre o enquadramento (rota cabe melhor na vertical)
+      const fovAlvo = IS_MOBILE ? 66 : 60;
+      if(camera.fov!==fovAlvo){ camera.fov=fovAlvo; camera.updateProjectionMatrix(); }
       // semente da câmera livre = ângulo atrás do boneco (continuidade ao pausar)
-      freeCam.yaw=Math.atan2(-smTan.x,-smTan.z); freeCam.pitch=0.16; freeCam.dist=3.4;
+      freeCam.yaw=Math.atan2(-smTan.x,-smTan.z); freeCam.pitch=0.16; freeCam.dist=IS_MOBILE?4.0:3.4;
     }
     miniDot(pos.x,pos.z);
     // halo reativo: realça sala mais próxima do trajeto
