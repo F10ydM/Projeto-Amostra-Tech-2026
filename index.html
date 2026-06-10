@@ -119,7 +119,8 @@
 
   /* ====== AJUSTES MOBILE (telas pequenas / retrato) ====== */
   @media (max-width:560px), (max-height:520px){
-    .topbrand{transform:scale(.82)}
+    /* a logo desce p/ baixo do banner (antes ficava coberta pelo banner largo) */
+    .topbrand{transform:scale(.78);top:calc(max(10px,env(safe-area-inset-top)) + 60px);left:12px;z-index:12}
     #banner{top:max(10px,env(safe-area-inset-top));width:calc(100% - 20px);padding:9px 12px;border-radius:13px;gap:10px}
     #banner .arr{font-size:24px;min-width:26px}
     #banner .txt .a{font-size:15px}
@@ -237,7 +238,7 @@
     <select id="destSel"></select>
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v23</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v25</b></div>
 </div>
 
 <!-- HUD -->
@@ -370,6 +371,7 @@ const EMBED = {
   ],
   // Grafo do A* (nós + arestas). 'tipo' marca arestas de escada (filtradas no modo acessível).
   nodes: {
+    estacionamento:{ x:46, y:58, name:'Estacionamento', tipo:'entrada' },
     ext_entrada:{ x:40, y:45.5, name:'Entrada principal', tipo:'entrada' },
     portaria:{ x:40, y:37.5, name:'Portaria principal', tipo:'entrada' },
     n_j:{ x:40, y:22 }, n_a:{ x:31, y:22 }, n_120:{ x:29.25, y:22 }, n_b:{ x:23, y:22 },
@@ -379,6 +381,7 @@ const EMBED = {
     n_esc:{ x:31, y:17, name:'Escadas rolantes', tipo:'escada' },
   },
   edges: [
+    ['estacionamento','ext_entrada'],
     ['ext_entrada','portaria'],
     ['portaria','n_j'], ['n_j','n_a'], ['n_a','n_120'], ['n_120','n_b'], ['n_b','n_c'], ['n_c','n_d'], ['n_d','via158'],
     ['n_120','via120'],
@@ -924,6 +927,7 @@ function buildWorld(){
 
   // ---------- FACHADA EXTERNA + PORTAS DE VIDRO (entrada principal) ----------
   buildFachada(P);
+  buildEstacionamento(P);
 }
 
 // registra um block como "sala destacável" (luz/label reativos) — mantém API do loop
@@ -1090,6 +1094,98 @@ function buildFachada(P){
   const poste=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.09,5,10),M.metal);
   poste.position.set(doorX-7,2.5,doorZ+7); g.add(poste);
   const lamp=new THREE.PointLight(0xfff0d0,5,18,2); lamp.position.set(doorX-7,5,doorZ+7); g.add(lamp);
+}
+
+// ====================================================================
+//  ESTACIONAMENTO EXTERNO  (vagas + carros low-poly + árvores + poste)
+//  Fica ao sul da esplanada; o boneco parte daqui e caminha até a entrada.
+// ====================================================================
+function buildEstacionamento(P){
+  const g=new THREE.Group(); envWorld.add(g);
+  const cz0=P.y+P.h;             // z da fachada (~40)
+  // --- asfalto do estacionamento (mais ao sul da esplanada) ---
+  const lotZ0=cz0+10, lotZ1=cz0+24, lotZc=(lotZ0+lotZ1)/2;   // z ~50..64
+  const lotX0=24, lotX1=60, lotXc=(lotX0+lotX1)/2;
+  const asfalto=new THREE.MeshStandardMaterial({color:0x23262c,roughness:0.97});
+  box(g, lotX1-lotX0, 0.06, lotZ1-lotZ0, asfalto, lotXc, -0.03, lotZc, false);
+  // faixa de pedestre ligando o estacionamento à esplanada (no eixo da entrada x=40)
+  const faixaMat=new THREE.MeshStandardMaterial({color:0xe8e6dc,roughness:0.9});
+  for(let i=0;i<6;i++) box(g,1.6,0.02,0.5,faixaMat,40,0.02,lotZ0-1+i*0.9,false);
+
+  // --- vagas pintadas (linhas brancas) em duas fileiras voltadas ao corredor central ---
+  const lineMat=new THREE.MeshStandardMaterial({color:0xc9c6bb,roughness:0.85});
+  const vagaW=2.6, fileiras=[ {z:lotZ0+0.2, dir:+1}, {z:lotZ1-0.2, dir:-1} ];
+  const vagasX=[];
+  for(let x=lotX0+1; x<=lotX1-vagaW; x+=vagaW){ vagasX.push(x); }
+  fileiras.forEach(f=>{
+    vagasX.forEach(x=>{
+      // linha divisória da vaga (perpendicular ao corredor)
+      box(g,0.08,0.02,4.0,lineMat,x,0.02,f.z+f.dir*2.0,false);
+    });
+    // linha de fundo da fileira
+    box(g, lotX1-lotX0-2, 0.02, 0.1, lineMat, lotXc, 0.02, f.z, false);
+  });
+
+  // --- carros low-poly (geometria/material reutilizados p/ não pesar) ---
+  const bodyGeo=new THREE.BoxGeometry(1.8,0.55,3.6);
+  const cabGeo=new THREE.BoxGeometry(1.6,0.5,1.9);
+  const wheelGeo=new THREE.CylinderGeometry(0.33,0.33,0.25,10);
+  const glassMat=new THREE.MeshStandardMaterial({color:0x10141c,roughness:0.3,metalness:0.4});
+  const wheelMat=new THREE.MeshStandardMaterial({color:0x0c0d10,roughness:0.8});
+  const carColors=[0xb63b3b,0x2f4f7e,0xded7cb,0x2c2f36,0x3a6e4a,0xc8a23a,0x6a6f78,0x8a3550];
+  const carMats=carColors.map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.45,metalness:0.25}));
+  let seed=7; const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
+  function carro(cx,cz,rot,mat){
+    const c=new THREE.Group();
+    const body=new THREE.Mesh(bodyGeo,mat); body.position.y=0.55; body.castShadow=true; c.add(body);
+    const cab=new THREE.Mesh(cabGeo,glassMat); cab.position.set(0,0.95,-0.15); c.add(cab);
+    // teto colorido sobre o vidro
+    const roof=new THREE.Mesh(new THREE.BoxGeometry(1.55,0.18,1.7),mat); roof.position.set(0,1.18,-0.15); c.add(roof);
+    for(const sx of [-1,1]) for(const sz of [-1.1,1.1]){
+      const w=new THREE.Mesh(wheelGeo,wheelMat); w.rotation.z=Math.PI/2;
+      w.position.set(sx*0.9,0.33,sz); c.add(w);
+    }
+    c.position.set(cx,0,cz); c.rotation.y=rot; g.add(c);
+  }
+  // preenche ~60% das vagas (deixa espaços vazios p/ naturalidade), pulando a vaga do eixo x=40
+  fileiras.forEach(f=>{
+    vagasX.forEach(x=>{
+      const cx=x+vagaW/2;
+      if(Math.abs(cx-40)<2.2) return;       // mantém livre o corredor da faixa de pedestre
+      if(rnd()>0.6) return;                 // nem toda vaga ocupada
+      const mat=carMats[Math.floor(rnd()*carMats.length)];
+      carro(cx, f.z+f.dir*2.0, f.dir>0?0:Math.PI, mat);
+    });
+  });
+
+  // --- árvores nas bordas + postes de luz ---
+  function arvore(x,z){
+    const t=new THREE.Group();
+    box(t,0.3,1.4,0.3,new THREE.MeshStandardMaterial({color:0x5b4632,roughness:0.95}),x,0.7,z,false);
+    const cMat=new THREE.MeshStandardMaterial({color:0x2f6e3a,roughness:0.95});
+    const c1=new THREE.Mesh(new THREE.SphereGeometry(1.1,9,8),cMat); c1.position.set(x,2.1,z); c1.castShadow=true; t.add(c1);
+    const c2=new THREE.Mesh(new THREE.SphereGeometry(0.8,9,8),cMat); c2.position.set(x+0.5,2.5,z+0.2); t.add(c2);
+    const c3=new THREE.Mesh(new THREE.SphereGeometry(0.75,9,8),cMat); c3.position.set(x-0.5,2.4,z-0.2); t.add(c3);
+    g.add(t);
+  }
+  [[lotX0+1,lotZ1-1],[lotX1-1,lotZ1-1],[lotX0+1,lotZ0+0.5],[lotX1-1,lotZ0+0.5]].forEach(([x,z])=>arvore(x,z));
+  // postes de iluminação do estacionamento
+  [[lotX0+3,lotZc],[lotX1-3,lotZc]].forEach(([x,z])=>{
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.1,5.5,10),M.metal); p.position.set(x,2.75,z); g.add(p);
+    box(g,1.4,0.16,0.4,new THREE.MeshStandardMaterial({color:0x1a1d22,roughness:0.6}),x,5.4,z,false);
+    const l=new THREE.PointLight(0xfff0d0,4,20,2); l.position.set(x,5.2,z); g.add(l);
+  });
+
+  // placa "ESTACIONAMENTO" para orientar na demonstração
+  {
+    const t=cvtex(512,128,(c,W,Hc)=>{ c.fillStyle='#13325f'; c.fillRect(0,0,W,Hc);
+      c.fillStyle='#fff'; c.font='700 54px Sora,sans-serif'; c.textAlign='center'; c.textBaseline='middle';
+      c.fillText('ESTACIONAMENTO',W/2,Hc/2); });
+    const pl=new THREE.Mesh(new THREE.PlaneGeometry(4,1.0),new THREE.MeshStandardMaterial({map:t,roughness:0.6}));
+    pl.position.set(40,2.4,lotZ1-0.3); pl.rotation.y=Math.PI; g.add(pl);
+    box(g,0.12,2.4,0.12,M.metal,38,1.2,lotZ1-0.3,false);
+    box(g,0.12,2.4,0.12,M.metal,42,1.2,lotZ1-0.3,false);
+  }
 }
 
 function updatePortas(dt){
@@ -1281,14 +1377,18 @@ function buildRoute(path){
       mk(a,0.085,0.24,0.10,mSkin,0,-0.42,0);   // antebraço
       jt(a,0.058,mSkin,0,-0.55,0);             // mão
     }
+    // QUADRIL (bacia) — conecta o tronco às pernas e cobre o vão durante a passada
+    mk(rig,0.40,0.20,0.24,mLeg,0,hip+0.02,0);                   // bacia/cintura baixa
     // PERNAS articuladas: coxa + joelho + canela + pé
-    const legL=new THREE.Group(); legL.position.set(-0.12,hip,0); rig.add(legL);
-    const legR=new THREE.Group(); legR.position.set( 0.12,hip,0); rig.add(legR);
+    // pivô das pernas na altura da bacia (hip+0.02) p/ a coxa "nascer" colada ao tronco
+    const legL=new THREE.Group(); legL.position.set(-0.12,hip+0.02,0); rig.add(legL);
+    const legR=new THREE.Group(); legR.position.set( 0.12,hip+0.02,0); rig.add(legR);
     for(const l of [legL,legR]){
-      mk(l,0.15,0.34,0.16,mLeg,0,-0.18,0);     // coxa
-      jt(l,0.08,mLeg,0,-0.36,0);               // joelho
-      mk(l,0.13,0.32,0.14,mLeg,0,-0.52,0);     // canela
-      mk(l,0.16,0.12,0.30,mShoe,0,-0.70,0.06); // pé
+      jt(l,0.10,mLeg,0,-0.02,0);                // junta do quadril (esfera que tampa o vão ao girar)
+      mk(l,0.15,0.36,0.16,mLeg,0,-0.21,0);      // coxa (topo encostando na bacia)
+      jt(l,0.08,mLeg,0,-0.40,0);                // joelho
+      mk(l,0.13,0.32,0.14,mLeg,0,-0.56,0);      // canela
+      mk(l,0.16,0.12,0.30,mShoe,0,-0.74,0.06);  // pé
     }
     // anel-base (marcador "você") — fora do rig, no chão, com pulso
     blob=new THREE.Mesh(new THREE.RingGeometry(0.30,0.46,32),new THREE.MeshBasicMaterial({color:0x38e1ff,transparent:true,opacity:0.75,side:THREE.DoubleSide,depthWrite:false}));
@@ -1335,6 +1435,10 @@ function startRoute(){
   if(!DATA.nodes[state.dest]){ showErr('Destino não existe no mapa: "'+state.dest+'". Verifique os dados (Supabase/EMBED).'); return; }
   const path=astar(GRAPH, state.origin, state.dest, state.allowEscada);
   if(!path){ showErr('Não há rota entre esses pontos no grafo.'); return; }
+  // INTRO: ao chegar de fora (entrada/portaria), começa no estacionamento e caminha até a entrada
+  if((state.origin==='ext_entrada'||state.origin==='portaria') && path[0]!=='estacionamento'){
+    path.unshift('estacionamento');
+  }
   buildRoute(path);
   state.traveled=0; state.total=routeLen; state.playing=true; pararCelebracao();
   setPlayIcon(true);
@@ -1461,7 +1565,7 @@ function animate(){
       const sw=Math.sin(u2.walk)*u2.amp;
       const sw2=Math.sin(u2.walk*2);
       // pernas: passada com leve flexão (rotação maior à frente)
-      u2.legL.rotation.x= sw*0.7; u2.legR.rotation.x=-sw*0.7;
+      u2.legL.rotation.x= sw*0.5; u2.legR.rotation.x=-sw*0.5;
       // braços em contrafase, com cotovelo levemente dobrado
       u2.armL.rotation.x=-sw*0.6; u2.armR.rotation.x= sw*0.6;
       u2.armL.rotation.z= 0.08; u2.armR.rotation.z=-0.08;
