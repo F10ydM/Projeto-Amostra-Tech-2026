@@ -154,6 +154,15 @@
   #arrive .rn{font-size:18px;font-weight:600}
   #arrive .sub{color:var(--mute);font-size:13px;max-width:320px}
   #arrive .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  #arrive .arrNext{width:min(360px,calc(100% - 28px));display:flex;flex-direction:column;gap:8px;margin:4px 0 2px}
+  #arrive .arrNext label{font-size:12px;color:var(--mute);text-align:left}
+  #arrive .arrNextRow{display:flex;gap:8px}
+  #arrive .arrNextRow select{flex:1;font-family:inherit;font-size:14px;color:#fff;background:#0a1f44;
+    border:1px solid rgba(60,139,255,.4);border-radius:12px;padding:11px 12px;cursor:pointer;
+    -webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%239cc2ff' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center}
+  #arrive .arrNextRow .pill{white-space:nowrap}
   .pill{font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:rgba(31,111,232,.18);
     border:1px solid rgba(60,139,255,.4);border-radius:12px;padding:11px 16px;cursor:pointer}
   .pill.solid{background:var(--blue);border-color:var(--blue-bright)}
@@ -227,7 +236,7 @@
     <select id="destSel"></select>
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v20</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v21</b></div>
 </div>
 
 <!-- HUD -->
@@ -302,8 +311,15 @@
   <div class="big">Você chegou</div>
   <div class="rn" id="arrName">Sala de Docentes · Via 158</div>
   <div class="sub" id="arrSub">Trajeto de demonstração — distâncias estimadas.</div>
+  <div class="arrNext">
+    <label for="arrDest">Escolha o próximo destino</label>
+    <div class="arrNextRow">
+      <select id="arrDest"></select>
+      <button class="pill solid" id="arrGo">Ir</button>
+    </div>
+  </div>
   <div class="row">
-    <button class="pill solid" id="arrInv">Rota de volta</button>
+    <button class="pill" id="arrInv">Rota de volta</button>
     <button class="pill" id="arrRe">Refazer</button>
   </div>
 </div>
@@ -1512,6 +1528,12 @@ function animate(){
 function arrive(){ if(!state.playing)return; state.playing=false;
   setPlayIcon(false);
   document.getElementById('arrName').textContent=DATA.nodes[state.dest].name||state.dest;
+  // preenche o seletor "próximo destino" com todos os pontos, exceto onde o aluno está
+  const ad=document.getElementById('arrDest');
+  if(ad){ ad.innerHTML='';
+    DATA.destinations.filter(d=>d.node!==state.dest).forEach(d=>{
+      const o=document.createElement('option'); o.value=d.node; o.textContent=d.label; ad.appendChild(o); });
+  }
   document.getElementById('arrive').classList.add('on');
   iniciarCelebracao();
 }
@@ -1578,6 +1600,13 @@ function bindUI(){
   document.getElementById('arrRe').onclick=()=>{ state.traveled=0; state.playing=true; setPlayIcon(true); document.getElementById('arrive').classList.remove('on'); pararCelebracao(); };
   document.getElementById('arrInv').onclick=()=>{ const o=state.origin; state.origin=state.dest; state.dest=o;
     document.getElementById('originName').textContent=DATA.nodes[state.origin].name||state.origin; startRoute(); };
+  // "Ir": parte de onde o aluno chegou e vai para o destino escolhido no seletor da tela de chegada
+  document.getElementById('arrGo').onclick=()=>{
+    const novo=document.getElementById('arrDest').value; if(!novo) return;
+    state.origin=state.dest; state.dest=novo;
+    document.getElementById('originName').textContent=DATA.nodes[state.origin].name||state.origin;
+    startRoute();
+  };
 }
 
 // ============================================================ BOOT
