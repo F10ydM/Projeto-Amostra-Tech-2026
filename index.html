@@ -119,33 +119,46 @@
 
   /* ====== AJUSTES MOBILE (telas pequenas / retrato) ====== */
   @media (max-width:560px), (max-height:520px){
-    /* a logo desce p/ baixo do banner (antes ficava coberta pelo banner largo) */
-    .topbrand{transform:scale(.78);top:calc(max(10px,env(safe-area-inset-top)) + 60px);left:12px;z-index:12}
-    #banner{top:max(10px,env(safe-area-inset-top));width:calc(100% - 20px);padding:9px 12px;border-radius:13px;gap:10px}
-    #banner .arr{font-size:24px;min-width:26px}
-    #banner .txt .a{font-size:15px}
+    /* LOGO vira só o ícone (pin) no canto — o texto "UniMaps" some p/ liberar o topo */
+    .topbrand{transform:none;top:max(10px,env(safe-area-inset-top));left:12px;z-index:12}
+    .topbrand .wm{display:none}                 /* esconde "UniMAPS" textual */
+    .topbrand .pin{width:30px;height:36px}
+    #banner{top:max(10px,env(safe-area-inset-top));left:auto;right:10px;transform:none;
+      width:calc(100% - 110px);padding:9px 12px;border-radius:13px;gap:10px}
+    #banner .arr{font-size:23px;min-width:24px}
+    #banner .txt .a{font-size:14.5px}
     #banner .txt .b{font-size:11px}
-    /* minimapa menor e ancorado abaixo do banner, à direita */
-    #mini{width:96px;height:96px;right:10px;top:calc(max(10px,env(safe-area-inset-top)) + 70px);border-radius:13px}
-    /* toggles à esquerda, acima do painel, botões um pouco menores */
-    .ctrls{left:10px;gap:8px;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 188px)}
+    /* minimapa menor, abaixo do banner, à direita */
+    #mini{width:84px;height:84px;right:10px;top:calc(max(10px,env(safe-area-inset-top)) + 64px);border-radius:12px}
+    /* toggles à esquerda */
+    .ctrls{left:10px;gap:8px;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 176px)}
     .cbtn{width:42px;height:42px;border-radius:12px}
     .cbtn svg{width:20px;height:20px}
-    /* painel inferior: largura total, botões compactos mas com bom alvo de toque */
-    #bottom{width:calc(100% - 16px);bottom:max(10px,env(safe-area-inset-bottom));padding:11px 14px 13px;border-radius:16px}
-    .meta .nums b{font-size:17px}
-    .transport{gap:14px;margin-top:11px;padding-top:11px}
-    .tbtn{width:48px;height:48px}
-    .tbtn svg{width:22px;height:22px}
-    .tbtn.play{width:62px;height:62px}
-    .tbtn.play svg{width:26px;height:26px}
+    /* painel inferior COMPACTO: "indo para" + distância na mesma linha */
+    #bottom{width:calc(100% - 16px);bottom:max(10px,env(safe-area-inset-bottom));padding:10px 14px 12px;border-radius:16px}
+    #bottom .meta{align-items:center}
+    .meta .dest{font-size:11px}
+    .meta .dest small{font-size:12.5px}
+    .meta .nums b{font-size:16px}
+    .meta .nums small{font-size:11px}
+    .transport{gap:14px;margin-top:9px;padding-top:9px}
+    .tbtn{width:46px;height:46px}
+    .tbtn svg{width:21px;height:21px}
+    .tbtn.play{width:58px;height:58px}
+    .tbtn.play svg{width:25px;height:25px}
   }
   /* telas muito estreitas: aperta um pouco mais o transporte */
   @media (max-width:380px){
     .transport{gap:10px}
     .tbtn{width:44px;height:44px}
-    .tbtn.play{width:56px;height:56px}
+    .tbtn.play{width:54px;height:54px}
+    #banner{width:calc(100% - 104px)}
   }
+
+  /* AUTO-OCULTAR controles secundários após parado (estilo Maps) — só mobile aplica via classe no body */
+  .ctrls,#mini,.topbrand{transition:opacity .4s ease, transform .4s ease}
+  body.hud-dim .ctrls,body.hud-dim #mini,body.hud-dim .topbrand{opacity:0;pointer-events:none}
+  body.hud-dim #mini{transform:translateY(-6px)}
 
 
 
@@ -214,6 +227,28 @@
     /* o widget do VLibras não cobrir o painel inferior */
     div[vw]{bottom:96px !important}
   }
+  /* ===== AVISO DE ROTA ACESSÍVEL: toast + selo + botão destacado ===== */
+  #toast{position:fixed;left:50%;top:calc(max(12px,env(safe-area-inset-top)) + 4px);transform:translate(-50%,-18px);
+    z-index:40;display:flex;align-items:center;gap:9px;max-width:calc(100% - 28px);
+    padding:11px 16px;border-radius:13px;font-size:13.5px;font-weight:600;color:#fff;
+    background:linear-gradient(180deg,#1f6fe8,#1550b8);border:1px solid #7ab8ff;
+    box-shadow:0 10px 30px rgba(0,0,0,.45);opacity:0;pointer-events:none;
+    transition:opacity .25s ease,transform .25s ease}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  #toast.off{background:linear-gradient(180deg,#3a414c,#272c34);border-color:#5b6573}
+  #toast .ico{display:inline-flex;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.18);
+    align-items:center;justify-content:center;font-size:13px;flex:0 0 auto}
+  /* selo persistente no HUD */
+  .a11y-badge{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:2px 8px;border-radius:999px;
+    font-size:10.5px;font-weight:700;letter-spacing:.02em;color:#bfe0ff;
+    background:rgba(31,111,232,.22);border:1px solid rgba(122,184,255,.55);vertical-align:middle}
+  .a11y-badge[hidden]{display:none}
+  .a11y-badge svg{color:#7ab8ff}
+  /* botão do cadeirante destacado quando ativo */
+  #btnAcc.on{background:radial-gradient(120% 120% at 50% 20%,#2b8bff,#1550b8 70%);border-color:#7ab8ff;
+    box-shadow:0 0 0 3px rgba(56,139,255,.35),0 6px 16px rgba(0,0,0,.4);color:#fff}
+  #btnAcc.on svg{fill:#fff}
+  body.reduce-motion #toast{transition:none}
 </style>
 </head>
 <body>
@@ -238,7 +273,7 @@
     <select id="destSel"></select>
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v25</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v28</b></div>
 </div>
 
 <!-- HUD -->
@@ -287,7 +322,9 @@
   <div id="bottom">
     <div class="prog" id="progTrack"><i id="progBar"></i></div>
     <div class="meta">
-      <div class="dest">Indo para<small id="destName">Sala de Docentes · Via 158</small></div>
+      <div class="dest">Indo para<small id="destName">Sala de Docentes · Via 158</small>
+        <span id="a11yBadge" class="a11y-badge" hidden><svg viewBox="0 0 24 24" width="12" height="12"><circle cx="12" cy="4" r="2" fill="currentColor"/><path d="M9 7v5h4l3 6 1.8-.9-2.6-5.1H11V7z" fill="currentColor"/><path d="M14 14.5a4.5 4.5 0 1 1-5-4.47v2.06A2.5 2.5 0 1 0 12.4 15z" fill="currentColor"/></svg>Rota acessível</span>
+      </div>
       <div class="nums"><b id="distNum">— m</b><small id="etaNum">—</small></div>
     </div>
     <div class="transport">
@@ -305,6 +342,11 @@
       </button>
     </div>
   </div>
+</div>
+
+<!-- TOAST de aviso (rota acessível) -->
+<div id="toast" role="status" aria-live="polite">
+  <span id="toastIco" class="ico"></span><span id="toastTxt"></span>
 </div>
 
 <!-- ARRIVE -->
@@ -371,7 +413,7 @@ const EMBED = {
   ],
   // Grafo do A* (nós + arestas). 'tipo' marca arestas de escada (filtradas no modo acessível).
   nodes: {
-    estacionamento:{ x:46, y:58, name:'Estacionamento', tipo:'entrada' },
+    estacionamento:{ x:40, y:60, name:'Estacionamento', tipo:'entrada' },
     ext_entrada:{ x:40, y:45.5, name:'Entrada principal', tipo:'entrada' },
     portaria:{ x:40, y:37.5, name:'Portaria principal', tipo:'entrada' },
     n_j:{ x:40, y:22 }, n_a:{ x:31, y:22 }, n_120:{ x:29.25, y:22 }, n_b:{ x:23, y:22 },
@@ -1108,9 +1150,9 @@ function buildEstacionamento(P){
   const lotX0=24, lotX1=60, lotXc=(lotX0+lotX1)/2;
   const asfalto=new THREE.MeshStandardMaterial({color:0x23262c,roughness:0.97});
   box(g, lotX1-lotX0, 0.06, lotZ1-lotZ0, asfalto, lotXc, -0.03, lotZc, false);
-  // faixa de pedestre ligando o estacionamento à esplanada (no eixo da entrada x=40)
+  // faixa de pedestre no corredor central (x=40, livre de carros) — do fundo do lote à esplanada
   const faixaMat=new THREE.MeshStandardMaterial({color:0xe8e6dc,roughness:0.9});
-  for(let i=0;i<6;i++) box(g,1.6,0.02,0.5,faixaMat,40,0.02,lotZ0-1+i*0.9,false);
+  for(let z=lotZ0-1; z<=lotZ1; z+=0.9) box(g,1.8,0.02,0.5,faixaMat,40,0.02,z,false);
 
   // --- vagas pintadas (linhas brancas) em duas fileiras voltadas ao corredor central ---
   const lineMat=new THREE.MeshStandardMaterial({color:0xc9c6bb,roughness:0.85});
@@ -1119,6 +1161,7 @@ function buildEstacionamento(P){
   for(let x=lotX0+1; x<=lotX1-vagaW; x+=vagaW){ vagasX.push(x); }
   fileiras.forEach(f=>{
     vagasX.forEach(x=>{
+      if(Math.abs(x-40)<3.2) return;   // sem linhas de vaga no corredor central
       // linha divisória da vaga (perpendicular ao corredor)
       box(g,0.08,0.02,4.0,lineMat,x,0.02,f.z+f.dir*2.0,false);
     });
@@ -1151,7 +1194,7 @@ function buildEstacionamento(P){
   fileiras.forEach(f=>{
     vagasX.forEach(x=>{
       const cx=x+vagaW/2;
-      if(Math.abs(cx-40)<2.2) return;       // mantém livre o corredor da faixa de pedestre
+      if(Math.abs(cx-40)<3.2) return;       // mantém livre o corredor central (onde o boneco anda)
       if(rnd()>0.6) return;                 // nem toda vaga ocupada
       const mat=carMats[Math.floor(rnd()*carMats.length)];
       carro(cx, f.z+f.dir*2.0, f.dir>0?0:Math.PI, mat);
@@ -1426,6 +1469,16 @@ function falar(txt){
   try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(txt);
     u.lang='pt-BR'; u.rate=1.0; u.pitch=1.0; speechSynthesis.speak(u); }catch(e){}
 }
+let _toastTimer=null;
+function showToast(positive, txt){
+  const el=document.getElementById('toast'); if(!el) return;
+  document.getElementById('toastTxt').textContent=txt;
+  document.getElementById('toastIco').textContent=positive?'♿':'✕';
+  el.classList.toggle('off',!positive);
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>el.classList.remove('show'), positive?3400:2200);
+}
 let ready=false, bootErr=null;   // ready=cena 3D pronta; bootErr=mensagem de falha na inicialização
 
 function startRoute(){
@@ -1634,7 +1687,11 @@ function animate(){
     for(const m of roomMeshes){ const on=(m===near && nd<6);
       m.material.opacity += ((on?0.22:0.0)-m.material.opacity)*0.1;
       m.material.emissiveIntensity += ((on?0.5:0.0)-m.material.emissiveIntensity)*0.1;
-      m.userData.label.classList.toggle('near', on && !m.userData.dest); }
+      m.userData.label.classList.toggle('near', on && !m.userData.dest);
+      // MOBILE: mostra só o label mais próximo (ou de destino próximo); desktop mostra todos
+      if(IS_MOBILE){ const vis=(m===near && nd<14)||(m.userData.dest && nd<22);
+        m.userData.label.style.display = vis?'':'none'; }
+    }
     _hudAcc+=dt; if(_hudAcc>=0.08){ _hudAcc=0; updateHUD(); }   // HUD ~12 Hz (menos escrita no DOM)
   }
   renderer.render(scene,camera); labelRenderer.render(scene,camera);
@@ -1712,8 +1769,15 @@ function bindUI(){
     state.allowEscada=!state.allowEscada;
     const acOn=!state.allowEscada;
     document.getElementById('btnAcc').classList.toggle('on',acOn);
+    document.getElementById('btnAcc').setAttribute('aria-pressed',acOn);
     const t=$('tglAcc'); t.setAttribute('aria-checked',acOn); t.textContent=acOn?'Ativado':'Ativar';
-    if(state.tts) falar(acOn?'Rota acessível ativada. Evitando escada rolante.':'Rota acessível desativada.');
+    // selo persistente no HUD
+    const badge=document.getElementById('a11yBadge'); if(badge) badge.hidden=!acOn;
+    // toast no topo
+    showToast(acOn, acOn
+      ? 'Rota acessível ativada — usando rampa/elevador, sem escadas'
+      : 'Rota acessível desativada');
+    if(state.tts) falar(acOn?'Rota acessível ativada. Evitando escadas. Usando rampa ou elevador.':'Rota acessível desativada.');
     const path=astar(GRAPH,state.origin,state.dest,state.allowEscada);
     if(path){ buildRoute(path); state.traveled=0; state.total=routeLen; state.playing=true; setPlayIcon(true); pararCelebracao(); drawMiniBase(); }
   }
@@ -1731,6 +1795,15 @@ function bindUI(){
     document.getElementById('originName').textContent=DATA.nodes[state.origin].name||state.origin;
     startRoute();
   };
+
+  // ===== AUTO-OCULTAR controles secundários após inatividade (estilo Maps, só mobile) =====
+  if(IS_MOBILE){
+    let dimTimer=null;
+    const wake=()=>{ document.body.classList.remove('hud-dim');
+      clearTimeout(dimTimer); dimTimer=setTimeout(()=>document.body.classList.add('hud-dim'), 4000); };
+    ['pointerdown','touchstart','keydown'].forEach(ev=>window.addEventListener(ev, wake, {passive:true}));
+    wake();   // inicia o cronômetro
+  }
 }
 
 // ============================================================ BOOT
