@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniMaps · Quadro do Projeto (editável)</title>
+<style>
+  :root{
+    --ink:#0a1730; --paper:#eef2f8; --line:#c3cede; --blue:#1f6fe8; --blue-deep:#1550b8;
+    --sky:#5b9cff; --amber:#f2b21c; --green:#1fb87a; --slate:#5a6b86; --card:#fff;
+    --shadow:0 1px 0 rgba(10,23,48,.04), 0 6px 18px rgba(10,23,48,.08);
+    --mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  body{background-image:linear-gradient(rgba(31,111,232,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(31,111,232,.04) 1px,transparent 1px);background-size:26px 26px;min-height:100vh}
+  header{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#0a1730,#0c1d3d);color:#fff;border-bottom:2px solid var(--blue);padding:14px clamp(16px,4vw,40px);display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 6px 20px rgba(10,23,48,.18)}
+  .pin{flex:0 0 auto;filter:drop-shadow(0 3px 6px rgba(0,0,0,.4))}
+  .brand{display:flex;flex-direction:column;line-height:1.05;margin-right:auto}
+  .brand .wm{font-weight:800;font-size:20px}
+  .brand .wm b{color:var(--sky)}
+  .brand .sub{font-family:var(--mono);font-size:11px;color:#9db6e6;letter-spacing:.08em;margin-top:3px;text-transform:uppercase}
+  .hbtn{font-family:var(--sans);font-size:13px;font-weight:600;color:#fff;background:var(--blue);border:0;border-radius:9px;padding:9px 14px;cursor:pointer}
+  .hbtn:hover{background:#3a82ff}
+  .hbtn.ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25)}
+  .meta-row{display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:10px clamp(16px,4vw,40px);font-family:var(--mono);font-size:12px;color:var(--slate);border-bottom:1px solid var(--line);background:rgba(255,255,255,.5)}
+  .meta-row b{color:var(--ink)}
+  .bar{height:7px;border-radius:4px;background:#dde5f1;overflow:hidden;min-width:160px;flex:1;max-width:280px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--green))}
+  main{padding:clamp(16px,3vw,28px);display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:16px;align-items:start;overflow-x:auto}
+  .col{background:rgba(255,255,255,.62);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;min-height:120px;backdrop-filter:blur(4px)}
+  .col-head{display:flex;align-items:center;gap:9px;padding:13px 14px;border-bottom:1px solid var(--line)}
+  .col-head .marker{width:10px;height:26px;border-radius:3px;flex:0 0 auto}
+  .col-head h2{margin:0;font-size:13.5px;font-weight:700}
+  .col-head .count{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--slate);background:#eaf0fa;border:1px solid var(--line);border-radius:999px;padding:1px 9px}
+  .col-body{padding:10px;display:flex;flex-direction:column;gap:10px;min-height:48px;flex:1}
+  .col-body.drag-over{background:rgba(31,111,232,.06);border-radius:10px}
+  .addcard{margin:0 10px 12px;border:1px dashed var(--line);background:none;color:var(--slate);border-radius:9px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:12px}
+  .addcard:hover{border-color:var(--blue);color:var(--blue)}
+  .card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:11px 12px;box-shadow:var(--shadow);cursor:grab;transition:transform .12s,box-shadow .12s,opacity .12s;position:relative}
+  .card:active{cursor:grabbing}
+  .card.dragging{opacity:.45;transform:scale(.98)}
+  .card.area-data{border-left-color:#7b61ff}.card.area-cloud{border-left-color:#1fb87a}
+  .card.area-3d{border-left-color:#1f6fe8}.card.area-a11y{border-left-color:#f2b21c}
+  .card.area-mobile{border-left-color:#ff7a59}.card.area-infra{border-left-color:#5a6b86}.card.area-ar{border-left-color:#e0457b}
+  .card .top{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .card .area{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:5px;color:#fff;white-space:nowrap}
+  .a-data{background:#7b61ff}.a-cloud{background:#1fb87a}.a-3d{background:#1f6fe8}.a-a11y{background:#cf9300}.a-mobile{background:#ff7a59}.a-infra{background:#5a6b86}.a-ar{background:#e0457b}
+  .card h3{margin:0;font-size:13.5px;font-weight:650;line-height:1.3;padding-right:46px}
+  .card p{margin:6px 0 0;font-size:12px;color:var(--slate);line-height:1.45}
+  .card .acts{position:absolute;top:9px;right:9px;display:flex;gap:4px;opacity:0;transition:opacity .12s}
+  .card:hover .acts{opacity:1}
+  .iconbtn{width:24px;height:24px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;color:var(--slate)}
+  .iconbtn:hover{border-color:var(--blue);color:var(--blue)}
+  .iconbtn.del:hover{border-color:#e0457b;color:#e0457b}
+  footer{padding:18px clamp(16px,4vw,40px) 30px;color:var(--slate);font-family:var(--mono);font-size:11px;text-align:center}
+  .ov{position:fixed;inset:0;background:rgba(10,23,48,.5);backdrop-filter:blur(3px);z-index:50;display:none;align-items:center;justify-content:center;padding:16px}
+  .ov.on{display:flex}
+  .modal{background:#fff;border-radius:16px;width:min(460px,100%);box-shadow:0 24px 70px rgba(10,23,48,.4);overflow:hidden}
+  .modal h3{margin:0;padding:16px 18px;font-size:16px;background:var(--ink);color:#fff}
+  .modal .body{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+  .fld{display:flex;flex-direction:column;gap:5px}
+  .fld label{font-size:12px;font-weight:600;color:var(--slate)}
+  .fld input,.fld textarea,.fld select{font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;color:var(--ink);background:#fff}
+  .fld textarea{resize:vertical;min-height:64px}
+  .modal .foot{display:flex;justify-content:flex-end;gap:9px;padding:12px 18px 18px}
+  .mbtn{font-size:13px;font-weight:600;border-radius:9px;padding:9px 16px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--slate)}
+  .mbtn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .mbtn.primary:hover{background:#3a82ff}
+  .mbtn.danger{background:#fff;color:#e0457b;border-color:#f0b6c8}
+  .mbtn.danger:hover{background:#fdeef2}
+  @media (max-width:880px){ main{grid-template-columns:repeat(4,minmax(230px,1fr))} }
+</style>
+</head>
+<body>
+<header>
+  <svg class="pin" width="30" height="36" viewBox="0 0 40 48" aria-hidden="true"><path d="M20 0C9 0 0 8.7 0 19.4 0 33 20 48 20 48s20-15 20-28.6C40 8.7 31 0 20 0z" fill="#1f6fe8"/><circle cx="20" cy="19" r="7.5" fill="#0a1730"/></svg>
+  <div class="brand">
+    <div class="wm"><b>Uni</b>Maps · Quadro do Projeto</div>
+    <div class="sub">GPS Interno 3D · Via Centro Uniube · editável</div>
+  </div>
+  <button class="hbtn" id="addBtn">+ Novo card</button>
+  <button class="hbtn ghost" id="exportBtn">Exportar</button>
+  <button class="hbtn ghost" id="importBtn">Importar</button>
+  <button class="hbtn ghost" id="resetBtn">Restaurar</button>
+  <input type="file" id="fileIn" accept="application/json" style="display:none">
+</header>
+<div class="meta-row">
+  <span>Progresso</span>
+  <div class="bar"><i id="progFill" style="width:0%"></i></div>
+  <span><b id="progPct">0%</b> concluído</span>
+  <span style="margin-left:auto">Arraste para mover · passe o mouse no card para <b>editar</b> ou <b>excluir</b></span>
+</div>
+<main id="board"></main>
+<footer>UniMaps · quadro editável — alterações salvas neste navegador. Use "Exportar" para guardar uma cópia.</footer>
+<div class="ov" id="ov">
+  <div class="modal">
+    <h3 id="mTitle">Novo card</h3>
+    <div class="body">
+      <div class="fld"><label>Título</label><input id="fTitle" placeholder="Ex.: Protótipo de AR por marcadores"></div>
+      <div class="fld"><label>Descrição</label><textarea id="fDesc" placeholder="O que é, por que importa..."></textarea></div>
+      <div class="fld"><label>Área</label>
+        <select id="fArea">
+          <option value="d3">3D · Algoritmo</option>
+          <option value="data">Banco de Dados</option>
+          <option value="cloud">Cloud</option>
+          <option value="a11y">Acessibilidade</option>
+          <option value="mobile">Mobile</option>
+          <option value="infra">Infra · DevOps</option>
+          <option value="ar">Realidade Aumentada</option>
+        </select>
+      </div>
+      <div class="fld"><label>Coluna</label>
+        <select id="fCol">
+          <option value="backlog">Planejado</option>
+          <option value="todo">A fazer</option>
+          <option value="doing">Em andamento</option>
+          <option value="done">Concluído</option>
+        </select>
+      </div>
+    </div>
+    <div class="foot">
+      <button class="mbtn danger" id="mDelete" style="margin-right:auto;display:none">Excluir</button>
+      <button class="mbtn" id="mCancel">Cancelar</button>
+      <button class="mbtn primary" id="mSave">Salvar</button>
+    </div>
+  </div>
+</div>
+<script>
+const AREA={
+  data:{label:'Banco de Dados',cls:'a-data',card:'area-data'},
+  cloud:{label:'Cloud',cls:'a-cloud',card:'area-cloud'},
+  d3:{label:'3D · Algoritmo',cls:'a-3d',card:'area-3d'},
+  a11y:{label:'Acessibilidade',cls:'a-a11y',card:'area-a11y'},
+  mobile:{label:'Mobile',cls:'a-mobile',card:'area-mobile'},
+  infra:{label:'Infra · DevOps',cls:'a-infra',card:'area-infra'},
+  ar:{label:'Realidade Aumentada',cls:'a-ar',card:'area-ar'},
+};
+const COLS=[
+  {id:'backlog',label:'Planejado',color:'#5a6b86'},
+  {id:'todo',label:'A fazer',color:'#f2b21c'},
+  {id:'doing',label:'Em andamento',color:'#1f6fe8'},
+  {id:'done',label:'Concluído',color:'#1fb87a'},
+];
+const KEY='unimaps_kanban_v2';
+const SEED=[
+  {id:'t1',col:'done',area:'d3',t:'Navegação 3D com A*',d:'Grafo de nós e arestas; rota por A*. Rota acessível filtra escadas.'},
+  {id:'t2',col:'done',area:'d3',t:'Cena 3D do 1º pavimento',d:'Salas, escada rolante, parede amarela, rampa e boneco-guia articulado. Otimizada para celulares mais fracos.'},
+  {id:'t3',col:'done',area:'d3',t:'Rota estilo Google Maps',d:'Fita azul rente ao piso; marcador de chegada em anel.'},
+  {id:'t4',col:'done',area:'infra',t:'Checkpoints por QR Code',d:'Escaneou → define a origem. Ponte físico-digital sem GPS.'},
+  {id:'t5',col:'done',area:'infra',t:'Deploy contínuo (Vercel+GitHub)',d:'git push publica automaticamente; commits semânticos.'},
+  {id:'t6',col:'done',area:'a11y',t:'Painel de acessibilidade',d:'VLibras, leitura por voz, alto contraste, fonte, reduzir animações.'},
+  {id:'t7',col:'done',area:'mobile',t:'HUD mobile-first',d:'Logo recolhida, 1 label por vez, painel compacto, auto-ocultar.'},
+  {id:'t8',col:'done',area:'cloud',t:'Banco PostgreSQL (Supabase)',d:'Mapa servido da nuvem com RLS; fallback offline.'},
+  {id:'t9',col:'done',area:'mobile',t:'PWA offline-first',d:'Service worker faz cache; app abre sem internet após a 1ª vez.'},
+  {id:'t9b',col:'done',area:'d3',t:'Ritmo do trajeto ajustado',d:'Velocidade da caminhada calibrada para acompanhamento confortável na apresentação.'},
+  {id:'t10',col:'doing',area:'cloud',t:'Demonstrar dados online',d:'Mostrar "Supabase (online)" e editar uma sala refletindo no app.'},
+  {id:'t11',col:'doing',area:'a11y',t:'VLibras em produção',d:'Botão próprio aciona o tradutor; validar no aparelho.'},
+  {id:'t12',col:'todo',area:'d3',t:'Rampa e elevador acessíveis',d:'Caminho alternativo no grafo para a rota acessível.'},
+  {id:'t13',col:'todo',area:'data',t:'Dados por andar',d:'Cada andar como conjunto de dados próprio; engine reaproveitada.'},
+  {id:'t14',col:'todo',area:'mobile',t:'Vídeo de demonstração',d:'Gravação mostrando os QR e a rota acessível.'},
+  {id:'a1',col:'backlog',area:'ar',t:'Fase 1 · Fundação métrica',d:'Medir corredores/salas com precisão e ajustar coordenadas. Pré-requisito de AR.'},
+  {id:'a2',col:'backlog',area:'ar',t:'Fase 1 · Densificar QR',d:'De 3 para vários QR (esquinas, salas-chave) como âncoras de recalibração.'},
+  {id:'a3',col:'backlog',area:'ar',t:'Fase 2 · Protótipo AR marcadores',d:'AR.js sobre Three.js; câmera + setas sobre a imagem real. Funciona em iPhone.'},
+  {id:'a4',col:'backlog',area:'ar',t:'Fase 2 · Modo "Ver em AR"',d:'AR como recurso extra, sem substituir o modo 3D/offline atual.'},
+  {id:'a5',col:'backlog',area:'ar',t:'Fase 3 · Piloto institucional',d:'AR em uso real num pavimento; coletar precisão e usabilidade.'},
+  {id:'a6',col:'backlog',area:'ar',t:'Fase 4 · App nativo (se justificar)',d:'ARKit/ARCore com rastreamento espacial. Só após validação no piloto.'},
+  {id:'t15',col:'backlog',area:'cloud',t:'Multi-prédio / multi-campus',d:'Seletor de prédio e andar; mesma engine para o campus.'},
+  {id:'t16',col:'backlog',area:'infra',t:'Integração com o AVA (Moodle)',d:'Nível 1: link. Nível 2: LTI. Nível 3: API de horários → rota contextual.'},
+  {id:'t17',col:'backlog',area:'data',t:'Painel de cadastro de salas',d:'Editor para não-programador manter o mapa.'},
+];
+let cards=[];
+const $=id=>document.getElementById(id);
+async function load(){
+  try{ const v=localStorage.getItem(KEY); cards=v?JSON.parse(v):structuredClone(SEED); }
+  catch(e){ cards=structuredClone(SEED); }
+  render();
+}
+async function save(){ try{ localStorage.setItem(KEY,JSON.stringify(cards)); }catch(e){} }
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function render(){
+  const board=$('board'); board.innerHTML='';
+  for(const col of COLS){
+    const sec=document.createElement('section'); sec.className='col';
+    const list=cards.filter(c=>c.col===col.id);
+    sec.innerHTML='<div class="col-head"><span class="marker" style="background:'+col.color+'"></span><h2>'+col.label+'</h2><span class="count">'+list.length+'</span></div><div class="col-body" data-drop="'+col.id+'"></div><button class="addcard" data-add="'+col.id+'">+ adicionar aqui</button>';
+    const body=sec.querySelector('.col-body');
+    list.forEach(c=>{
+      const a=AREA[c.area]||AREA.infra;
+      const el=document.createElement('article');
+      el.className='card '+a.card; el.draggable=true; el.dataset.id=c.id;
+      el.innerHTML='<div class="acts"><button class="iconbtn edit" title="Editar">✎</button><button class="iconbtn del" title="Excluir">🗑</button></div><div class="top"><span class="area '+a.cls+'">'+a.label+'</span></div><h3>'+esc(c.t)+'</h3>'+(c.d?'<p>'+esc(c.d)+'</p>':'');
+      body.appendChild(el);
+    });
+    board.appendChild(sec);
+  }
+  bindDrag(); bindCardActions();
+  const done=cards.filter(c=>c.col==='done').length;
+  const pct=cards.length?Math.round(done/cards.length*100):0;
+  $('progFill').style.width=pct+'%'; $('progPct').textContent=pct+'%';
+}
+let dragId=null;
+function bindDrag(){
+  document.querySelectorAll('.card').forEach(el=>{
+    el.addEventListener('dragstart',e=>{ dragId=el.dataset.id; el.classList.add('dragging'); });
+    el.addEventListener('dragend',()=>{ el.classList.remove('dragging'); dragId=null;
+      document.querySelectorAll('.col-body').forEach(b=>b.classList.remove('drag-over')); });
+  });
+  document.querySelectorAll('.col-body').forEach(body=>{
+    body.addEventListener('dragover',e=>{ e.preventDefault(); body.classList.add('drag-over'); });
+    body.addEventListener('dragleave',()=>body.classList.remove('drag-over'));
+    body.addEventListener('drop',e=>{ e.preventDefault(); body.classList.remove('drag-over');
+      if(!dragId) return; const c=cards.find(x=>x.id===dragId);
+      if(c){ c.col=body.dataset.drop; render(); save(); } });
+  });
+  document.querySelectorAll('[data-add]').forEach(b=>{ b.addEventListener('click',()=>openModal(null,b.dataset.add)); });
+}
+function bindCardActions(){
+  document.querySelectorAll('.card .edit').forEach(b=>{
+    b.addEventListener('click',e=>{ e.stopPropagation(); openModal(b.closest('.card').dataset.id); });
+  });
+  document.querySelectorAll('.card .del').forEach(b=>{
+    b.addEventListener('click',e=>{ e.stopPropagation();
+      const id=b.closest('.card').dataset.id;
+      if(confirm('Excluir este card?')){ cards=cards.filter(c=>c.id!==id); render(); save(); } });
+  });
+}
+let editingId=null;
+function openModal(id, col){
+  editingId=id;
+  const c=id?cards.find(x=>x.id===id):null;
+  $('mTitle').textContent=id?'Editar card':'Novo card';
+  $('fTitle').value=c?c.t:'';
+  $('fDesc').value=c?c.d:'';
+  $('fArea').value=c?c.area:'d3';
+  $('fCol').value=c?c.col:(col||'backlog');
+  $('mDelete').style.display=id?'block':'none';
+  $('ov').classList.add('on'); $('fTitle').focus();
+}
+function closeModal(){ $('ov').classList.remove('on'); editingId=null; }
+$('mCancel').onclick=closeModal;
+$('ov').addEventListener('click',e=>{ if(e.target===$('ov')) closeModal(); });
+$('mSave').onclick=()=>{
+  const t=$('fTitle').value.trim(); if(!t){ $('fTitle').focus(); return; }
+  const data={t, d:$('fDesc').value.trim(), area:$('fArea').value, col:$('fCol').value};
+  if(editingId){ Object.assign(cards.find(x=>x.id===editingId), data); }
+  else { cards.push({id:'c'+Date.now().toString(36), ...data}); }
+  render(); save(); closeModal();
+};
+$('mDelete').onclick=()=>{
+  if(editingId && confirm('Excluir este card?')){ cards=cards.filter(c=>c.id!==editingId); render(); save(); closeModal(); }
+};
+$('addBtn').onclick=()=>openModal(null,'backlog');
+$('resetBtn').onclick=()=>{ if(confirm('Restaurar o quadro para o estado inicial? As suas alterações serão perdidas.')){ cards=structuredClone(SEED); render(); save(); } };
+$('exportBtn').onclick=()=>{
+  const blob=new Blob([JSON.stringify(cards,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='unimaps-kanban.json'; a.click(); URL.revokeObjectURL(a.href);
+};
+$('importBtn').onclick=()=>$('fileIn').click();
+$('fileIn').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{ const data=JSON.parse(rd.result);
+    if(Array.isArray(data)){ cards=data; render(); save(); } else alert('Arquivo inválido.'); }
+    catch(err){ alert('Não foi possível ler o arquivo.'); } };
+  rd.readAsText(f); e.target.value='';
+};
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+load();
+</script>
+</body>
+</html>
