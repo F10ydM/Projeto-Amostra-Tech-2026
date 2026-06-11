@@ -288,7 +288,7 @@
     <select id="destSel"></select>
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v34</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v35</b></div>
 </div>
 
 <!-- HUD -->
@@ -1788,25 +1788,26 @@ function bindUI(){
   const btnLibras=$('btnLibras');
   if(btnLibras) btnLibras.onclick=()=>{
     const hint=$('librasHint');
-    // 1) procura o botão de acesso do VLibras no DOM
+    const wrap=document.querySelector('div[vw]');
     const acc=document.querySelector('[vw-access-button]');
+    // diagnóstico visível na própria tela (útil no celular, sem console)
+    const diag = 'VLibras: '
+      + (window.VLibras?'lib✓':'lib✗') + ' '
+      + (wrap?'wrap✓':'wrap✗') + ' '
+      + (acc?'btn✓':'btn✗');
     if(acc){
-      // garante visível e clica para abrir o tradutor
-      const wrap=document.querySelector('div[vw]');
-      if(wrap){ wrap.style.zIndex='99999'; wrap.style.display='block'; }
-      acc.style.display='block'; acc.style.visibility='visible'; acc.style.opacity='1';
+      if(wrap){ wrap.style.cssText += ';z-index:99999!important;display:block!important;right:14px;bottom:120px;'; }
+      acc.style.cssText += ';display:block!important;visibility:visible!important;opacity:1!important;';
+      // tenta abrir de duas formas: clique direto e evento de mouse
       acc.click();
-      if(hint) hint.textContent='Tradutor de Libras aberto. Toque num texto para traduzir.';
-      a11y.classList.remove('on');   // fecha o painel para liberar a tela
+      acc.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));
+      if(hint) hint.textContent='Tradutor aberto no canto direito. ('+diag+')';
+      a11y.classList.remove('on');
     } else if(window.VLibras && window.VLibras.Widget){
-      // 2) ainda não montou: tenta montar agora
-      try{ new window.VLibras.Widget('https://vlibras.gov.br/app');
-        setTimeout(()=>{ const a=document.querySelector('[vw-access-button]'); if(a) a.click(); }, 800);
-      }catch(e){}
-      if(hint) hint.textContent='Carregando o tradutor de Libras…';
+      try{ new window.VLibras.Widget('https://vlibras.gov.br/app'); }catch(e){}
+      if(hint) hint.textContent='Carregando o tradutor… toque de novo em 2s. ('+diag+')';
     } else {
-      // 3) plugin não disponível (provável falta de internet)
-      if(hint) hint.textContent='O VLibras precisa de internet e não está disponível agora.';
+      if(hint) hint.textContent='VLibras indisponível (precisa de internet). ('+diag+')';
     }
   };
   function toggleAcessivel(){
