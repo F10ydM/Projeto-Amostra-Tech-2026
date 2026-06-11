@@ -330,7 +330,7 @@
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
   <button class="credits-link" id="openCredits">Sobre o projeto · Autores e orientadores</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v37</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v38</b></div>
 </div>
 
 <!-- TELA SOBRE / CRÉDITOS -->
@@ -515,30 +515,30 @@ const EMBED = {
     { id:'s3', name:'Sala de aula', x:15.5, y:25, w:2.5, h:6, cat:'neutro' },
     { id:'s4', name:'Sala de aula', x:19, y:25, w:2.5, h:6, cat:'neutro' },
     { id:'s5', name:'Sala de aula', x:25, y:25, w:2.5, h:6, cat:'neutro' },
-    { id:'via120', name:'Sala 120', x:28, y:25, w:2.5, h:6, cat:'destino' },
+    { id:'via129', name:'Sala 129', x:28, y:25, w:2.5, h:6, cat:'destino' },
   ],
   // Grafo do A* (nós + arestas). 'tipo' marca arestas de escada (filtradas no modo acessível).
   nodes: {
     ext_entrada:{ x:40, y:45.5, name:'Entrada principal', tipo:'entrada' },
     portaria:{ x:40, y:37.5, name:'Portaria principal', tipo:'entrada' },
-    n_j:{ x:40, y:22 }, n_a:{ x:31, y:22 }, n_120:{ x:29.25, y:22 }, n_b:{ x:23, y:22 },
+    n_j:{ x:40, y:22 }, n_a:{ x:31, y:22 }, n_129:{ x:29.25, y:22 }, n_b:{ x:23, y:22 },
     n_c:{ x:16, y:22 }, n_d:{ x:8.5, y:22 },
     via158:{ x:8.75, y:16.8, name:'Sala de Docentes · Via 158', tipo:'destino' },
-    via120:{ x:29.25, y:24.4, name:'Sala 120', tipo:'destino' },
+    via129:{ x:29.25, y:24.4, name:'Sala 129', tipo:'destino' },
     n_esc:{ x:31, y:17, name:'Escadas rolantes', tipo:'escada' },
   },
   edges: [
     ['ext_entrada','portaria'],
-    ['portaria','n_j'], ['n_j','n_a'], ['n_a','n_120'], ['n_120','n_b'], ['n_b','n_c'], ['n_c','n_d'], ['n_d','via158'],
-    ['n_120','via120'],
+    ['portaria','n_j'], ['n_j','n_a'], ['n_a','n_129'], ['n_129','n_b'], ['n_b','n_c'], ['n_c','n_d'], ['n_d','via158'],
+    ['n_129','via129'],
     ['n_a','n_esc','escada'],
   ],
   destinations: [
     { node:'via158', label:'Sala de Docentes · Via 158' },
-    { node:'via120', label:'Sala 120' },
+    { node:'via129', label:'Sala 129' },
     { node:'portaria', label:'Portaria principal (voltar)' },
   ],
-  qr: { portaria:'ext_entrada', entrada:'ext_entrada', docentes:'via158', via158:'via158', sala120:'via120', via120:'via120' },
+  qr: { portaria:'ext_entrada', entrada:'ext_entrada', docentes:'via158', via158:'via158', sala129:'via129', via129:'via129' },
 };
 
 // ---------- carregar dados (Supabase opcional) ----------
@@ -1853,9 +1853,9 @@ function bindUI(){
     DATA=await loadData(); GRAPH=buildGraph(DATA);
     // QR: aceita ?origem=... (completo) OU ?o=... (curto, gera QR menos denso)
     const params=new URLSearchParams(location.search);
-    const SHORT={ p:'portaria', e:'portaria', d:'docentes', '158':'docentes', '120':'sala120' };
+    const SHORT={ p:'portaria', e:'portaria', d:'docentes', '158':'docentes', '129':'sala129' };
     let q=params.get('origem');
-    if(!q){ const s=params.get('o'); if(s) q=SHORT[s]||s; }   // ?o=120 → 'sala120'
+    if(!q){ const s=params.get('o'); if(s) q=SHORT[s]||s; }   // ?o=129 → 'sala129'
     let hasQR=false;
     if(q && DATA.qr[q]){ state.origin=DATA.qr[q]; hasQR=true; }
     else if(q && DATA.nodes[q]){ state.origin=q; hasQR=true; }
@@ -1865,7 +1865,7 @@ function bindUI(){
     const sel=document.getElementById('destSel');
     DATA.destinations.filter(d=>d.node!==state.origin).forEach(d=>{ const o=document.createElement('option'); o.value=d.node; o.textContent=d.label; sel.appendChild(o); });
     // destino padrão sugerido: sala-destino → volta p/ portaria; demais → docentes 158
-    if(state.origin==='via158' || state.origin==='via120'){ state.dest='portaria'; }
+    if(state.origin==='via158' || state.origin==='via129'){ state.dest='portaria'; }
     else { state.dest='via158'; }
     if([...sel.options].some(o=>o.value===state.dest)) sel.value=state.dest;
     else state.dest = sel.value || (sel.options[0] && sel.options[0].value) || 'via158';
