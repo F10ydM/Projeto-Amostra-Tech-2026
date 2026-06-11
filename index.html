@@ -288,7 +288,7 @@
     <select id="destSel"></select>
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v33</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v34</b></div>
 </div>
 
 <!-- HUD -->
@@ -331,7 +331,10 @@
     <div class="a11yRow"><span>Rota acessível (evita escada)</span>
       <button class="tgl" id="tglAcc" role="switch" aria-checked="false">Ativar</button>
     </div>
-    <div class="a11yHint">Tradução em Libras: use o botão do VLibras no canto da tela.</div>
+    <div class="a11yRow"><span>Tradução em Libras (VLibras)</span>
+      <button class="tgl" id="btnLibras">Abrir</button>
+    </div>
+    <div class="a11yHint" id="librasHint">O tradutor de Libras abre no canto da tela.</div>
   </div>
 
   <div id="bottom">
@@ -1780,6 +1783,32 @@ function bindUI(){
     if(state.tts){ falar('Leitura em voz ativada.'); } else if(window.speechSynthesis){ speechSynthesis.cancel(); } };
   // rota acessível (mesma ação do botão lateral, sincronizada)
   $('tglAcc').onclick=()=>toggleAcessivel();
+
+  // Botão próprio de Libras: aciona o widget do VLibras (contorna o botão padrão escondido)
+  const btnLibras=$('btnLibras');
+  if(btnLibras) btnLibras.onclick=()=>{
+    const hint=$('librasHint');
+    // 1) procura o botão de acesso do VLibras no DOM
+    const acc=document.querySelector('[vw-access-button]');
+    if(acc){
+      // garante visível e clica para abrir o tradutor
+      const wrap=document.querySelector('div[vw]');
+      if(wrap){ wrap.style.zIndex='99999'; wrap.style.display='block'; }
+      acc.style.display='block'; acc.style.visibility='visible'; acc.style.opacity='1';
+      acc.click();
+      if(hint) hint.textContent='Tradutor de Libras aberto. Toque num texto para traduzir.';
+      a11y.classList.remove('on');   // fecha o painel para liberar a tela
+    } else if(window.VLibras && window.VLibras.Widget){
+      // 2) ainda não montou: tenta montar agora
+      try{ new window.VLibras.Widget('https://vlibras.gov.br/app');
+        setTimeout(()=>{ const a=document.querySelector('[vw-access-button]'); if(a) a.click(); }, 800);
+      }catch(e){}
+      if(hint) hint.textContent='Carregando o tradutor de Libras…';
+    } else {
+      // 3) plugin não disponível (provável falta de internet)
+      if(hint) hint.textContent='O VLibras precisa de internet e não está disponível agora.';
+    }
+  };
   function toggleAcessivel(){
     state.allowEscada=!state.allowEscada;
     const acOn=!state.allowEscada;
