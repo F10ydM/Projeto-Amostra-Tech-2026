@@ -330,7 +330,7 @@
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
   <button class="credits-link" id="openCredits">Sobre o projeto · Autores e orientadores</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v38</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v39</b></div>
 </div>
 
 <!-- TELA SOBRE / CRÉDITOS -->
@@ -794,89 +794,6 @@ function matStd(color,rough=0.85){ const k=color+'|'+rough;
 const _sph=new THREE.SphereGeometry(1,10,8);   // esfera unitária reutilizável (juntas)
 function joint(grp,r,mat,x,y,z){ const m=new THREE.Mesh(_sph,mat); m.scale.setScalar(r);
   m.position.set(x,y,z); m.castShadow=false; grp.add(m); return m; }
-function pessoa(g,x,z,seed=0,sit=false){
-  const grp=new THREE.Group();
-  let s=Math.abs(Math.floor((x*73.1+z*131.7+seed*0.013))%997)+1;
-  const rnd=()=>{s=(s*9301+49297)%233280;return s/233280;};
-  const female=rnd()>0.5;
-  const matSkin=matStd(SKIN[Math.floor(rnd()*SKIN.length)]);
-  const matHair=matStd(HAIR[Math.floor(rnd()*HAIR.length)],0.92);
-  const matShirt=matStd(NPC_SHIRT[Math.floor(rnd()*NPC_SHIRT.length)]);
-  const matLeg=matStd(PANTS[Math.floor(rnd()*PANTS.length)],0.9);
-  const matShoe=matStd(0x14161c,0.6);
-  const faceVar=Math.floor(rnd()*6);
-  const tall=0.92+rnd()*0.16;       // variação de altura
-  const wide=0.92+rnd()*0.16;       // variação de porte
-  const rig=new THREE.Group(); rig.scale.set(wide,tall,wide); grp.add(rig);
-
-  if(sit){
-    // sentado: tronco + coxas insinuadas
-    box(rig,0.40,0.46,0.26,matShirt,0,0.70,0);
-    box(rig,0.38,0.16,0.40,matLeg,0,0.46,0.10,false);   // coxas
-    box(rig,0.40,0.40,0.40,matStd(0x2a2f38,0.6),0,0.22,0.02,false); // assento
-  } else {
-    const hip=0.78;
-    // tronco trapezoidal (ombros mais largos que a cintura)
-    box(rig,0.44,0.30,0.25,matShirt,0,hip+0.50,0);      // peito/ombros
-    box(rig,0.36,0.26,0.22,matShirt,0,hip+0.22,0);      // cintura
-    joint(rig,0.115,matShirt,-0.22,hip+0.62,0);          // ombro L
-    joint(rig,0.115,matShirt, 0.22,hip+0.62,0);          // ombro R
-    // BRAÇOS com cotovelo + mão
-    for(const sx of[-1,1]){
-      box(rig,0.085,0.26,0.10,matShirt,sx*0.26,hip+0.46,0,false);  // braço sup
-      joint(rig,0.06,matSkin,sx*0.26,hip+0.32,0);                  // cotovelo
-      box(rig,0.075,0.24,0.09,matSkin,sx*0.26,hip+0.18,0,false);   // antebraço
-      joint(rig,0.055,matSkin,sx*0.26,hip+0.05,0);                 // mão
-    }
-    // PERNAS com joelho + pé (ou saia)
-    if(female && rnd()>0.55){
-      box(rig,0.40,0.30,0.26,matLeg,0,hip-0.02,0,false);           // saia
-      for(const sx of[-1,1]){ box(rig,0.085,0.42,0.09,matSkin,sx*0.10,0.22,0,false);
-        box(rig,0.10,0.07,0.22,matShoe,sx*0.10,0.035,0.04,false); }
-    } else {
-      for(const sx of[-1,1]){
-        box(rig,0.13,0.34,0.14,matLeg,sx*0.10,hip-0.10,0,false);   // coxa
-        joint(rig,0.075,matLeg,sx*0.10,hip-0.30,0);                // joelho
-        box(rig,0.11,0.32,0.12,matLeg,sx*0.10,hip-0.48,0,false);   // canela
-        box(rig,0.12,0.08,0.24,matShoe,sx*0.10,0.04,0.04,false);   // pé
-      }
-    }
-  }
-  // PESCOÇO + CABEÇA + cabelo variado + rosto
-  const hy=(sit?1.02:1.62);
-  box(rig,0.10,0.10,0.10,matSkin,0,hy-0.16,0,false);              // pescoço
-  const hr=0.135;
-  const head=new THREE.Mesh(_sph,matSkin); head.scale.set(hr,hr*1.08,hr);
-  head.position.set(0,hy,0); head.castShadow=true; rig.add(head);
-  // cabelo: 0 calota, 1 calota+franja, 2 longo, 3 coque, 4 careca/curtíssimo
-  const hairType=Math.floor(rnd()*5);
-  if(hairType!==4){
-    const cap=new THREE.Mesh(new THREE.SphereGeometry(hr*1.12,12,10,0,Math.PI*2,0,Math.PI*0.62),matHair);
-    cap.position.set(0,hy+0.02,0); rig.add(cap);
-  }
-  if(hairType===1) box(rig,hr*2,0.04,0.04,matHair,0,hy+0.06,hr*0.95,false);     // franja
-  if(hairType===2) box(rig,hr*1.9,0.30,0.10,matHair,0,hy-0.10,-0.09,false);     // cabelo longo
-  if(hairType===3) joint(rig,0.07,matHair,0,hy+hr*1.1,-0.02);                   // coque
-  addRosto(rig,hr,hy,faceVar);
-  // óculos ocasionais
-  if(rnd()>0.78){ const mg=matStd(0x15171c,0.4);
-    box(rig,0.10,0.05,0.02,mg,-0.055,hy+0.02,hr*1.0,false);
-    box(rig,0.10,0.05,0.02,mg, 0.055,hy+0.02,hr*1.0,false); }
-  // barba ocasional (homens)
-  if(!female && rnd()>0.7) box(rig,hr*1.4,0.08,0.06,matHair,0,hy-0.10,hr*0.7,false);
-
-  // ACESSÓRIOS: mochila (em pé) ou crachá
-  if(!sit && rnd()>0.5){
-    const mb=matStd(BAG[Math.floor(rnd()*BAG.length)],0.8);
-    box(rig,0.30,0.40,0.16,mb,0,1.28,-0.20,false);                 // mochila nas costas
-    box(rig,0.05,0.22,0.05,mb,-0.16,1.45,-0.02,false);             // alça L
-    box(rig,0.05,0.22,0.05,mb, 0.16,1.45,-0.02,false);             // alça R
-  } else if(rnd()>0.6){
-    box(rig,0.10,0.14,0.01,matStd(0xedeef0,0.5),0,1.28,0.13,false);// crachá no peito
-  }
-
-  grp.position.set(x,0,z); g.add(grp); return grp;
-}
 
 // sala de vidro genérica a partir de um block do EMBED
 function salaVidro(g,b,opts={}){
@@ -913,7 +830,6 @@ function salaVidro(g,b,opts={}){
     const dz = along ? z : b.y+ (i+0.7)*d/dn;
     box(g,1.3,0.74,0.66,new THREE.MeshStandardMaterial({color:0xeceae4,roughness:0.5}),dx,0.37,dz);
     box(g,0.32,0.3,0.02,new THREE.MeshStandardMaterial({color:0x12121a,roughness:0.4,emissive:0x0a1830,emissiveIntensity:0.5}),dx,1.0,dz-0.26,false);
-    pessoa(g,dx,dz+0.5,0x37506e,true);
   }
   // placa na face de acesso (lado do corredor = norte, z=b.y)
   placaSala(g, b.name.replace(/·.*/,'').trim(), x, 2.42, b.y-0.02);
@@ -1058,18 +974,7 @@ function buildWorld(){
     const tb=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.55,0.05,18),new THREE.MeshStandardMaterial({color:0xeceae4,roughness:0.5}));
     tb.position.set(cx,0.74,cz);tb.castShadow=true;envWorld.add(tb);
     box(envWorld,0.08,0.74,0.08,M.dark,cx,0.37,cz,false);}); }
-  // bancos, lixeiras, extintores, plantas, pessoas (escala)
-  box(envWorld,2.2,0.45,0.6,M.dark,38,0.22,24);
-  [[33.6,16.6],[46.4,24],[2.6,21]].forEach(([x,z])=>{const e=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,0.45,10),
-    new THREE.MeshStandardMaterial({color:0xc81e1e,roughness:0.5}));e.position.set(x,0.5,z);e.castShadow=true;envWorld.add(e);});
-  [[34,24],[20,24],[12,24]].forEach(([x,z])=>{const l=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.15,0.55,12),
-    new THREE.MeshStandardMaterial({color:0xf3f3ef,roughness:0.6}));l.position.set(x,0.27,z);l.castShadow=true;envWorld.add(l);});
-  [[34.5,27],[46,28]].forEach(([x,z])=>{const g=new THREE.Group();
-    box(g,0.42,0.4,0.42,new THREE.MeshStandardMaterial({color:0x6b5640,roughness:0.9}),x,0.2,z);
-    const f=new THREE.Mesh(new THREE.SphereGeometry(0.45,8,7),new THREE.MeshStandardMaterial({color:0x2f6e3a,roughness:0.95}));
-    f.position.set(x,0.85,z);f.scale.y=1.4;f.castShadow=true;g.add(f);envWorld.add(g);});
-  pessoa(envWorld,30,21.4,0x444b58); pessoa(envWorld,24,23.6,0x5a4a55);
-  pessoa(envWorld,16,21,0x3a4452); pessoa(envWorld,9,23.2,0x37506e,true);
+  // (mobiliário, plantas e NPCs removidos para melhorar o desempenho em celulares mais fracos)
 
   // ---------- FACHADA EXTERNA + PORTAS DE VIDRO (entrada principal) ----------
   buildFachada(P);
