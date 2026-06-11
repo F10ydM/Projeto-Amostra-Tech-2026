@@ -330,7 +330,7 @@
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
   <button class="credits-link" id="openCredits">Sobre o projeto · Autores e orientadores</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v39</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v42</b></div>
 </div>
 
 <!-- TELA SOBRE / CRÉDITOS -->
@@ -1378,7 +1378,7 @@ function computeTurns(path){
 }
 
 // ============================================================ ESTADO
-let state={ mode:'fp', playing:true, traveled:0, speed:1.6, allowEscada:true, origin:'ext_entrada', dest:'via158', total:0, celebrate:false, celT:0, tts:false, reduceMotion:false };
+let state={ mode:'fp', playing:true, traveled:0, speed:0.8, allowEscada:true, origin:'ext_entrada', dest:'via158', total:0, celebrate:false, celT:0, tts:false, reduceMotion:false };
 let _lastSpoken='';
 function falar(txt){
   if(!('speechSynthesis' in window)) return;
