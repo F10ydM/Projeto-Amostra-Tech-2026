@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>UniMaps · Via Centro Uniube</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0a1730">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="UniMaps">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
@@ -224,8 +231,6 @@
     #a11yPanel{left:10px;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 250px);width:calc(100% - 20px);max-width:300px}
     .a11yRow{padding:10px 0}              /* alvos de toque maiores no mobile */
     .a11yBtns button,.tgl{height:40px}
-    /* o widget do VLibras não cobrir o painel inferior */
-    div[vw]{bottom:96px !important}
   }
   /* ===== AVISO DE ROTA ACESSÍVEL: toast + selo + botão destacado ===== */
   #toast{position:fixed;left:50%;top:calc(max(12px,env(safe-area-inset-top)) + 4px);transform:translate(-50%,-18px);
@@ -249,6 +254,16 @@
     box-shadow:0 0 0 3px rgba(56,139,255,.35),0 6px 16px rgba(0,0,0,.4);color:#fff}
   #btnAcc.on svg{fill:#fff}
   body.reduce-motion #toast{transition:none}
+
+  /* ===== VLibras: garante que o botão (mãozinha) apareça ACIMA da HUD ===== */
+  div[vw]{position:fixed !important; z-index:99999 !important;}
+  div[vw] [vw-access-button]{ display:block !important; visibility:visible !important; opacity:1 !important; }
+  /* posição padrão (desktop): canto inferior direito, acima do painel */
+  div[vw]{ right:14px !important; bottom:120px !important; top:auto !important; left:auto !important; }
+  @media (max-width:560px), (max-height:520px){
+    /* no celular, sobe um pouco mais para não cobrir o painel inferior de navegação */
+    div[vw]{ right:10px !important; bottom:200px !important; }
+  }
 </style>
 </head>
 <body>
@@ -273,7 +288,7 @@
     <select id="destSel"></select>
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v31</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v33</b></div>
 </div>
 
 <!-- HUD -->
@@ -1867,6 +1882,17 @@ function bindUI(){
   s.onerror=function(){ console.error('[VLibras] falhou ao baixar o script. Provável bloqueio de CSP (script-src vlibras.gov.br) ou rede.'); };
   document.body.appendChild(s);
 })();
+</script>
+
+<!-- PWA · registra o Service Worker (app funciona offline após a 1ª abertura) -->
+<script>
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js')
+        .then(function(reg){ console.log('[PWA] service worker registrado', reg.scope); })
+        .catch(function(err){ console.warn('[PWA] falha ao registrar service worker:', err); });
+    });
+  }
 </script>
 </body>
 </html>
