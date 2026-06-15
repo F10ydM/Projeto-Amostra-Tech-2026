@@ -259,15 +259,11 @@
   #btnAcc.on svg{fill:#fff}
   body.reduce-motion #toast{transition:none}
 
-  /* ===== VLibras: garante que o botão (mãozinha) apareça ACIMA da HUD ===== */
-  div[vw]{position:fixed !important; z-index:99999 !important;}
-  div[vw] [vw-access-button]{ display:block !important; visibility:visible !important; opacity:1 !important; }
-  /* posição padrão (desktop): canto inferior direito, acima do painel */
-  div[vw]{ right:14px !important; bottom:120px !important; top:auto !important; left:auto !important; }
-  @media (max-width:560px), (max-height:520px){
-    /* no celular, sobe um pouco mais para não cobrir o painel inferior de navegação */
-    div[vw]{ right:10px !important; bottom:200px !important; }
-  }
+  /* ===== Modo legendas visuais (acessibilidade offline) ===== */
+  body.legendas #banner{ background:#0a1730 !important; border:2px solid var(--blue-bright,#5b9cff) !important; }
+  body.legendas #banner .txt .a{ font-size:22px !important; font-weight:700 !important; color:#fff !important; }
+  body.legendas #banner .txt .b{ font-size:15px !important; color:#cfe0fa !important; }
+  body.legendas #banner .arr{ font-size:38px !important; color:#5b9cff !important; }
 
   /* ===== SOBRE / CRÉDITOS ===== */
   .credits-link{display:block;width:100%;margin-top:12px;background:none;border:0;
@@ -380,7 +376,7 @@
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
   <button class="credits-link" id="openCredits">Sobre o projeto · Autores e orientadores</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v49</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v50</b></div>
 </div>
 
 <!-- TELA SOBRE / CRÉDITOS -->
@@ -419,7 +415,7 @@
           <div class="kb-card">📷 Checkpoints por QR Code</div>
           <div class="kb-card">🏛️ Cena 3D do 1º pavimento</div>
           <div class="kb-card">🗺️ Rota visual estilo Maps</div>
-          <div class="kb-card">🤟 VLibras + leitura por voz</div>
+          <div class="kb-card">📝 Legendas grandes + leitura por voz</div>
           <div class="kb-card">🔤 Tamanho de texto e alto contraste</div>
           <div class="kb-card">📴 PWA offline-first</div>
           <div class="kb-card">☁️ Banco de dados no Supabase</div>
@@ -449,7 +445,7 @@
         <div class="cm-grid">
           <div class="cm-item"><div class="cm-ic">🏫</div><div><b>Multi-campus</b><span>Arquitetura por grafo e dados separados por andar permitem replicar para o Campus Gávea e novos prédios sem reescrever o sistema.</span></div></div>
           <div class="cm-item"><div class="cm-ic">💼</div><div><b>Solução licenciável</b><span>Modelo de produto (SaaS) de navegação indoor para universidades, com painel de cadastro de salas mantido pela própria instituição.</span></div></div>
-          <div class="cm-item"><div class="cm-ic">🎯</div><div><b>Diferencial de mercado</b><span>Mapeamento indoor sob controle da instituição, acessível (Libras, voz), de baixo custo e offline — sem depender de uma instituição ter seu prédio cadastrado por terceiros.</span></div></div>
+          <div class="cm-item"><div class="cm-ic">🎯</div><div><b>Diferencial de mercado</b><span>Mapeamento indoor sob controle da instituição, acessível (legendas, voz), de baixo custo e offline — sem depender de uma instituição ter seu prédio cadastrado por terceiros.</span></div></div>
           <div class="cm-item"><div class="cm-ic">📄</div><div><b>Validação acadêmica</b><span>Trabalho submetido ao SVR 2026 (Simpósio de Realidade Virtual e Aumentada · SBC), reforçando o embasamento técnico-científico da solução.</span></div></div>
         </div>
       </div>
@@ -515,10 +511,10 @@
     <div class="a11yRow"><span>Rota acessível (evita escada)</span>
       <button class="tgl" id="tglAcc" role="switch" aria-checked="false">Ativar</button>
     </div>
-    <div class="a11yRow"><span>Tradução em Libras (VLibras)</span>
-      <button class="tgl" id="btnLibras">Abrir</button>
+    <div class="a11yRow"><span>Legendas grandes (instruções em texto)</span>
+      <button class="tgl" id="tglLegendas" role="switch" aria-checked="false">Ativar</button>
     </div>
-    <div class="a11yHint" id="librasHint">O tradutor de Libras abre no canto da tela.</div>
+    <div class="a11yHint">Destaca as instruções de navegação em texto grande na tela — útil para pessoas surdas e funciona offline.</div>
   </div>
 
   <div id="bottom">
@@ -1844,31 +1840,13 @@ function bindUI(){
   // rota acessível (mesma ação do botão lateral, sincronizada)
   $('tglAcc').onclick=()=>toggleAcessivel();
 
-  // Botão próprio de Libras: aciona o widget do VLibras (contorna o botão padrão escondido)
-  const btnLibras=$('btnLibras');
-  if(btnLibras) btnLibras.onclick=()=>{
-    const hint=$('librasHint');
-    const wrap=document.querySelector('div[vw]');
-    const acc=document.querySelector('[vw-access-button]');
-    // diagnóstico visível na própria tela (útil no celular, sem console)
-    const diag = 'VLibras: '
-      + (window.VLibras?'lib✓':'lib✗') + ' '
-      + (wrap?'wrap✓':'wrap✗') + ' '
-      + (acc?'btn✓':'btn✗');
-    if(acc){
-      if(wrap){ wrap.style.cssText += ';z-index:99999!important;display:block!important;right:14px;bottom:120px;'; }
-      acc.style.cssText += ';display:block!important;visibility:visible!important;opacity:1!important;';
-      // tenta abrir de duas formas: clique direto e evento de mouse
-      acc.click();
-      acc.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));
-      if(hint) hint.textContent='Tradutor aberto no canto direito. ('+diag+')';
-      a11y.classList.remove('on');
-    } else if(window.VLibras && window.VLibras.Widget){
-      try{ new window.VLibras.Widget('https://vlibras.gov.br/app'); }catch(e){}
-      if(hint) hint.textContent='Carregando o tradutor… toque de novo em 2s. ('+diag+')';
-    } else {
-      if(hint) hint.textContent='VLibras indisponível (precisa de internet). ('+diag+')';
-    }
+  // Legendas grandes: destaca as instruções de navegação em texto (acessibilidade offline)
+  const tglLeg=$('tglLegendas');
+  if(tglLeg) tglLeg.onclick=()=>{
+    const on=document.body.classList.toggle('legendas');
+    tglLeg.setAttribute('aria-checked', on?'true':'false');
+    tglLeg.textContent = on?'Ativado':'Ativar';
+    tglLeg.classList.toggle('on', on);
   };
   function toggleAcessivel(){
     state.allowEscada=!state.allowEscada;
@@ -1946,31 +1924,6 @@ function bindUI(){
     showErr(bootErr);
     document.getElementById('lo2d').style.display='none';
   }
-})();
-</script>
-
-<!-- VLibras · tradutor de Libras oficial (governo) -->
-<div vw class="enabled">
-  <div vw-access-button class="active"></div>
-  <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
-</div>
-<script>
-(function(){
-  function initVLibras(){
-    if(window.VLibras && window.VLibras.Widget){
-      try{ new window.VLibras.Widget('https://vlibras.gov.br/app');
-        console.log('[VLibras] inicializado'); }
-      catch(e){ console.error('[VLibras] erro ao iniciar:', e); }
-    } else {
-      console.warn('[VLibras] plugin não carregou (verifique a CSP em vercel.json e a conexão).');
-    }
-  }
-  var s=document.createElement('script');
-  s.src='https://vlibras.gov.br/app/vlibras-plugin.js';
-  s.async=true;
-  s.onload=function(){ setTimeout(initVLibras, 300); };   // dá tempo do plugin registrar window.VLibras
-  s.onerror=function(){ console.error('[VLibras] falhou ao baixar o script. Provável bloqueio de CSP (script-src vlibras.gov.br) ou rede.'); };
-  document.body.appendChild(s);
 })();
 </script>
 
