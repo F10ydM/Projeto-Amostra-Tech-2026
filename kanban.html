@@ -25,6 +25,10 @@
   .hbtn:hover{background:#3a82ff}
   .hbtn.ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25)}
   .meta-row{display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:10px clamp(16px,4vw,40px);font-family:var(--mono);font-size:12px;color:var(--slate);border-bottom:1px solid var(--line);background:rgba(255,255,255,.5)}
+  .kpis{display:flex;flex-wrap:wrap;gap:10px;padding:14px clamp(16px,4vw,40px);background:rgba(31,111,232,.06);border-bottom:1px solid var(--line)}
+  .kpi{flex:1;min-width:120px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center}
+  .kpi b{display:block;font-family:var(--mono);font-size:24px;font-weight:700;color:#1f6fe8;line-height:1.1}
+  .kpi span{display:block;font-size:11px;color:var(--slate);margin-top:3px;letter-spacing:.2px}
   .meta-row b{color:var(--ink)}
   .bar{height:7px;border-radius:4px;background:#dde5f1;overflow:hidden;min-width:160px;flex:1;max-width:280px}
   .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--green))}
@@ -93,6 +97,14 @@
   <button class="hbtn ghost" id="resetBtn">Restaurar</button>
   <input type="file" id="fileIn" accept="application/json" style="display:none">
 </header>
+<div class="kpis">
+  <div class="kpi"><b id="kpiDone">0</b><span>entregas concluídas</span></div>
+  <div class="kpi"><b>2</b><span>integrantes</span></div>
+  <div class="kpi"><b>~5</b><span>semanas de projeto</span></div>
+  <div class="kpi"><b>50+</b><span>versões publicadas</span></div>
+  <div class="kpi"><b>7</b><span>áreas técnicas</span></div>
+  <div class="kpi"><b>100%</b><span>deploy automatizado</span></div>
+</div>
 <div class="meta-row">
   <span>Progresso</span>
   <div class="bar"><i id="progFill" style="width:0%"></i></div>
@@ -155,29 +167,55 @@ const COLS=[
   {id:'doing',label:'Em andamento',color:'#1f6fe8'},
   {id:'done',label:'Concluído',color:'#1fb87a'},
 ];
-const KEY='unimaps_kanban_v2';
+const KEY='unimaps_kanban_v3';
 const SEED=[
-  {id:'t1',col:'done',area:'d3',t:'Navegação 3D com A*',d:'Grafo de nós e arestas; rota por A*. Rota acessível filtra escadas.'},
-  {id:'t2',col:'done',area:'d3',t:'Cena 3D do 1º pavimento',d:'Salas, escada rolante, parede amarela, rampa e boneco-guia articulado. Otimizada para celulares mais fracos.'},
-  {id:'t3',col:'done',area:'d3',t:'Rota estilo Google Maps',d:'Fita azul rente ao piso; marcador de chegada em anel.'},
-  {id:'t4',col:'done',area:'infra',t:'Checkpoints por QR Code',d:'Escaneou → define a origem. Ponte físico-digital sem GPS.'},
-  {id:'t5',col:'done',area:'infra',t:'Deploy contínuo (Vercel+GitHub)',d:'git push publica automaticamente; commits semânticos.'},
-  {id:'t6',col:'done',area:'a11y',t:'Painel de acessibilidade',d:'VLibras, leitura por voz, alto contraste, fonte, reduzir animações.'},
-  {id:'t7',col:'done',area:'mobile',t:'HUD mobile-first',d:'Logo recolhida, 1 label por vez, painel compacto, auto-ocultar.'},
-  {id:'t8',col:'done',area:'cloud',t:'Banco PostgreSQL (Supabase)',d:'Mapa servido da nuvem com RLS; fallback offline.'},
-  {id:'t9',col:'done',area:'mobile',t:'PWA offline-first',d:'Service worker faz cache; app abre sem internet após a 1ª vez.'},
-  {id:'t9b',col:'done',area:'d3',t:'Ritmo do trajeto ajustado',d:'Velocidade da caminhada calibrada para acompanhamento confortável na apresentação.'},
-  {id:'t10',col:'doing',area:'cloud',t:'Demonstrar dados online',d:'Mostrar "Supabase (online)" e editar uma sala refletindo no app.'},
-  {id:'t11',col:'doing',area:'a11y',t:'VLibras em produção',d:'Botão próprio aciona o tradutor; validar no aparelho.'},
-  {id:'t18',col:'doing',area:'infra',t:'Submissão de artigo científico (SVR 2026)',d:'Short paper submetido ao Workshop of Undergraduate Works do SVR 2026 (SBC). Validação acadêmica da solução.'},
-  {id:'t12',col:'todo',area:'d3',t:'Rampa e elevador acessíveis',d:'Caminho alternativo no grafo para a rota acessível.'},
-  {id:'t13',col:'todo',area:'data',t:'Dados por andar',d:'Cada andar como conjunto de dados próprio; engine reaproveitada.'},
-  {id:'t14',col:'todo',area:'mobile',t:'Vídeo de demonstração',d:'Gravação mostrando os QR e a rota acessível.'},
-  {id:'t15',col:'backlog',area:'cloud',t:'Multi-prédio / multi-campus',d:'Seletor de prédio e andar; mesma engine para o campus.'},
-  {id:'t19',col:'backlog',area:'cloud',t:'⭐ Expansão para o Campus Gávea',d:'ESCALABILIDADE: replicar a solução para outro campus da Uniube — prova de que a arquitetura escala de um pavimento para múltiplos prédios.'},
-  {id:'t20',col:'backlog',area:'infra',t:'⭐ Produto comercial (SaaS) para outras IES',d:'ESCALABILIDADE: licenciar o UniMaps como produto de navegação indoor para outras universidades. Diferencial: acessível, baixo custo, offline e sob controle da instituição.'},
-  {id:'t16',col:'backlog',area:'infra',t:'Integração com o AVA (Moodle)',d:'Nível 1: link. Nível 2: LTI. Nível 3: API de horários → rota contextual.'},
-  {id:'t17',col:'backlog',area:'data',t:'Painel de cadastro de salas',d:'Editor para não-programador manter o mapa (essencial para o modelo comercial).'},
+  // ---------- CONCLUÍDO ----------
+  {id:'c1',col:'done',area:'d3',t:'Modelagem do prédio como grafo',d:'Nós e arestas com coordenadas métricas reais do 1º pavimento.'},
+  {id:'c2',col:'done',area:'d3',t:'Algoritmo A* de roteamento',d:'Menor caminho no grafo com heurística de distância euclidiana.'},
+  {id:'c3',col:'done',area:'d3',t:'Modo de rota acessível',d:'Remove arestas de escada do grafo, forçando o A* pela rampa.'},
+  {id:'c4',col:'done',area:'d3',t:'Cena 3D procedural (Three.js)',d:'Salas, escada rolante, rampa, parede amarela e forro — desenhados por código.'},
+  {id:'c5',col:'done',area:'d3',t:'Boneco-guia articulado',d:'Avatar low-poly com câmera over-the-shoulder seguindo a rota.'},
+  {id:'c6',col:'done',area:'d3',t:'Rota visual estilo Google Maps',d:'Fita azul rente ao piso + marcador de chegada pulsante.'},
+  {id:'c7',col:'done',area:'d3',t:'Calibração do ritmo do trajeto',d:'Velocidade da caminhada ajustada para acompanhamento confortável.'},
+  {id:'c8',col:'done',area:'infra',t:'Checkpoints físicos por QR Code',d:'Escanear define a origem no mapa — resolve a falta de GPS indoor.'},
+  {id:'c9',col:'done',area:'infra',t:'Geração e validação dos QR',d:'3 cartões (portaria, docentes, sala 129) validados por leitura real.'},
+  {id:'c10',col:'done',area:'infra',t:'Deploy contínuo (Vercel + GitHub)',d:'git push publica automaticamente; ~50 versões com commits semânticos.'},
+  {id:'c11',col:'done',area:'infra',t:'Cabeçalhos de segurança (CSP/HSTS)',d:'Política de segurança de conteúdo e headers no vercel.json.'},
+  {id:'c12',col:'done',area:'infra',t:'Organização e limpeza do repositório',d:'.gitignore, remoção de artefatos Unity, unificação em uma única fonte de verdade.'},
+  {id:'c13',col:'done',area:'cloud',t:'Banco PostgreSQL no Supabase',d:'Tabelas blocos/nós/arestas servidas da nuvem, com RLS.'},
+  {id:'c14',col:'done',area:'cloud',t:'Fallback offline dos dados',d:'Se o banco cai, o app usa cópia local embarcada — sem quebrar.'},
+  {id:'c15',col:'done',area:'mobile',t:'PWA offline-first',d:'Service worker faz cache; o app abre e navega sem internet.'},
+  {id:'c16',col:'done',area:'mobile',t:'App instalável (manifest + ícones)',d:'Manifesto e ícones para instalar na tela inicial como app nativo.'},
+  {id:'c17',col:'done',area:'mobile',t:'HUD mobile-first',d:'Interface compacta, 1 label por vez, auto-ocultar dos controles.'},
+  {id:'c18',col:'done',area:'a11y',t:'Leitura por voz (TTS) passo a passo',d:'Instruções faladas em pt-BR via Web Speech API.'},
+  {id:'c19',col:'done',area:'a11y',t:'Alto contraste e tamanho de texto',d:'Opções de contraste e três tamanhos de fonte (pequena/normal/grande).'},
+  {id:'c20',col:'done',area:'a11y',t:'Reduzir animações',d:'Opção para usuários sensíveis a movimento.'},
+  {id:'c21',col:'done',area:'a11y',t:'Modo legendas grandes (offline)',d:'Instruções de navegação destacadas em texto — acessibilidade visual sem internet.'},
+  {id:'c22',col:'done',area:'d3',t:'Controle de Xbox (Gamepad API)',d:'Navegação da câmera livre por controle — diferencial para a feira.'},
+  {id:'c23',col:'done',area:'infra',t:'Tela "Sobre / Créditos"',d:'Autores, orientadores, status do projeto e visão comercial.'},
+  {id:'c24',col:'done',area:'infra',t:'Maquete 3D impressa da rota',d:'Modelo físico (.3mf) do pavimento para o estande da feira.'},
+  {id:'c25',col:'done',area:'infra',t:'Artigo científico (short paper)',d:'Escrito em formato IEEE para submissão ao SVR 2026 (SBC).'},
+  {id:'c26',col:'done',area:'infra',t:'README didático + decisões de projeto',d:'Documentação com a engenharia, trade-offs e visão comercial.'},
+  {id:'c27',col:'done',area:'infra',t:'Quadro Kanban de acompanhamento',d:'Gestão visual do projeto (este quadro) como evidência de método.'},
+  {id:'c28',col:'done',area:'d3',t:'Fluxograma da arquitetura',d:'Diagrama didático do fluxo para apresentação e banner.'},
+
+  // ---------- EM ANDAMENTO ----------
+  {id:'d1',col:'doing',area:'infra',t:'Submissão do artigo (SVR 2026)',d:'Trilha Workshop of Undergraduate Works; prazo 05/07.'},
+  {id:'d2',col:'doing',area:'mobile',t:'Testes em vários celulares',d:'Validar desempenho e leitura dos QR em aparelhos diferentes.'},
+  {id:'d3',col:'doing',area:'infra',t:'Preparação do estande da feira',d:'Dois monitores, maquete, banner científico e pitch.'},
+
+  // ---------- A FAZER ----------
+  {id:'f1',col:'todo',area:'d3',t:'Rampa e elevador no grafo',d:'Caminho alternativo real para a rota acessível.'},
+  {id:'f2',col:'todo',area:'data',t:'Dados por andar',d:'Cada pavimento como conjunto próprio; engine reaproveitada.'},
+  {id:'f3',col:'todo',area:'mobile',t:'Vídeo de demonstração',d:'Gravação mostrando os QR e a rota acessível.'},
+
+  // ---------- PLANEJADO / ROADMAP ----------
+  {id:'b1',col:'backlog',area:'cloud',t:'⭐ Expansão para o Campus Gávea',d:'ESCALABILIDADE: replicar para outro campus da Uniube.'},
+  {id:'b2',col:'backlog',area:'infra',t:'⭐ Produto comercial (SaaS) para outras IES',d:'ESCALABILIDADE: licenciar a navegação indoor para outras universidades.'},
+  {id:'b3',col:'backlog',area:'cloud',t:'Multi-prédio / multi-campus',d:'Seletor de prédio e andar; mesma engine para o campus.'},
+  {id:'b4',col:'backlog',area:'infra',t:'Integração com o AVA (Moodle)',d:'Link → LTI autenticado → rota a partir do horário de aula.'},
+  {id:'b5',col:'backlog',area:'data',t:'Painel de cadastro de salas',d:'Editor para não-programador manter o mapa (chave do modelo comercial).'},
+  {id:'b6',col:'backlog',area:'a11y',t:'Avaliação com usuários',d:'Teste piloto com métricas de eficácia e satisfação.'},
 ];
 let cards=[];
 const $=id=>document.getElementById(id);
@@ -208,6 +246,7 @@ function render(){
   const done=cards.filter(c=>c.col==='done').length;
   const pct=cards.length?Math.round(done/cards.length*100):0;
   $('progFill').style.width=pct+'%'; $('progPct').textContent=pct+'%';
+  const kd=$('kpiDone'); if(kd) kd.textContent=done;
 }
 let dragId=null;
 function bindDrag(){
