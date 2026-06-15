@@ -337,6 +337,17 @@
   .kb-col:nth-child(3) .kb-card{border-left-color:#5b9cff}
   @media (max-width:480px){ .kb{grid-template-columns:1fr} }
 
+  /* ===== Faixa de destaque: escalabilidade & visão comercial ===== */
+  .cm-box{background:linear-gradient(135deg,rgba(31,111,232,.16),rgba(31,184,122,.12));
+    border:1px solid rgba(60,139,255,.35);border-radius:12px;padding:14px}
+  .cm-lead{font-size:12.5px;line-height:1.5;color:#dbe9ff;margin-bottom:12px;font-weight:500}
+  .cm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .cm-item{display:flex;gap:9px;align-items:flex-start}
+  .cm-ic{font-size:18px;flex:0 0 auto;line-height:1.2}
+  .cm-item b{display:block;font-size:12.5px;color:#fff;margin-bottom:2px}
+  .cm-item span{display:block;font-size:11px;line-height:1.4;color:#9db6e6}
+  @media (max-width:480px){ .cm-grid{grid-template-columns:1fr} }
+
   /* ===== Links de LinkedIn dos autores ===== */
   .cr-link{text-decoration:none;color:#fff;display:inline-flex;align-items:center;gap:8px;transition:color .15s}
   .cr-link:hover{color:var(--blue-bright,#5b9cff)}
@@ -369,7 +380,7 @@
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
   <button class="credits-link" id="openCredits">Sobre o projeto · Autores e orientadores</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v48</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v49</b></div>
 </div>
 
 <!-- TELA SOBRE / CRÉDITOS -->
@@ -418,12 +429,28 @@
           <div class="kb-top"><span class="kb-dot doing"></span>Em andamento</div>
           <div class="kb-card">🔍 Validação final na feira</div>
           <div class="kb-card">📲 Testes em vários celulares</div>
+          <div class="kb-card">📄 Submissão de artigo científico (SVR 2026)</div>
         </div>
         <div class="kb-col">
           <div class="kb-top"><span class="kb-dot next"></span>Próximos passos</div>
           <div class="kb-card">🏢 Múltiplos andares</div>
+          <div class="kb-card">🏫 Expansão para o Campus Gávea</div>
+          <div class="kb-card">💼 Produto comercial para outras IES</div>
           <div class="kb-card">🤖 Assistente de IA</div>
           <div class="kb-card">🎓 Integração com o AVA</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cr-sec">
+      <div class="cr-h">Escalabilidade &amp; visão comercial</div>
+      <div class="cm-box">
+        <div class="cm-lead">Da feira ao mercado: o UniMaps foi projetado para escalar de um pavimento para um campus inteiro e, daí, para um produto vendável a outras instituições de ensino.</div>
+        <div class="cm-grid">
+          <div class="cm-item"><div class="cm-ic">🏫</div><div><b>Multi-campus</b><span>Arquitetura por grafo e dados separados por andar permitem replicar para o Campus Gávea e novos prédios sem reescrever o sistema.</span></div></div>
+          <div class="cm-item"><div class="cm-ic">💼</div><div><b>Solução licenciável</b><span>Modelo de produto (SaaS) de navegação indoor para universidades, com painel de cadastro de salas mantido pela própria instituição.</span></div></div>
+          <div class="cm-item"><div class="cm-ic">🎯</div><div><b>Diferencial de mercado</b><span>Mapeamento indoor sob controle da instituição, acessível (Libras, voz), de baixo custo e offline — sem depender de uma instituição ter seu prédio cadastrado por terceiros.</span></div></div>
+          <div class="cm-item"><div class="cm-ic">📄</div><div><b>Validação acadêmica</b><span>Trabalho submetido ao SVR 2026 (Simpósio de Realidade Virtual e Aumentada · SBC), reforçando o embasamento técnico-científico da solução.</span></div></div>
         </div>
       </div>
     </div>
