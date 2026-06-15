@@ -369,7 +369,7 @@
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
   <button class="credits-link" id="openCredits">Sobre o projeto · Autores e orientadores</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v47</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v48</b></div>
 </div>
 
 <!-- TELA SOBRE / CRÉDITOS -->
@@ -1545,6 +1545,61 @@ function miniDot(px,pz){
 // ============================================================ LOOP
 let camRoll=0;
 const freeCam={active:false,dragging:false,yaw:0,pitch:0.46,dist:5.6,lx:0,ly:0};   // câmera livre ao pausar
+
+// ===== CONTROLE DE XBOX (Gamepad API) — comanda a câmera livre quando pausado =====
+const pad={ index:null, connected:false };
+window.addEventListener('gamepadconnected', e=>{
+  pad.index=e.gamepad.index; pad.connected=true;
+  showPadToast('🎮 Controle conectado · pause para usar a câmera livre');
+});
+window.addEventListener('gamepaddisconnected', e=>{
+  if(pad.index===e.gamepad.index){ pad.connected=false; pad.index=null;
+    showPadToast('🎮 Controle desconectado'); }
+});
+function showPadToast(msg){
+  let el=document.getElementById('padToast');
+  if(!el){ el=document.createElement('div'); el.id='padToast';
+    el.style.cssText='position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:60;'
+      +'background:rgba(8,20,40,.92);border:1px solid rgba(60,139,255,.45);color:#eaf2ff;'
+      +'padding:9px 16px;border-radius:999px;font-size:13px;font-weight:600;pointer-events:none;'
+      +'box-shadow:0 6px 20px rgba(0,0,0,.4);transition:opacity .3s;backdrop-filter:blur(8px)';
+    document.body.appendChild(el); }
+  el.textContent=msg; el.style.opacity='1';
+  clearTimeout(showPadToast._t); showPadToast._t=setTimeout(()=>{ el.style.opacity='0'; }, 2600);
+}
+// lê o controle e aplica na câmera livre; retorna true se houve input
+function lerGamepad(dt){
+  if(!pad.connected) return;
+  const gps=navigator.getGamepads ? navigator.getGamepads() : [];
+  const gp=gps[pad.index]; if(!gp) return;
+  const dz=0.18;                                   // zona morta dos analógicos
+  const ax=a=>{ const v=gp.axes[a]||0; return Math.abs(v)<dz?0:v; };
+  // Analógico DIREITO (eixos 2 e 3) gira a câmera (yaw/pitch)
+  const rx=ax(2), ry=ax(3);
+  // Gatilhos LT/RT (botões 6 e 7) ou analógico ESQUERDO vertical (eixo 1) dão zoom
+  const lt=(gp.buttons[6]?.value)||0, rt=(gp.buttons[7]?.value)||0;
+  const ly=ax(1);
+  const usou = rx||ry||ly||lt>0.1||rt>0.1;
+  if(!usou) return;
+  // se o usuário mexeu no controle e está pausado, ativa a câmera livre
+  if(!state.playing && !state.celebrate){
+    freeCam.active=true;
+    freeCam.yaw  -= rx*2.4*dt;
+    freeCam.pitch = Math.max(-0.25, Math.min(1.25, freeCam.pitch - ry*2.0*dt));
+    // zoom: RT aproxima, LT afasta; analógico esquerdo (cima/baixo) também
+    const zoom = (rt-lt)*7*dt + ly*7*dt;
+    freeCam.dist = Math.max(2.2, Math.min(11, freeCam.dist - zoom));
+  }
+}
+let padAB=false;   // estado anterior dos botões A/B (para detectar "acabou de apertar")
+function lerGamepadBotoes(){
+  if(!pad.connected) return;
+  const gp=(navigator.getGamepads?navigator.getGamepads():[])[pad.index]; if(!gp) return;
+  const aPress=(gp.buttons[0]?.pressed)||false;   // botão A → play/pause
+  if(aPress && !padAB){ const b=document.getElementById('btnPlay'); if(b) b.click(); }
+  padAB=aPress;
+}
+
 const smTan=new THREE.Vector3(0,0,1);   // tangente suavizada (movimento de câmera macio nas curvas)
 let avYaw=0, camInit=false;
 const _dummy=new THREE.Object3D();        // reutilizado (evita alocar por frame)
@@ -1555,6 +1610,7 @@ let _hudAcc=0;                            // acumulador p/ throttle do HUD
 function lerpAng(a,b,k){ let d=((b-a+Math.PI)%(Math.PI*2))-Math.PI; if(d<-Math.PI)d+=Math.PI*2; return a+d*k; }
 function animate(){
   const dt=Math.min(0.05,clock.getDelta()), t=clock.elapsedTime;
+  lerGamepad(dt); lerGamepadBotoes();   // controle de Xbox → câmera livre
   // marcador do destino: só aparece quando falta pouco; pulsa no chão
   if(routeGroup?.userData?.pin){ const p=routeGroup.userData.pin;
     const restante=routeMeters*(1-(state.total>0?state.traveled/state.total:0));
