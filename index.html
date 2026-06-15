@@ -336,6 +336,14 @@
   .kb-col:nth-child(2) .kb-card{border-left-color:#f2b21c}
   .kb-col:nth-child(3) .kb-card{border-left-color:#5b9cff}
   @media (max-width:480px){ .kb{grid-template-columns:1fr} }
+
+  /* ===== Links de LinkedIn dos autores ===== */
+  .cr-link{text-decoration:none;color:#fff;display:inline-flex;align-items:center;gap:8px;transition:color .15s}
+  .cr-link:hover{color:var(--blue-bright,#5b9cff)}
+  .cr-in{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;
+    background:#0a66c2;color:#fff;font-family:var(--techno,sans-serif);font-weight:800;font-size:10px;
+    letter-spacing:0;flex:0 0 auto;text-transform:lowercase}
+  .cr-link:hover .cr-in{background:#1a78d4}
 </style>
 </head>
 <body>
@@ -361,7 +369,7 @@
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
   <button class="credits-link" id="openCredits">Sobre o projeto · Autores e orientadores</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v46</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v47</b></div>
 </div>
 
 <!-- TELA SOBRE / CRÉDITOS -->
@@ -380,11 +388,11 @@
       <div class="cr-h">Autores</div>
       <div class="cr-people">
         <div class="cr-person big">
-          <div class="cr-name">Arthur Moreira Martins</div>
+          <a class="cr-name cr-link" href="https://www.linkedin.com/in/arthur-martins-677a193a4/" target="_blank" rel="noopener">Arthur Moreira Martins <span class="cr-in">in</span></a>
           <div class="cr-meta">RA 5168694</div>
         </div>
         <div class="cr-person big">
-          <div class="cr-name">Maria Eduarda dos Santos Duque Estrada</div>
+          <a class="cr-name cr-link" href="https://www.linkedin.com/in/maria-eduarda-a3a9142a9/" target="_blank" rel="noopener">Maria Eduarda dos Santos Duque Estrada <span class="cr-in">in</span></a>
           <div class="cr-meta">RA 5171981</div>
         </div>
       </div>
