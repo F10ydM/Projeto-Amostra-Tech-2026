@@ -33,9 +33,12 @@
   - [5. Acessibilidade de verdade](#5-acessibilidade-de-verdade-)
   - [6. Offline com PWA](#6-offline-com-pwa-)
   - [7. Dados na nuvem com Supabase](#7-dados-na-nuvem-com-supabase-)
+- [🧭 Decisões de projeto (e o que descartamos)](#-decisões-de-projeto-e-o-que-descartamos)
 - [🗂️ Estrutura dos arquivos](#️-estrutura-dos-arquivos)
 - [🚀 Como rodar e publicar](#-como-rodar-e-publicar)
 - [🎓 Mapa das disciplinas](#-mapa-das-disciplinas)
+- [💼 Escalabilidade e visão comercial](#-escalabilidade-e-visão-comercial)
+- [📄 Validação científica](#-validação-científica)
 - [🛣️ Roadmap](#️-roadmap)
 - [👥 Autores](#-autores)
 
@@ -137,9 +140,51 @@ Os dados do mapa (blocos, nós e arestas) podem vir de um banco **PostgreSQL no 
 
 ---
 
-## 🗂️ Estrutura dos arquivos
+## 🧭 Decisões de projeto (e o que descartamos)
 
-| Arquivo | O que faz |
+Esta seção explica **por que** o UniMaps é como é. Cada decisão envolveu trade-offs, e documentá-los faz parte da engenharia.
+
+### Por que 3D na web — e não Realidade Aumentada ou Mista?
+
+A escolha mais natural num evento como a feira poderia ser AR/RV. Optamos conscientemente por **navegação 3D no navegador**, e essa é a decisão de projeto mais importante de todo o trabalho.
+
+**O que descartamos — AR/RV — e por quê:**
+- **Custo e hardware.** Soluções de RA/RV de qualidade exigem dispositivos de ponta (sensores específicos, boa GPU) ou até óculos/visores. Isso exclui boa parte dos alunos, que usam celulares modestos.
+- **Barreira de acessibilidade.** A imersão de AR/RV é, por natureza, visual. Ela tende a *excluir* pessoas com deficiência visual — o oposto do nosso objetivo.
+- **Fragmentação de plataforma.** AR na web (WebXR) tem suporte irregular, especialmente em iPhones, o que quebraria a promessa de "funciona no celular de qualquer um".
+
+**O que ganhamos com 3D na web:**
+- Roda em **qualquer navegador**, sem instalar nada e sem hardware especial.
+- Permite uma camada de **acessibilidade rica** (voz, Libras, contraste) que conviveria mal com a imersão de AR.
+- É **leve o suficiente** para funcionar offline.
+
+> **Trade-off assumido:** abrimos mão da imersão de AR/RV em troca de **alcance universal e acessibilidade**. Para o caso de uso — orientar alguém até uma sala — concluímos que chegar a todos importa mais do que impressionar alguns. *(AR continua no roadmap como modo opcional futuro, sobre a mesma base 3D.)*
+
+### Por que fazer questão de funcionar offline?
+
+O UniMaps é um **PWA com funcionamento offline** por uma razão concreta: **o sinal de internet falha justamente dentro dos prédios**, que é onde o app é usado. Um app de navegação indoor que dependesse de conexão seria inútil no exato momento em que o usuário mais precisa dele — perdido num corredor sem sinal.
+
+- **Como conseguimos:** um *service worker* faz cache do app e da biblioteca 3D na primeira abertura; o algoritmo de rota (A\*) e os dados do mapa rodam no próprio navegador, sem servidor.
+- **O que descartamos:** uma arquitetura cliente-servidor, em que cada rota seria calculada na nuvem. Seria mais simples de atualizar, mas frágil sem internet.
+
+> **Trade-off assumido:** o núcleo de navegação funciona **100% offline**; em contrapartida, dois recursos *dependem* de internet — o **VLibras** (tradução em Libras, hospedada pelo governo) e a sincronização opcional com o **Supabase**. Quando offline, o app cai automaticamente nos dados locais e segue funcionando.
+
+### Por que QR Code — e não GPS ou sensores (BLE/Wi-Fi)?
+
+Para saber *onde o usuário está*, descartamos duas alternativas comuns:
+
+- **GPS:** não funciona indoor — o sinal de satélite é bloqueado por lajes e paredes.
+- **Sensores (beacons BLE, Wi-Fi fingerprinting):** funcionam, mas exigem **instalar e manter infraestrutura** (dezenas de dispositivos, calibração periódica, custo recorrente).
+
+O **QR Code** resolve o problema com custo praticamente zero: um adesivo impresso em cada checkpoint. Ele não dá posição contínua, mas dá o que importa — **o ponto de partida** — e é trivial de implantar em qualquer prédio.
+
+> **Trade-off assumido:** abrimos mão do rastreamento *contínuo* da posição (que beacons dariam) em troca de **custo zero de infraestrutura e implantação imediata**. Para orientação ponto-a-ponto, saber a origem é suficiente.
+
+### Por que um único arquivo e deploy estático?
+
+O sistema roda como aplicação estática (HTML + biblioteca via CDN) publicada na Vercel. Descartamos um back-end pesado porque ele encareceria a hospedagem e adicionaria pontos de falha. A consequência é um projeto **barato de hospedar, simples de implantar e fácil de escalar** — o que conecta diretamente com a visão comercial abaixo.
+
+
 |---|---|
 | 🏠 `index.html` | O aplicativo inteiro: cena 3D, A\*, interface, acessibilidade. É o coração do projeto. |
 | ⚙️ `config.js` | Credenciais públicas do Supabase (chave de leitura). |
@@ -194,6 +239,33 @@ Cada componente técnico do projeto se conecta a uma disciplina do curso de ADS 
 | Acessibilidade (VLibras, WCAG) | Engenharia de Software / IHC |
 | Cabeçalhos CSP e segurança | Segurança e Auditoria |
 | Back-end de IA *(preparado)* | Tecnologias Digitais Emergentes |
+
+---
+
+## 💼 Escalabilidade e visão comercial
+
+O UniMaps não foi pensado apenas como trabalho acadêmico, mas como **base de um produto**. A arquitetura — grafo de dados separável, deploy estático barato, sem hardware especial — foi escolhida pensando em escalar.
+
+**O caminho de crescimento, do menor ao maior:**
+
+1. **Um pavimento** → estado atual (1º andar do campus Via Centro).
+2. **Um campus inteiro** → suporte a múltiplos andares e prédios, reutilizando a mesma engine.
+3. **Múltiplos campi** → expansão planejada para o **Campus Gávea da UNIUBE**, provando que a solução replica.
+4. **Produto para outras instituições** → modelo de **solução licenciável (SaaS)** de navegação indoor para outras universidades, com um painel em que a própria instituição cadastra e mantém suas salas.
+
+**O diferencial de mercado** está em democratizar a navegação indoor: hoje, o mapeamento interno detalhado costuma existir só em grandes locais comerciais cadastrados por terceiros. O UniMaps permite que **qualquer instituição** tenha o seu — com três vantagens difíceis de igualar:
+
+- 🎯 **Controle institucional dos dados** — a instituição mantém o próprio mapa, sem depender de terceiros cadastrarem o prédio.
+- ♿ **Acessibilidade nativa** — Libras, voz e alto contraste, raramente presentes em soluções de wayfinding.
+- 💰 **Baixo custo e offline** — roda em qualquer celular, sem infraestrutura de sensores nem hardware dedicado.
+
+> Há interesse institucional da UNIUBE na adoção e expansão da solução, o que reforça seu potencial de produto além do contexto acadêmico.
+
+---
+
+## 📄 Validação científica
+
+O embasamento técnico-científico do projeto foi submetido como artigo (short paper) ao **SVR 2026 — 28º Simpósio de Realidade Virtual e Aumentada** (Sociedade Brasileira de Computação), na trilha *Workshop of Undergraduate Works*. O artigo posiciona o UniMaps como **alternativa acessível e de baixo custo às soluções de RA/RV** para orientação espacial, discutindo seus impactos sociais, econômicos e técnicos.
 
 ---
 
