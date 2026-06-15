@@ -1,0 +1,34 @@
+﻿# Projeto Unity (NAO pertence ao repositorio do site)
+.plastic/
+Assets/
+Library/
+Logs/
+Packages/
+ProjectSettings/
+UserSettings/
+Temp/
+obj/
+Build/
+Builds/
+Assembly-CSharp*.csproj
+*.sln
+*.slnx
+*.csproj
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Backups e temporarios
+*.bak
+vercel.json.bak
+
+# Node
+node_modules/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# .gitignore do Unity (nao pertence ao site)
+ignore.conf

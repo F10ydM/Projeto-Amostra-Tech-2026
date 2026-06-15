@@ -1,0 +1,41 @@
+{
+  "name": "UNIUBE Via Centro · GPS Interno 3D",
+  "short_name": "UNIUBE 3D",
+  "description": "GPS Interno 3D do campus UNIUBE Via Centro · Trabalho Integrador Amostra Tech 2026",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050a18",
+  "theme_color": "#0c1730",
+  "lang": "pt-BR",
+  "categories": ["education", "navigation", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Iniciar demo",
+      "short_name": "Demo",
+      "url": "/?demo=1",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Saguão Entrada",
+      "short_name": "Saguão",
+      "url": "/?from=qr_saguao",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
