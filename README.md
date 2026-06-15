@@ -112,7 +112,7 @@ A cena é construída com **[Three.js](https://threejs.org/)** (biblioteca de We
 
 Acessibilidade não é enfeite aqui — é um pilar:
 
-- **🤟 VLibras** — tradução do conteúdo para Libras (língua brasileira de sinais), via widget oficial do governo.
+- **📝 Legendas grandes** — as instruções de navegação aparecem em texto destacado na tela, para pessoas surdas, funcionando offline.
 - **🔊 Leitura por voz (TTS)** — as instruções da rota são faladas em português, usando a Web Speech API.
 - **🎨 Alto contraste e fonte ajustável** — para baixa visão.
 - **🦽 Rota acessível** — desvia da escada para a rampa (ver o truque do A\* acima).
@@ -155,7 +155,7 @@ A escolha mais natural num evento como a feira poderia ser AR/RV. Optamos consci
 
 **O que ganhamos com 3D na web:**
 - Roda em **qualquer navegador**, sem instalar nada e sem hardware especial.
-- Permite uma camada de **acessibilidade rica** (voz, Libras, contraste) que conviveria mal com a imersão de AR.
+- Permite uma camada de **acessibilidade rica** (voz, legendas, contraste) que conviveria mal com a imersão de AR.
 - É **leve o suficiente** para funcionar offline.
 
 > **Trade-off assumido:** abrimos mão da imersão de AR/RV em troca de **alcance universal e acessibilidade**. Para o caso de uso — orientar alguém até uma sala — concluímos que chegar a todos importa mais do que impressionar alguns. *(AR continua no roadmap como modo opcional futuro, sobre a mesma base 3D.)*
@@ -167,7 +167,7 @@ O UniMaps é um **PWA com funcionamento offline** por uma razão concreta: **o s
 - **Como conseguimos:** um *service worker* faz cache do app e da biblioteca 3D na primeira abertura; o algoritmo de rota (A\*) e os dados do mapa rodam no próprio navegador, sem servidor.
 - **O que descartamos:** uma arquitetura cliente-servidor, em que cada rota seria calculada na nuvem. Seria mais simples de atualizar, mas frágil sem internet.
 
-> **Trade-off assumido:** o núcleo de navegação funciona **100% offline**; em contrapartida, dois recursos *dependem* de internet — o **VLibras** (tradução em Libras, hospedada pelo governo) e a sincronização opcional com o **Supabase**. Quando offline, o app cai automaticamente nos dados locais e segue funcionando.
+> **Trade-off assumido:** o núcleo de navegação — incluindo as legendas e a leitura por voz — funciona **100% offline**. O único recurso que *depende* de internet é a sincronização opcional com o **Supabase**; quando offline, o app cai automaticamente nos dados locais e segue funcionando.
 
 ### Por que QR Code — e não GPS ou sensores (BLE/Wi-Fi)?
 
@@ -230,15 +230,17 @@ git push                      # 4. publica (a Vercel faz o resto)
 
 Cada componente técnico do projeto se conecta a uma disciplina do curso de ADS — o que faz dele um verdadeiro **Trabalho Integrador**:
 
-| 🧩 Componente | 📚 Disciplina |
-|---|---|
-| Grafo + algoritmo A\* | Estruturas de Dados / Matemática Discreta |
-| Banco PostgreSQL (Supabase) | Banco de Dados |
-| Service Worker / PWA | Tecnologias para Internet |
-| Hospedagem e CI/CD na nuvem | Cloud Computing |
-| Acessibilidade (VLibras, WCAG) | Engenharia de Software / IHC |
-| Cabeçalhos CSP e segurança | Segurança e Auditoria |
-| Back-end de IA *(preparado)* | Tecnologias Digitais Emergentes |
+| 🧩 Componente | 📚 Disciplina | 👨‍🏫 Professor(a) |
+|---|---|---|
+| Grafo + algoritmo A\* | Matemática Discreta | Renato Coutinho |
+| Service Worker / PWA | Tecnologias para Internet | Maxwell Gomes |
+| Lógica do app (JavaScript) | Java | Camilo Barreto |
+| Banco PostgreSQL (Supabase) | Banco de Dados I e II | Leandra Mendes · Eduardo Chagas |
+| Hospedagem e CI/CD na nuvem | Cloud Computing | Romualdo Mathias |
+| Kanban, versionamento e entregas | Gestão de Projetos | Kênia Arruda |
+| Acessibilidade (legendas, voz, WCAG) | Engenharia de Software / IHC | — |
+| Cabeçalhos CSP e segurança | Segurança e Auditoria | — |
+| Back-end de IA *(preparado)* | Tecnologias Digitais Emergentes | — |
 
 ---
 
@@ -256,7 +258,7 @@ O UniMaps não foi pensado apenas como trabalho acadêmico, mas como **base de u
 **O diferencial de mercado** está em democratizar a navegação indoor: hoje, o mapeamento interno detalhado costuma existir só em grandes locais comerciais cadastrados por terceiros. O UniMaps permite que **qualquer instituição** tenha o seu — com três vantagens difíceis de igualar:
 
 - 🎯 **Controle institucional dos dados** — a instituição mantém o próprio mapa, sem depender de terceiros cadastrarem o prédio.
-- ♿ **Acessibilidade nativa** — Libras, voz e alto contraste, raramente presentes em soluções de wayfinding.
+- ♿ **Acessibilidade nativa** — legendas, voz e alto contraste, raramente presentes em soluções de wayfinding.
 - 💰 **Baixo custo e offline** — roda em qualquer celular, sem infraestrutura de sensores nem hardware dedicado.
 
 > Há interesse institucional da UNIUBE na adoção e expansão da solução, o que reforça seu potencial de produto além do contexto acadêmico.
