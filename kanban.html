@@ -98,7 +98,7 @@
   <div class="modal">
     <h3 id="mTitle">Novo card</h3>
     <div class="body">
-      <div class="fld"><label>Título</label><input id="fTitle" placeholder="Ex.: Protótipo de AR por marcadores"></div>
+      <div class="fld"><label>Título</label><input id="fTitle" placeholder="Ex.: Dados por andar (multi-pavimento)"></div>
       <div class="fld"><label>Descrição</label><textarea id="fDesc" placeholder="O que é, por que importa..."></textarea></div>
       <div class="fld"><label>Área</label>
         <select id="fArea">
@@ -108,7 +108,6 @@
           <option value="a11y">Acessibilidade</option>
           <option value="mobile">Mobile</option>
           <option value="infra">Infra · DevOps</option>
-          <option value="ar">Realidade Aumentada</option>
         </select>
       </div>
       <div class="fld"><label>Coluna</label>
@@ -135,7 +134,6 @@ const AREA={
   a11y:{label:'Acessibilidade',cls:'a-a11y',card:'area-a11y'},
   mobile:{label:'Mobile',cls:'a-mobile',card:'area-mobile'},
   infra:{label:'Infra · DevOps',cls:'a-infra',card:'area-infra'},
-  ar:{label:'Realidade Aumentada',cls:'a-ar',card:'area-ar'},
 };
 const COLS=[
   {id:'backlog',label:'Planejado',color:'#5a6b86'},
@@ -160,12 +158,6 @@ const SEED=[
   {id:'t12',col:'todo',area:'d3',t:'Rampa e elevador acessíveis',d:'Caminho alternativo no grafo para a rota acessível.'},
   {id:'t13',col:'todo',area:'data',t:'Dados por andar',d:'Cada andar como conjunto de dados próprio; engine reaproveitada.'},
   {id:'t14',col:'todo',area:'mobile',t:'Vídeo de demonstração',d:'Gravação mostrando os QR e a rota acessível.'},
-  {id:'a1',col:'backlog',area:'ar',t:'Fase 1 · Fundação métrica',d:'Medir corredores/salas com precisão e ajustar coordenadas. Pré-requisito de AR.'},
-  {id:'a2',col:'backlog',area:'ar',t:'Fase 1 · Densificar QR',d:'De 3 para vários QR (esquinas, salas-chave) como âncoras de recalibração.'},
-  {id:'a3',col:'backlog',area:'ar',t:'Fase 2 · Protótipo AR marcadores',d:'AR.js sobre Three.js; câmera + setas sobre a imagem real. Funciona em iPhone.'},
-  {id:'a4',col:'backlog',area:'ar',t:'Fase 2 · Modo "Ver em AR"',d:'AR como recurso extra, sem substituir o modo 3D/offline atual.'},
-  {id:'a5',col:'backlog',area:'ar',t:'Fase 3 · Piloto institucional',d:'AR em uso real num pavimento; coletar precisão e usabilidade.'},
-  {id:'a6',col:'backlog',area:'ar',t:'Fase 4 · App nativo (se justificar)',d:'ARKit/ARCore com rastreamento espacial. Só após validação no piloto.'},
   {id:'t15',col:'backlog',area:'cloud',t:'Multi-prédio / multi-campus',d:'Seletor de prédio e andar; mesma engine para o campus.'},
   {id:'t16',col:'backlog',area:'infra',t:'Integração com o AVA (Moodle)',d:'Nível 1: link. Nível 2: LTI. Nível 3: API de horários → rota contextual.'},
   {id:'t17',col:'backlog',area:'data',t:'Painel de cadastro de salas',d:'Editor para não-programador manter o mapa.'},
