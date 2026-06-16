@@ -211,6 +211,8 @@
   .a11yHead button{background:none;border:0;color:var(--mute);font-size:16px;cursor:pointer;padding:4px}
   .a11yRow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(60,139,255,.14);font-size:13px}
   .a11yBtns{display:flex;gap:6px}
+  .spdOpts{flex-wrap:wrap;justify-content:flex-end}
+  .spdOpts button{padding:5px 7px;font-size:12px;min-width:34px}
   .a11yBtns button{min-width:38px;height:34px;border-radius:9px;border:1px solid rgba(60,139,255,.35);
     background:rgba(12,28,58,.9);color:var(--blue-soft);font-weight:700;cursor:pointer}
   .tgl{height:34px;padding:0 14px;border-radius:9px;border:1px solid rgba(60,139,255,.35);
@@ -381,7 +383,7 @@
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
   <button class="credits-link" id="openCredits">Sobre o projeto · Autores e orientadores</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v52</b></div>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v53</b></div>
 </div>
 
 <!-- TELA SOBRE / CRÉDITOS -->
@@ -513,6 +515,15 @@
     </div>
     <div class="a11yRow"><span>Reduzir animações</span>
       <button class="tgl" id="tglMotion" role="switch" aria-checked="false">Ativar</button>
+    </div>
+    <div class="a11yRow"><span>Velocidade do trajeto</span>
+      <div class="a11yBtns spdOpts">
+        <button data-spd="0.5" aria-label="Meia velocidade">0.5×</button>
+        <button data-spd="1" class="on" aria-label="Velocidade normal">1×</button>
+        <button data-spd="1.5" aria-label="Uma vez e meia">1.5×</button>
+        <button data-spd="1.75" aria-label="Velocidade alta">1.75×</button>
+        <button data-spd="2" aria-label="Velocidade máxima">2×</button>
+      </div>
     </div>
     <div class="a11yRow"><span>Rota acessível (evita escada)</span>
       <button class="tgl" id="tglAcc" role="switch" aria-checked="false">Ativar</button>
@@ -1832,6 +1843,16 @@ function bindUI(){
   if($('fsSmall'))  $('fsSmall').onclick =()=>setFonte('small');
   if($('fsNormal')) $('fsNormal').onclick=()=>setFonte('normal');
   if($('fsLarge'))  $('fsLarge').onclick =()=>setFonte('large');
+  // Velocidade do trajeto: multiplicador sobre a velocidade-base (0.8 = 1×)
+  const SPEED_BASE=0.8;
+  document.querySelectorAll('.spdOpts [data-spd]').forEach(b=>{
+    b.onclick=()=>{
+      const mult=parseFloat(b.dataset.spd);
+      state.speed=SPEED_BASE*mult;
+      document.querySelectorAll('.spdOpts [data-spd]').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+    };
+  });
   // alto contraste
   $('tglContrast').onclick=e=>{ const on=document.body.classList.toggle('hc');
     e.currentTarget.setAttribute('aria-checked',on); e.currentTarget.textContent=on?'Ativado':'Ativar'; };
