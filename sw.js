@@ -8,13 +8,14 @@
 //   - Demais (fontes, VLibras): network, com fallback ao cache se houver
 // ============================================================================
 
-const CACHE = 'unimaps-v33';
+const CACHE = 'unimaps-v34';
 
 // Recursos essenciais para o app abrir offline.
 const CORE = [
   './',
   './index.html',
   './kanban.html',
+  './tecnico.html',
   './config.js',
   './manifest.webmanifest',
   // Three.js (mesmas URLs do importmap do index.html)

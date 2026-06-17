@@ -384,7 +384,8 @@
   <button class="go" id="goBtn">Iniciar rota</button>
   <button class="credits-link" id="openCredits">Sobre o projeto · Autores e orientadores</button>
   <button class="credits-link" id="openStatus">📊 Status do projeto · Kanban da equipe</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v56</b></div>
+  <button class="credits-link" id="openTec">📖 Material técnico · Como foi construído</button>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v57</b></div>
 </div>
 
 <!-- TELA SOBRE / CRÉDITOS -->
@@ -1819,6 +1820,8 @@ function bindUI(){
   document.getElementById('openCredits').onclick=()=>cr.classList.add('on');
   const openStatus=document.getElementById('openStatus');
   if(openStatus) openStatus.onclick=()=>{ window.open('kanban.html','_blank','noopener'); };
+  const openTec=document.getElementById('openTec');
+  if(openTec) openTec.onclick=()=>{ window.open('tecnico.html','_blank','noopener'); };
   document.getElementById('closeCredits').onclick=()=>cr.classList.remove('on');
   cr.addEventListener('click',e=>{ if(e.target===cr) cr.classList.remove('on'); });
   document.getElementById('btnPlay').onclick=e=>{ if(state.total<=0) return;
