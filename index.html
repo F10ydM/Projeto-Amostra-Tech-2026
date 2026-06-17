@@ -306,7 +306,7 @@
 
   /* ===== Tamanho do texto (3 opções prontas) ===== */
   /* botão ativo */
-  .a11yBtns.fsOpts button.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+  .a11yBtns.fsOpts button.on, .a11yBtns.spdOpts button.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
   /* escala os textos da interface; 'Normal' = sem classe (100%) */
   body.fs-small #banner .txt .a, body.fs-small .meta .dest, body.fs-small #start .here .val{font-size:0.86em}
   body.fs-small #banner, body.fs-small #hud, body.fs-small #a11yPanel, body.fs-small .meta{font-size:13px}
@@ -383,7 +383,8 @@
   </div>
   <button class="go" id="goBtn">Iniciar rota</button>
   <button class="credits-link" id="openCredits">Sobre o projeto · Autores e orientadores</button>
-  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v53</b></div>
+  <button class="credits-link" id="openStatus">📊 Status do projeto · Kanban da equipe</button>
+  <div class="src">Fonte de dados: <b id="srcLabel">offline (demo)</b> · Via Centro Uniube · 1º pavimento · <b style="color:#1fd18b">build v56</b></div>
 </div>
 
 <!-- TELA SOBRE / CRÉDITOS -->
@@ -412,7 +413,7 @@
       </div>
     </div>
 
-    <div class="cr-sec">
+    <div class="cr-sec" id="secStatus">
       <div class="cr-h">Status do projeto · pronto para a feira</div>
       <div class="kb">
         <div class="kb-col">
@@ -1618,7 +1619,13 @@ function lerGamepad(dt){
   const rx=ax(2), ry=ax(3);
   // Gatilhos LT/RT (botões 6 e 7) ou analógico ESQUERDO vertical (eixo 1) dão zoom
   const lt=(gp.buttons[6]?.value)||0, rt=(gp.buttons[7]?.value)||0;
-  const ly=ax(1);
+  const lx=ax(0), ly=ax(1);
+  // Analógico ESQUERDO horizontal (eixo 0): avança (direita) / retrocede (esquerda) no trajeto
+  if(lx && state.total>0 && !state.celebrate){
+    const passo = lx * 6 * dt;                     // ~6 m/s no talo
+    state.traveled = Math.max(0, Math.min(state.total, state.traveled + passo));
+    const arr=document.getElementById('arrive'); if(arr && state.traveled<state.total) arr.classList.remove('on');
+  }
   const usou = rx||ry||ly||lt>0.1||rt>0.1;
   if(!usou) return;
   // se o usuário mexeu no controle e está pausado, ativa a câmera livre
@@ -1810,6 +1817,8 @@ function bindUI(){
   // Sobre / Créditos
   const cr=document.getElementById('credits');
   document.getElementById('openCredits').onclick=()=>cr.classList.add('on');
+  const openStatus=document.getElementById('openStatus');
+  if(openStatus) openStatus.onclick=()=>{ window.open('kanban.html','_blank','noopener'); };
   document.getElementById('closeCredits').onclick=()=>cr.classList.remove('on');
   cr.addEventListener('click',e=>{ if(e.target===cr) cr.classList.remove('on'); });
   document.getElementById('btnPlay').onclick=e=>{ if(state.total<=0) return;
