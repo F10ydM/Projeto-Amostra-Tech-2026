@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniMaps · Material Técnico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#01142B; --bg2:#002149; --panel:#002149; --panel2:#073463;
+    --blue:#1062C4; --bright:#5b9cff; --teal:#5b9cff; --amber:#1062C4; --purple:#5b9cff;
+    --txt:#eaf1fb; --mute:#9db6e6; --faint:#5f78a3;
+    --line:rgba(120,150,200,.16); --line2:rgba(120,150,200,.28);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --disp:"Orbitron",system-ui,sans-serif;
+    --body:"Sora",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{animation:none!important;transition:none!important} }
+  body{margin:0;background:
+      radial-gradient(1200px 600px at 78% -8%,rgba(16,98,196,.18),transparent 60%),
+      radial-gradient(900px 500px at 8% 12%,rgba(91,156,255,.08),transparent 55%),
+      var(--bg);
+    color:var(--txt);font-family:var(--body);font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;
+    overflow-x:hidden}
+  a{color:var(--bright);text-decoration:none}
+
+  /* ---------- NAV ---------- */
+  nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;gap:18px;
+    padding:13px clamp(16px,4vw,46px);
+    background:rgba(6,13,29,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line)}
+  .wm{font-family:var(--disp);font-weight:900;font-size:17px;letter-spacing:.06em;color:#fff;display:flex;align-items:center;gap:9px;margin-right:auto}
+  .wm svg{width:17px;height:23px;display:block;flex:0 0 auto;filter:drop-shadow(0 0 8px rgba(16,98,196,.55))}
+  .wm .u{font-family:var(--body);font-weight:700;letter-spacing:-.01em;color:#fff}
+  .wm b{color:#fff}
+  .nav-links{display:flex;gap:4px;flex-wrap:wrap}
+  .nav-links a{font-family:var(--mono);font-size:11.5px;color:var(--mute);padding:6px 11px;border-radius:8px;letter-spacing:.02em;transition:.18s}
+  .nav-links a:hover{color:#fff;background:rgba(16,98,196,.16)}
+  .nav-links a.act{color:#fff;background:rgba(16,98,196,.28)}
+  @media(max-width:880px){ .nav-links{display:none} }
+
+  /* ---------- LAYOUT ---------- */
+  section{padding:clamp(60px,9vh,108px) clamp(16px,5vw,46px);max-width:1100px;margin:0 auto;position:relative}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--bright);margin:0 0 14px}
+  h1,h2,h3{font-family:var(--body);font-weight:600;line-height:1.12;margin:0}
+  h2{font-size:clamp(26px,4.2vw,42px);letter-spacing:-.01em}
+  h3{font-size:19px;font-weight:600}
+  .lede{font-size:clamp(16px,2vw,19px);color:var(--mute);max-width:62ch;margin:16px 0 0;font-weight:300}
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ---------- HERO ---------- */
+  .hero{min-height:92vh;display:flex;flex-direction:column;justify-content:center;padding-top:120px;max-width:1100px}
+  .hero h1{font-family:var(--body);font-weight:700;font-size:clamp(38px,7vw,76px);letter-spacing:-.025em}
+  .hero h1 .g{background:linear-gradient(100deg,#fff 10%,var(--bright) 55%,var(--teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .hero .sub{font-family:var(--mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:0 0 22px}
+  .hero .lede{font-size:clamp(17px,2.2vw,22px);color:var(--mute);max-width:60ch}
+  .hero-meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:34px;font-family:var(--mono);font-size:12px;color:var(--faint)}
+  .hero-meta b{color:var(--txt);font-weight:500}
+  .scrollcue{margin-top:46px;font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.16em;display:flex;align-items:center;gap:10px}
+  .scrollcue .bar{width:34px;height:1px;background:var(--line2);position:relative;overflow:hidden}
+  .scrollcue .bar::after{content:"";position:absolute;inset:0;width:12px;background:var(--bright);animation:slide 2.1s infinite}
+  @keyframes slide{0%{transform:translateX(-12px)}100%{transform:translateX(34px)}}
+
+  /* ---------- CARDS / GRID ---------- */
+  .grid{display:grid;gap:16px;margin-top:34px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:860px){ .g2,.g3,.g4{grid-template-columns:1fr} }
+  .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:16px;padding:22px}
+  .card h3{margin-bottom:7px}
+  .card p{margin:0;font-size:14px;color:var(--mute)}
+  .tag{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--bright);margin-bottom:12px}
+
+  /* ---------- FLUXOGRAMA (passos clicáveis) ---------- */
+  .steps{display:flex;flex-direction:column;gap:10px;margin-top:32px}
+  .step{display:grid;grid-template-columns:54px 1fr;gap:16px;align-items:start;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;cursor:pointer;transition:.2s}
+  .step:hover{border-color:var(--line2);background:var(--panel2)}
+  .step .n{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:15px;
+    background:rgba(16,98,196,.16);color:var(--bright);border:1px solid rgba(16,98,196,.3)}
+  .step.dec .n{background:rgba(16,98,196,.14);color:var(--amber);border-color:rgba(16,98,196,.32)}
+  .step .t{font-weight:500;font-size:16px}
+  .step .d{font-size:13.5px;color:var(--mute);margin-top:3px}
+  .step .more{font-size:13px;color:var(--faint);margin-top:10px;max-height:0;overflow:hidden;transition:max-height .35s ease,margin .35s ease;border-left:2px solid var(--line2);padding-left:0}
+  .step.open .more{max-height:200px;margin-top:12px;padding-left:14px}
+  .step .more code{font-family:var(--mono);font-size:12px;color:var(--teal)}
+
+  /* ---------- DEMO A* ---------- */
+  .demo{margin-top:34px;background:linear-gradient(180deg,var(--panel),#01142B);border:1px solid var(--line2);border-radius:20px;overflow:hidden}
+  .demo-head{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
+  .demo-head .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-right:auto}
+  .seg{display:flex;gap:5px}
+  .seg button,.btn{font-family:var(--mono);font-size:12px;color:var(--mute);background:rgba(16,98,196,.08);
+    border:1px solid var(--line2);border-radius:9px;padding:8px 12px;cursor:pointer;transition:.15s}
+  .seg button:hover,.btn:hover{color:#fff;border-color:var(--bright)}
+  .seg button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .btn.acc.on{background:rgba(91,156,255,.18);border-color:var(--teal);color:#cfe2ff}
+  .btn.go{background:linear-gradient(180deg,#2b8bff,#1550b8);border-color:#7ab8ff;color:#fff;font-weight:500}
+  .demo-body{display:grid;grid-template-columns:1.35fr .9fr;gap:0}
+  @media(max-width:760px){ .demo-body{grid-template-columns:1fr} }
+  .demo-canvas{padding:10px;background:
+      linear-gradient(rgba(120,150,200,.05) 1px,transparent 1px) 0 0/26px 26px,
+      linear-gradient(90deg,rgba(120,150,200,.05) 1px,transparent 1px) 0 0/26px 26px}
+  .demo-side{padding:20px;border-left:1px solid var(--line);font-size:13.5px}
+  @media(max-width:760px){ .demo-side{border-left:none;border-top:1px solid var(--line)} }
+  .demo-side .row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}
+  .demo-side .row b{font-family:var(--mono);color:#fff;font-weight:500}
+  .legend{display:flex;flex-direction:column;gap:8px;margin-top:16px;font-size:12.5px;color:var(--mute)}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-1px}
+  .narr{margin-top:16px;font-family:var(--mono);font-size:12px;color:var(--teal);min-height:34px;line-height:1.45}
+  /* svg node/edge states */
+  .edge{stroke:rgba(120,150,200,.32);stroke-width:2}
+  .edge.stair{stroke:rgba(16,98,196,.45);stroke-dasharray:5 4}
+  .edge.off{stroke:rgba(120,150,200,.08)}
+  .edge.path{stroke:var(--bright);stroke-width:5;filter:drop-shadow(0 0 6px rgba(91,156,255,.7))}
+  .nd{fill:#002149;stroke:rgba(120,150,200,.4);stroke-width:2;transition:.25s}
+  .nd.seen{fill:#16345f;stroke:var(--blue)}
+  .nd.path{fill:var(--bright);stroke:#fff}
+  .nd.start{fill:#fff;stroke:var(--blue)}
+  .nd.goal{fill:var(--amber);stroke:#fff}
+  .ndlabel{font-family:var(--mono);font-size:8.5px;fill:var(--mute)}
+
+  /* ---------- INFRA (camadas clicáveis) ---------- */
+  .layer{border:1px solid var(--line);border-radius:16px;margin-top:14px;overflow:hidden;background:var(--panel)}
+  .layer-h{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer}
+  .layer-h .dot{width:10px;height:10px;border-radius:50%}
+  .layer-h .nm{font-weight:500;font-size:16px}
+  .layer-h .hint{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
+  .layer-c{max-height:0;overflow:hidden;transition:max-height .4s ease}
+  .layer.open .layer-c{max-height:520px}
+  .layer-c-in{padding:0 18px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:680px){ .layer-c-in{grid-template-columns:1fr} }
+  .mini{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:13px 14px}
+  .mini b{font-size:13.5px}.mini span{display:block;font-size:12.5px;color:var(--mute);margin-top:3px}
+  .mini code{font-family:var(--mono);font-size:11.5px;color:var(--teal)}
+
+  /* ---------- TIMELINE ---------- */
+  .tl{position:relative;margin-top:36px;padding-left:30px}
+  .tl::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--teal),var(--blue),var(--purple))}
+  .tl-item{position:relative;padding:0 0 26px 22px}
+  .tl-item::before{content:"";position:absolute;left:-30px;top:3px;width:16px;height:16px;border-radius:50%;background:var(--bg);border:3px solid var(--blue)}
+  .tl-item.now::before{background:var(--teal);border-color:var(--teal);box-shadow:0 0 12px rgba(91,156,255,.7)}
+  .tl-item .ph{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--faint);text-transform:uppercase}
+  .tl-item .ti{font-weight:600;font-size:17px;margin:2px 0 4px}
+  .tl-item .ds{font-size:14px;color:var(--mute)}
+
+  /* ---------- STATS ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  @media(max-width:760px){ .stats{grid-template-columns:1fr 1fr} }
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center}
+  .stat b{display:block;font-family:var(--mono);font-weight:700;font-size:30px;color:var(--bright);line-height:1}
+  .stat span{display:block;font-size:12px;color:var(--mute);margin-top:8px}
+
+  .note{background:rgba(91,156,255,.06);border:1px solid rgba(91,156,255,.25);border-radius:14px;padding:18px 20px;margin-top:24px}
+  .note b{color:var(--teal)}
+  .note p{margin:6px 0 0;font-size:14px;color:var(--mute)}
+  .note ul{margin:8px 0 0;padding-left:18px;font-size:14px;color:var(--mute)}
+  .note li{margin:3px 0}
+
+  footer{border-top:1px solid var(--line);padding:46px clamp(16px,5vw,46px);max-width:1100px;margin:40px auto 0;text-align:center}
+  footer .wm{justify-content:center;margin:0 0 14px}
+  footer .who{font-size:14px;color:var(--mute)}
+  footer .who a{font-family:var(--mono);font-size:12px}
+  footer .fine{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:18px}
+</style>
+</head>
+<body>
+<noscript><style>.reveal{opacity:1!important;transform:none!important}</style></noscript>
+
+<nav>
+  <div class="wm"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 8.4 12 20 12 20s12-11.6 12-20C24 5.37 18.63 0 12 0z" fill="#1062C4"/><circle cx="12" cy="12" r="4.6" fill="#01142B"/></svg><span class="u">Uni</span><b>MAPS</b></div>
+  <div class="nav-links">
+    <a href="#inicio">Início</a>
+    <a href="#problema">Problema</a>
+    <a href="#fluxo">Como funciona</a>
+    <a href="#astar">Algoritmo A*</a>
+    <a href="#infra">Infraestrutura</a>
+    <a href="#acess">Acessibilidade</a>
+    <a href="#tempo">Linha do tempo</a>
+    <a href="#ficha">Ficha técnica</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <p class="sub">GPS Interno 3D · Navegação indoor · Trabalho Integrador</p>
+  <h1>O caminho até a sala,<br><span class="g">calculado em tempo real.</span></h1>
+  <p class="lede">O UniMaps resolve um problema que o GPS não consegue: orientar pessoas <em>dentro</em> de um prédio. Este material explica, em profundidade, como ele foi construído — do grafo e do algoritmo de rotas à infraestrutura que roda no próprio navegador.</p>
+  <div class="hero-meta">
+    <span><b>Three.js + A*</b> · navegação 3D no navegador</span>
+    <span><b>PWA</b> · funciona offline</span>
+    <span><b>QR Code</b> · localização sem GPS</span>
+  </div>
+  <div class="scrollcue"><span class="bar"></span> role para explorar o sistema</div>
+</section>
+
+<!-- PROBLEMA -->
+<section id="problema">
+  <p class="eyebrow reveal">O ponto de partida</p>
+  <h2 class="reveal">Por que o GPS não basta</h2>
+  <p class="lede reveal">Dentro de um prédio, o sinal de satélite é bloqueado por lajes e paredes. Resultado: a navegação que funciona na rua simplesmente não funciona no corredor — exatamente onde estudantes, visitantes e candidatos se perdem.</p>
+  <div class="grid g3">
+    <div class="card reveal"><span class="tag">desafio</span><h3>GPS falha indoor</h3><p>Posicionamento por satélite não atravessa a estrutura do edifício. Não há sinal confiável dentro das salas.</p></div>
+    <div class="card reveal"><span class="tag">restrição</span><h3>Sem infraestrutura cara</h3><p>Beacons e sensores exigem instalar e manter dezenas de dispositivos. Inviável para uma instituição comum.</p></div>
+    <div class="card reveal"><span class="tag">objetivo</span><h3>Acessível a todos</h3><p>Tem que funcionar em qualquer celular, sem instalar nada, e incluir pessoas com deficiência.</p></div>
+  </div>
+</section>
+
+<!-- FLUXOGRAMA -->
+<section id="fluxo">
+  <p class="eyebrow reveal">Como funciona</p>
+  <h2 class="reveal">Seis passos, do QR à chegada</h2>
+  <p class="lede reveal">Toque em cada etapa para ver o detalhe técnico por trás dela.</p>
+  <div class="steps reveal" id="steps">
+    <div class="step" data-more="O parâmetro <code>?origem=</code> na URL do QR define o nó de partida no grafo. Sem GPS: o código é a âncora de posição."><div class="n">1</div><div><div class="t">Escaneia o QR Code</div><div class="d">Um código fixado no prédio informa onde você está.</div><div class="more"></div></div></div>
+    <div class="step" data-more="A lista de destinos é montada a partir dos nós do grafo. O usuário escolhe o nó-alvo."><div class="n">2</div><div><div class="t">Escolhe o destino</div><div class="d">Tela de seleção lista as salas disponíveis.</div><div class="more"></div></div></div>
+    <div class="step" data-more="Os dados (blocos, nós e arestas) vêm do <code>Supabase</code> via API REST. Sem internet, o app cai numa cópia local embutida (<code>EMBED</code>) e funciona igual."><div class="n">3</div><div><div class="t">Carrega o mapa</div><div class="d">O prédio é um grafo de nós e conexões.</div><div class="more"></div></div></div>
+    <div class="step dec" data-more="A decisão muda o grafo <em>antes</em> de calcular: no modo acessível, as arestas marcadas como escada são removidas, forçando o algoritmo pela rampa."><div class="n">◆</div><div><div class="t">Rota acessível? <span style="color:var(--amber);font-size:13px">· decisão</span></div><div class="d">A escolha do usuário altera o caminho calculado.</div><div class="more"></div></div></div>
+    <div class="step" data-more="O <code>A*</code> roda em JavaScript no próprio aparelho. Heurística: distância euclidiana até o destino. Custo das arestas: distância real entre nós."><div class="n">5</div><div><div class="t">Calcula a rota com A*</div><div class="d">Menor caminho entre origem e destino no grafo.</div><div class="more"></div></div></div>
+    <div class="step" data-more="A rota vira uma curva 3D (Three.js). Um guia a percorre com a câmera over-the-shoulder, e as instruções saem por texto (legendas) e voz (Web Speech API)."><div class="n">6</div><div><div class="t">Navega em 3D</div><div class="d">Guia visual com voz e legendas passo a passo.</div><div class="more"></div></div></div>
+  </div>
+</section>
+
+<!-- A* AO VIVO -->
+<section id="astar">
+  <p class="eyebrow reveal">O coração do sistema</p>
+  <h2 class="reveal">O algoritmo A*, ao vivo</h2>
+  <p class="lede reveal">Este é o grafo do prédio (modelo didático). Escolha um destino e veja o A* explorar os nós (azul) e traçar o menor caminho (azul brilhante). Ative a rota acessível para ver o algoritmo evitar a escada e seguir pela rampa.</p>
+
+  <div class="demo reveal">
+    <div class="demo-head">
+      <span class="lbl">grafo · A* em tempo real</span>
+      <div class="seg" id="destSeg">
+        <button data-goal="via158">Via 158</button>
+        <button data-goal="via129" class="on">Via 129</button>
+        <button data-goal="piso2">2º piso</button>
+      </div>
+      <button class="btn acc" id="accBtn" aria-pressed="false">♿ Rota acessível</button>
+      <button class="btn go" id="goBtn">▶ Calcular rota</button>
+    </div>
+    <div class="demo-body">
+      <div class="demo-canvas">
+        <svg id="graph" viewBox="0 0 100 100" width="100%" style="aspect-ratio:1/.92;display:block"></svg>
+      </div>
+      <div class="demo-side">
+        <div class="row"><span>Nós explorados</span><b id="mExpl">—</b></div>
+        <div class="row"><span>Nós no caminho</span><b id="mPath">—</b></div>
+        <div class="row"><span>Distância da rota</span><b id="mDist">—</b></div>
+        <div class="row"><span>Modo</span><b id="mMode">padrão</b></div>
+        <div class="legend">
+          <span><i style="background:#fff"></i>Origem (portaria)</span>
+          <span><i style="background:var(--amber)"></i>Destino</span>
+          <span><i style="background:#16345f;border:1px solid var(--blue)"></i>Nó explorado pelo A*</span>
+          <span><i style="background:var(--bright)"></i>Caminho final</span>
+          <span><i style="background:transparent;border:1px dashed var(--amber)"></i>Aresta de escada</span>
+        </div>
+        <div class="narr" id="narr">Pronto. Toque em “Calcular rota”.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card reveal"><span class="tag">por que A*</span><h3>Rápido e ótimo</h3><p>O A* combina o custo já percorrido com uma estimativa (heurística) do que falta. Com uma heurística admissível — aqui, a distância em linha reta — ele garante o menor caminho explorando bem menos nós que uma busca cega.</p></div>
+    <div class="card reveal"><span class="tag">o truque da acessibilidade</span><h3>Mudar o grafo, não o algoritmo</h3><p>A rota acessível não é um algoritmo separado: o sistema remove as arestas de escada do grafo e roda o mesmo A*. Elegante e fácil de manter — a regra de negócio vira topologia.</p></div>
+  </div>
+</section>
+
+<!-- INFRAESTRUTURA -->
+<section id="infra">
+  <p class="eyebrow reveal">Arquitetura</p>
+  <h2 class="reveal">Quase tudo roda no seu celular</h2>
+  <p class="lede reveal">O servidor só entrega arquivos e guarda dados — não processa rota. Toque em cada camada para abrir os detalhes técnicos.</p>
+
+  <div class="layer reveal" data-open>
+    <div class="layer-h"><span class="dot" style="background:var(--teal)"></span><span class="nm">No navegador (cliente)</span><span class="hint">onde o trabalho acontece ▾</span></div>
+    <div class="layer-c"><div class="layer-c-in">
+      <div class="mini"><b>Interface 3D</b><span>HTML/CSS/JS puro, sem framework, em arquivo único. 3D com <code>Three.js r160</code> via CDN (importmap).</span></div>
+      <div class="mini"><b>Cérebro: A*</b><span>Grafo + <code>A*</code> em JavaScript. Cada celular calcula a própria rota — nada vai a servidor.</span></div>
+      <div class="mini"><b>Service Worker (PWA)</b><span>Cacheia o app na 1ª visita. Páginas usam <code>network-first</code> (sempre a versão nova online); offline, usa o cache.</span></div>
+      <div class="mini"><b>Voz e controle</b><span>Instruções por <code>Web Speech API</code>. Suporte a controle de Xbox via <code>Gamepad API</code> na câmera livre.</span></div>
+    </div></div>
+  </div>
+
+  <div class="layer reveal">
+    <div class="layer-h"><span class="dot" style="background:var(--purple)"></span><span class="nm">Na nuvem (entrega e dados)</span><span class="hint">infraestrutura ▾</span></div>
+    <div class="layer-c"><div class="layer-c-in">
+      <div class="mini"><b>Vercel · hospedagem</b><span>Site estático servido por CDN global. Deploy contínuo: <code>git push</code> publica a versão nova sozinho.</span></div>
+      <div class="mini"><b>Supabase · dados</b><span>PostgreSQL com 3 tabelas — <code>blocos</code>, <code>nos</code>, <code>arestas</code> — e API REST automática. Leitura pública via RLS.</span></div>
+      <div class="mini"><b>Rede de segurança</b><span>Se o Supabase cair, o app usa a cópia local embutida e funciona igual. Sem ponto único de falha no uso.</span></div>
+      <div class="mini"><b>Segurança</b><span>Cabeçalhos no <code>vercel.json</code>: Content-Security-Policy (CSP) e HSTS restringem origens e forçam HTTPS.</span></div>
+    </div></div>
+  </div>
+
+  <div class="layer reveal">
+    <div class="layer-h"><span class="dot" style="background:var(--blue)"></span><span class="nm">Versionamento e entrega</span><span class="hint">processo ▾</span></div>
+    <div class="layer-c"><div class="layer-c-in">
+      <div class="mini"><b>GitHub</b><span>Código versionado com commits semânticos. Cada build carrega um marcador de versão no rodapé para conferência.</span></div>
+      <div class="mini"><b>CI/CD</b><span>Integração GitHub → Vercel: o push dispara o build e a publicação automaticamente, sem etapa manual.</span></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ACESSIBILIDADE -->
+<section id="acess">
+  <p class="eyebrow reveal">Inclusão por projeto</p>
+  <h2 class="reveal">Acessibilidade não é enfeite</h2>
+  <p class="lede reveal">Recursos pensados para diferentes necessidades — e todos funcionam offline.</p>
+  <div class="grid g3">
+    <div class="card reveal"><h3>🦽 Rota acessível</h3><p>Remove a escada do grafo e roteia pela rampa, para cadeirantes e mobilidade reduzida.</p></div>
+    <div class="card reveal"><h3>🔊 Leitura por voz</h3><p>As instruções da rota são faladas em português (Web Speech API), para baixa visão.</p></div>
+    <div class="card reveal"><h3>📝 Legendas grandes</h3><p>Instruções destacadas em texto grande na tela, para pessoas surdas — sem depender de internet.</p></div>
+    <div class="card reveal"><h3>🎨 Alto contraste</h3><p>Modo de contraste reforçado e três tamanhos de fonte para a interface inteira.</p></div>
+    <div class="card reveal"><h3>🎬 Reduzir animações</h3><p>Desliga movimentos para quem tem sensibilidade vestibular.</p></div>
+    <div class="card reveal"><h3>⚡ Velocidade do trajeto</h3><p>Ajuste de 0,5× a 2× no ritmo do guia, para acompanhar com conforto.</p></div>
+  </div>
+</section>
+
+<!-- LINHA DO TEMPO -->
+<section id="tempo">
+  <p class="eyebrow reveal">Da feira ao mercado</p>
+  <h2 class="reveal">Maturidade do produto</h2>
+  <p class="lede reveal">O sistema foi projetado para escalar de um pavimento a um produto comercial. As fases 1 a 4 são roadmap.</p>
+  <div class="tl reveal">
+    <div class="tl-item now"><div class="ph">Fase 0 · hoje</div><div class="ti">Protótipo da feira</div><div class="ds">App 3D, A*, QR Code, PWA offline e acessibilidade — um pavimento, pronto para demonstração.</div></div>
+    <div class="tl-item"><div class="ph">Fase 1</div><div class="ti">Editor visual de mapas</div><div class="ds">Desenhar salas e corredores sobre a planta gera o grafo. Mapear vira tarefa de mouse, não de código.</div></div>
+    <div class="tl-item"><div class="ph">Fase 2</div><div class="ti">Campus completo</div><div class="ds">Múltiplos andares e prédios na mesma engine; escadas e elevadores como conexões entre pavimentos.</div></div>
+    <div class="tl-item"><div class="ph">Fase 3</div><div class="ti">Automação do mapeamento</div><div class="ds">Conversor de planta DWG e OCR dos nomes de sala reduzem o mapeamento de dias para horas.</div></div>
+    <div class="tl-item"><div class="ph">Fase 4</div><div class="ti">Produto comercial (SaaS)</div><div class="ds">Back-end multi-cliente, login e versionamento de mapas — sob arquitetura hexagonal — para hospitais, universidades e shoppings.</div></div>
+  </div>
+
+  <h3 class="reveal" style="margin-top:44px">Tecnologias da fase 2, por frente</h3>
+  <div class="grid g4">
+    <div class="card reveal"><span class="tag">mapeamento</span><p>Editor visual · conversor DWG · OCR de plantas · navmesh.</p></div>
+    <div class="card reveal"><span class="tag">localização</span><p>Dead reckoning por sensores do celular · beacons BLE (premium).</p></div>
+    <div class="card reveal"><span class="tag">produto</span><p>Multi-tenant · login (Auth) · versionamento · arquitetura hexagonal.</p></div>
+    <div class="card reveal"><span class="tag">qualidade</span><p>Assistente de IA · analytics de uso · testes automatizados.</p></div>
+  </div>
+</section>
+
+<!-- FICHA TÉCNICA -->
+<section id="ficha">
+  <p class="eyebrow reveal">Ficha técnica</p>
+  <h2 class="reveal">Em números, e com honestidade</h2>
+  <div class="stats reveal">
+    <div class="stat"><b>2</b><span>integrantes</span></div>
+    <div class="stat"><b>~5</b><span>semanas de projeto</span></div>
+    <div class="stat"><b>56</b><span>versões publicadas</span></div>
+    <div class="stat"><b>7</b><span>áreas técnicas</span></div>
+  </div>
+  <div class="note reveal">
+    <b>O que o UniMaps NÃO usa</b> — porque saber os limites é parte da engenharia:
+    <ul>
+      <li><b>Beacon / GPS:</b> a localização é por QR Code. Ele sabe onde você começou, não rastreia em tempo real.</li>
+      <li><b>Java / Spring Boot:</b> não há back-end próprio. A lógica é JavaScript no navegador.</li>
+      <li><b>AWS:</b> a hospedagem é Vercel + Supabase.</li>
+      <li><b>Arquitetura hexagonal:</b> o app atual é uma SPA cliente; o padrão hexagonal entra no back-end comercial da fase 4. (Hoje há, sim, um padrão Adapter na camada de dados: Supabase ou cópia local atrás da mesma interface.)</li>
+    </ul>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card reveal"><span class="tag">stack</span><h3>Tecnologias</h3><p>HTML · CSS · JavaScript · Three.js r160 · A* in-browser · Supabase (PostgreSQL) · Vercel · Service Worker (PWA) · Web Speech API · Gamepad API.</p></div>
+    <div class="card reveal"><span class="tag">disciplinas</span><h3>Trabalho Integrador</h3><p>Matemática Discreta (grafo + A*) · Tecnologias para Internet (PWA) · Banco de Dados (Supabase) · Cloud (deploy) · Gestão de Projetos (Kanban) · Engenharia de Software / IHC (acessibilidade).</p></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wm"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 8.4 12 20 12 20s12-11.6 12-20C24 5.37 18.63 0 12 0z" fill="#1062C4"/><circle cx="12" cy="12" r="4.6" fill="#01142B"/></svg><span class="u">Uni</span><b>MAPS</b></div>
+  <p class="who">Arthur Moreira Martins · Maria Eduarda dos Santos Duque Estrada<br>
+  <a href="https://github.com/F10ydM/Projeto-Amostra-Tech-2026" target="_blank" rel="noopener">Repositório no GitHub</a></p>
+  <p class="fine">Material técnico · UniMaps · GPS Interno 3D · Amostra Tech 2026</p>
+</footer>
+
+<script>
+// blindagem: se algo falhar, o conteúdo aparece de qualquer jeito
+(function(){
+  var revealAll=function(){document.querySelectorAll('.reveal').forEach(function(e){e.classList.add('in');});};
+  if(!('IntersectionObserver' in window)){ revealAll(); }
+  setTimeout(revealAll, 2500); // rede de segurança: nada fica invisível
+})();
+// ===== nav ativo + reveal =====
+const secs=[...document.querySelectorAll('section')];
+const links=[...document.querySelectorAll('.nav-links a')];
+const navObs=new IntersectionObserver((es)=>{es.forEach(e=>{
+  if(e.isIntersecting){const id=e.target.id;links.forEach(l=>l.classList.toggle('act',l.getAttribute('href')==='#'+id));}
+});},{rootMargin:'-45% 0px -50% 0px'});
+secs.forEach(s=>navObs.observe(s));
+
+const revObs=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');revObs.unobserve(e.target);}});},{rootMargin:'0px 0px -10% 0px'});
+document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
+
+// ===== fluxograma: preencher .more e abrir/fechar =====
+document.querySelectorAll('#steps .step').forEach(st=>{
+  st.querySelector('.more').innerHTML=st.dataset.more;
+  st.addEventListener('click',()=>st.classList.toggle('open'));
+});
+
+// ===== infra: camadas =====
+document.querySelectorAll('.layer').forEach(l=>{
+  if(l.hasAttribute('data-open')) l.classList.add('open');
+  l.querySelector('.layer-h').addEventListener('click',()=>l.classList.toggle('open'));
+});
+
+// ===== DEMO A* =====
+const NODES={
+  portaria:{x:50,y:91,label:'Portaria'},
+  hallA:{x:50,y:71,label:''},
+  via158:{x:15,y:71,label:'Via 158'},
+  hallB:{x:50,y:51,label:''},
+  via129:{x:85,y:51,label:'Via 129'},
+  esc_b:{x:40,y:34,label:'escada'},
+  esc_t:{x:40,y:18,label:''},
+  ramp_b:{x:74,y:36,label:'rampa'},
+  ramp_t:{x:62,y:18,label:''},
+  piso2:{x:51,y:7,label:'2º piso'}
+};
+// [a, b, tipo]  tipo 'stair' = removida na rota acessível
+const EDGES=[
+  ['portaria','hallA'],['hallA','via158'],['hallA','hallB'],['hallB','via129'],
+  ['hallB','esc_b','stair'],['esc_b','esc_t','stair'],['esc_t','piso2'],
+  ['hallB','ramp_b'],['ramp_b','ramp_t'],['ramp_t','piso2']
+];
+const dist=(a,b)=>Math.hypot(NODES[a].x-NODES[b].x,NODES[a].y-NODES[b].y);
+function neighbors(n,accessible){
+  const out=[];
+  for(const [a,b,t] of EDGES){
+    if(accessible && t==='stair') continue;
+    if(a===n) out.push(b); else if(b===n) out.push(a);
+  }
+  return out;
+}
+// A* devolve {path, order(expansão), cost}
+function astar(start,goal,accessible){
+  const open=new Set([start]); const came={}; const g={[start]:0};
+  const f={[start]:dist(start,goal)}; const order=[];
+  while(open.size){
+    let cur=null,best=1e9;
+    for(const n of open){ if((f[n]??1e9)<best){best=f[n];cur=n;} }
+    order.push(cur);
+    if(cur===goal){
+      const path=[cur]; let c=cur; while(came[c]!==undefined){c=came[c];path.unshift(c);}
+      return {path,order,cost:g[goal]};
+    }
+    open.delete(cur);
+    for(const nb of neighbors(cur,accessible)){
+      const t=g[cur]+dist(cur,nb);
+      if(t<(g[nb]??1e9)){ came[nb]=cur; g[nb]=t; f[nb]=t+dist(nb,goal); open.add(nb); }
+    }
+  }
+  return {path:[],order,cost:0};
+}
+
+const SVG=document.getElementById('graph');
+const NS='http://www.w3.org/2000/svg';
+let goal='via129', accessible=false;
+
+function drawBase(){
+  SVG.innerHTML='';
+  // arestas
+  for(const [a,b,t] of EDGES){
+    const ln=document.createElementNS(NS,'line');
+    ln.setAttribute('x1',NODES[a].x);ln.setAttribute('y1',NODES[a].y);
+    ln.setAttribute('x2',NODES[b].x);ln.setAttribute('y2',NODES[b].y);
+    ln.setAttribute('class','edge'+(t==='stair'?' stair':'')+(accessible&&t==='stair'?' off':''));
+    ln.dataset.a=a;ln.dataset.b=b;ln.dataset.t=t||'';
+    SVG.appendChild(ln);
+  }
+  // nós
+  for(const k in NODES){
+    const c=document.createElementNS(NS,'circle');
+    c.setAttribute('cx',NODES[k].x);c.setAttribute('cy',NODES[k].y);c.setAttribute('r',k==='portaria'||k===goal?4.4:3.2);
+    let cls='nd'; if(k==='portaria')cls+=' start'; if(k===goal)cls+=' goal';
+    c.setAttribute('class',cls);c.dataset.k=k;SVG.appendChild(c);
+    if(NODES[k].label){
+      const tx=document.createElementNS(NS,'text');
+      tx.setAttribute('x',NODES[k].x);tx.setAttribute('y',NODES[k].y-5.5);
+      tx.setAttribute('text-anchor','middle');tx.setAttribute('class','ndlabel');
+      tx.textContent=NODES[k].label;SVG.appendChild(tx);
+    }
+  }
+}
+const setNarr=t=>document.getElementById('narr').textContent=t;
+const nd=k=>SVG.querySelector(`circle[data-k="${k}"]`);
+
+let timer=null;
+function run(){
+  if(timer){clearInterval(timer);timer=null;}
+  drawBase();
+  const {path,order,cost}=astar('portaria',goal,accessible);
+  document.getElementById('mMode').textContent=accessible?'acessível (sem escada)':'padrão';
+  document.getElementById('mExpl').textContent='—';
+  document.getElementById('mPath').textContent='—';
+  document.getElementById('mDist').textContent='—';
+  setNarr('Explorando o grafo a partir da portaria…');
+  let i=0;
+  timer=setInterval(()=>{
+    if(i<order.length){
+      const k=order[i];
+      if(k!=='portaria'&&k!==goal){const c=nd(k);if(c)c.classList.add('seen');}
+      document.getElementById('mExpl').textContent=i+1;
+      i++;
+    } else {
+      clearInterval(timer);timer=null;
+      // desenha caminho
+      for(let j=0;j<path.length-1;j++){
+        const a=path[j],b=path[j+1];
+        const ln=[...SVG.querySelectorAll('line.edge')].find(l=>(l.dataset.a===a&&l.dataset.b===b)||(l.dataset.a===b&&l.dataset.b===a));
+        if(ln)ln.classList.add('path');
+        const c=nd(a);if(c&&a!=='portaria')c.classList.add('path');
+      }
+      path.forEach(k=>{if(k!=='portaria'&&k!==goal){const c=nd(k);if(c)c.classList.add('path');}});
+      document.getElementById('mPath').textContent=path.length;
+      document.getElementById('mDist').textContent=cost.toFixed(1)+' u';
+      const vEsc=path.includes('esc_t'), via=path.includes('via158')||path.includes('via129');
+      setNarr(accessible&&goal==='piso2'?'Rota acessível: o A* evitou a escada e seguiu pela rampa.'
+        : goal==='piso2'?'Rota padrão: o caminho mais curto usa a escada.'
+        : 'Menor caminho encontrado pelo A*.');
+    }
+  },260);
+}
+
+document.getElementById('destSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-goal]'); if(!b)return;
+  document.querySelectorAll('#destSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); goal=b.dataset.goal; drawBase();
+  document.getElementById('mExpl').textContent='—';document.getElementById('mPath').textContent='—';document.getElementById('mDist').textContent='—';
+  setNarr('Destino: '+(NODES[goal].label||goal)+'. Toque em “Calcular rota”.');
+});
+const accBtn=document.getElementById('accBtn');
+accBtn.addEventListener('click',()=>{
+  accessible=!accessible; accBtn.classList.toggle('on',accessible);
+  accBtn.setAttribute('aria-pressed',accessible?'true':'false'); drawBase();
+  setNarr(accessible?'Modo acessível: arestas de escada removidas do grafo.':'Modo padrão.');
+});
+document.getElementById('goBtn').addEventListener('click',run);
+drawBase();
+</script>
+</body>
+</html>
