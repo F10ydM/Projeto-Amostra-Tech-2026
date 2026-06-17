@@ -11,7 +11,7 @@
   :root{
     --bg:#01142B; --bg2:#002149; --panel:#002149; --panel2:#073463;
     --blue:#1062C4; --bright:#5b9cff; --teal:#5b9cff; --amber:#1062C4; --purple:#5b9cff;
-    --txt:#eaf1fb; --mute:#9db6e6; --faint:#5f78a3;
+    --txt:#f3f7fd; --mute:#c2d4f0; --faint:#86a0c9;
     --line:rgba(120,150,200,.16); --line2:rgba(120,150,200,.28);
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
     --disp:"Orbitron",system-ui,sans-serif;
@@ -24,7 +24,7 @@
       radial-gradient(1200px 600px at 78% -8%,rgba(16,98,196,.18),transparent 60%),
       radial-gradient(900px 500px at 8% 12%,rgba(91,156,255,.08),transparent 55%),
       var(--bg);
-    color:var(--txt);font-family:var(--body);font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;
+    color:var(--txt);font-family:var(--body);font-weight:400;line-height:1.65;-webkit-font-smoothing:antialiased;
     overflow-x:hidden}
   a{color:var(--bright);text-decoration:none}
 
@@ -49,7 +49,7 @@
   h1,h2,h3{font-family:var(--body);font-weight:600;line-height:1.12;margin:0}
   h2{font-size:clamp(26px,4.2vw,42px);letter-spacing:-.01em}
   h3{font-size:19px;font-weight:600}
-  .lede{font-size:clamp(16px,2vw,19px);color:var(--mute);max-width:62ch;margin:16px 0 0;font-weight:300}
+  .lede{font-size:clamp(16px,2vw,19px);color:var(--mute);max-width:62ch;margin:16px 0 0;font-weight:400}
   .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
   .reveal.in{opacity:1;transform:none}
 
@@ -74,7 +74,7 @@
   @media(max-width:860px){ .g2,.g3,.g4{grid-template-columns:1fr} }
   .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:16px;padding:22px}
   .card h3{margin-bottom:7px}
-  .card p{margin:0;font-size:14px;color:var(--mute)}
+  .card p{margin:0;font-size:15px;color:var(--mute)}
   .tag{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
     padding:3px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--bright);margin-bottom:12px}
 
@@ -247,7 +247,7 @@
     </div>
     <div class="demo-body">
       <div class="demo-canvas">
-        <svg id="graph" viewBox="0 0 100 100" width="100%" style="aspect-ratio:1/.92;display:block"></svg>
+        <svg id="graph" viewBox="-8 -12 116 112" preserveAspectRatio="xMidYMid meet" width="100%" style="aspect-ratio:116/112;display:block"></svg>
       </div>
       <div class="demo-side">
         <div class="row"><span>Nós explorados</span><b id="mExpl">—</b></div>
@@ -261,7 +261,7 @@
           <span><i style="background:var(--bright)"></i>Caminho final</span>
           <span><i style="background:transparent;border:1px dashed var(--amber)"></i>Aresta de escada</span>
         </div>
-        <div class="narr" id="narr">Pronto. Toque em “Calcular rota”.</div>
+        <div class="narr" id="narr">Toque num destino (ou num nó do mapa) e veja o A* traçar a rota.</div>
       </div>
     </div>
   </div>
@@ -471,18 +471,28 @@ function drawBase(){
     SVG.appendChild(ln);
   }
   // nós
+  const DESTS=['via158','via129','piso2'];
   for(const k in NODES){
     const c=document.createElementNS(NS,'circle');
     c.setAttribute('cx',NODES[k].x);c.setAttribute('cy',NODES[k].y);c.setAttribute('r',k==='portaria'||k===goal?4.4:3.2);
     let cls='nd'; if(k==='portaria')cls+=' start'; if(k===goal)cls+=' goal';
-    c.setAttribute('class',cls);c.dataset.k=k;SVG.appendChild(c);
+    c.setAttribute('class',cls);c.dataset.k=k;
+    if(DESTS.includes(k)){ c.style.cursor='pointer'; c.addEventListener('click',()=>pickGoal(k)); }
+    SVG.appendChild(c);
     if(NODES[k].label){
       const tx=document.createElementNS(NS,'text');
       tx.setAttribute('x',NODES[k].x);tx.setAttribute('y',NODES[k].y-5.5);
       tx.setAttribute('text-anchor','middle');tx.setAttribute('class','ndlabel');
+      if(DESTS.includes(k)){ tx.style.cursor='pointer'; tx.addEventListener('click',()=>pickGoal(k)); }
       tx.textContent=NODES[k].label;SVG.appendChild(tx);
     }
   }
+}
+// seleciona destino (usado pelos botões e pelo clique no nó)
+function pickGoal(g){
+  goal=g;
+  document.querySelectorAll('#destSeg button').forEach(x=>x.classList.toggle('on',x.dataset.goal===g));
+  run();
 }
 const setNarr=t=>document.getElementById('narr').textContent=t;
 const nd=k=>SVG.querySelector(`circle[data-k="${k}"]`);
@@ -526,19 +536,25 @@ function run(){
 
 document.getElementById('destSeg').addEventListener('click',e=>{
   const b=e.target.closest('button[data-goal]'); if(!b)return;
-  document.querySelectorAll('#destSeg button').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); goal=b.dataset.goal; drawBase();
-  document.getElementById('mExpl').textContent='—';document.getElementById('mPath').textContent='—';document.getElementById('mDist').textContent='—';
-  setNarr('Destino: '+(NODES[goal].label||goal)+'. Toque em “Calcular rota”.');
+  pickGoal(b.dataset.goal);
 });
 const accBtn=document.getElementById('accBtn');
 accBtn.addEventListener('click',()=>{
   accessible=!accessible; accBtn.classList.toggle('on',accessible);
-  accBtn.setAttribute('aria-pressed',accessible?'true':'false'); drawBase();
-  setNarr(accessible?'Modo acessível: arestas de escada removidas do grafo.':'Modo padrão.');
+  accBtn.setAttribute('aria-pressed',accessible?'true':'false');
+  run(); // recalcula na hora, mostrando o efeito da rota acessível
 });
 document.getElementById('goBtn').addEventListener('click',run);
 drawBase();
+
+// roda a demo automaticamente quando ela aparece na tela (1ª vez)
+let demoRan=false;
+const demoEl=document.querySelector('.demo');
+if(demoEl && 'IntersectionObserver' in window){
+  new IntersectionObserver((es,ob)=>{es.forEach(e=>{
+    if(e.isIntersecting && !demoRan){ demoRan=true; setTimeout(run,400); ob.disconnect(); }
+  });},{threshold:.35}).observe(demoEl);
+}
 </script>
 </body>
 </html>
